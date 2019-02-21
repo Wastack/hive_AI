@@ -486,7 +486,6 @@ class Hive(object):
         (ex, ey) = endCell
         dx = ex - sx
         dy = ey - sy
-        p = sy % 2  # starting from an even or odd line?
 
         # horizontal jump
         if dy == 0:

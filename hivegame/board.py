@@ -58,7 +58,7 @@ class Board(object):
     def _add_row(self, before=False):
         newRow = []
         rowSize = len(self.board[0])
-        for i in range(rowSize):
+        for _ in range(rowSize):
             newRow.append([])
         if not before:
             self.board.append(newRow)

@@ -59,7 +59,7 @@ class HiveShellClient(object):
 
     def ppoc2cell(self, pointOfContact, refPiece):
         direction = self.poc2direction(pointOfContact)
-        return self.hive.poc2cell(refPiece, direction)
+        return self.hive._poc2cell(refPiece, direction)
 
 
     def poc2direction(self, pointOfContact):
@@ -95,13 +95,11 @@ class HiveShellClient(object):
         if pointOfContact is None and turn > 1:
             return False
 
-        actPlayer = (2 - (turn % 2))
         try:
-            p = self.player[actPlayer][actPiece]
             direction = None
             if pointOfContact is not None:
                 direction = self.poc2direction(pointOfContact)
-        except Exception, e:
+        except Exception:
             return False
 
         try:
@@ -128,7 +126,7 @@ class HiveShellClient(object):
             print "player %s play: " % active_player,
             try:
                 cmd = self.input.readline()
-            except KeyboardInterrupt, e:
+            except KeyboardInterrupt:
                 break
             if self.exec_cmd(cmd.strip(), self.hive.turn):
                 print
