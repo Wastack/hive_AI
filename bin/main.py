@@ -25,12 +25,12 @@ class HiveShellClient(object):
         Return a full set of hive pieces
         """
         pieceSet = {}
-        for i in xrange(3):
+        for i in range(3):
             ant = HivePiece(color, 'A', i+1)
             pieceSet[str(ant)] = ant
             grasshopper = HivePiece(color, 'G', i+1)
             pieceSet[str(grasshopper)] = grasshopper
-        for i in xrange(2):
+        for i in range(2):
             spider = HivePiece(color, 'S', i+1)
             pieceSet[str(spider)] = spider
             beetle = HivePiece(color, 'B', i+1)
@@ -117,25 +117,25 @@ class HiveShellClient(object):
         self.hive.setup()
 
         while self.hive.check_victory() == self.hive.UNFINISHED:
-            print "Turn: %s" % self.hive.turn
+            print("Turn: %s" % self.hive.turn)
             active_player = (2 - (self.hive.turn % 2))
-            print self.view
-            print "pieces available: %s" % sorted(
+            print(self.view)
+            print("pieces available: %s" % sorted(
                 self.player[active_player].keys()
-            )
-            print "player %s play: " % active_player,
+            ))
+            print("player %s play: " % active_player)
             try:
                 cmd = self.input.readline()
             except KeyboardInterrupt:
                 break
             if self.exec_cmd(cmd.strip(), self.hive.turn):
-                print
-                print "=" * 79
-                print
+                print()
+                print("=" * 79)
+                print()
             else:
-                print "invalid play!"
+                print("invalid play!")
 
-        print "\nThanks for playing Hive. Have a nice day!"
+        print("\nThanks for playing Hive. Have a nice day!")
 
 
 def main():

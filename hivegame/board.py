@@ -77,11 +77,12 @@ class Board(object):
                 row.insert(0, [])
 
 
-    def resize(self, (x, y)):
+    def resize(self, x_y):
         """
         Resizes the board to include the position (x, y)
         returns the normalized (x, y)
         """
+        (x, y) = x_y
         xx = self.ref0x + x
         yy = self.ref0y + y
 
@@ -107,25 +108,28 @@ class Board(object):
         return firstCol, firstRow, lastCol, lastRow
 
 
-    def get_surrounding(self, (x, y)):
+    def get_surrounding(self, x_y):
         """
         Returns a list with the surrounding positions sorted clockwise starting
         from the left
         """
+        (x, y) = x_y
         return [(x-1, y), (x, y-1), (x+1, y), (x, y+1)]
 
 
-    def get_w_xy(self, (x, y)):
+    def get_w_xy(self, x_y):
         """
         Get X;Y coordinates for the west/left Cell
         """
+        (x, y) = x_y
         return (x-1, y)
 
 
-    def get_e_xy(self, (x, y)):
+    def get_e_xy(self, x_y):
         """
         Get X;Y coordinates for the east/right Cell
         """
+        (x, y) = x_y
         return (x+1, y)
 
 
@@ -155,11 +159,12 @@ class HexBoard(Board):
         }
 
 
-    def get_surrounding(self, (x, y)):
+    def get_surrounding(self, x_y):
         """
         Returns a list with the surrounding positions sorted clockwise starting
         from the left
         """
+        (x, y) = x_y
         res = super(HexBoard, self).get_surrounding((x, y))
         # if in a even row we insert NW into position 1 and SW into position 5
         p = y % 2
@@ -190,57 +195,63 @@ class HexBoard(Board):
         return self.dir2func[direction](cell)
 
 
-    def get_nw_xy(self, (x, y)):
+    def get_nw_xy(self, x_y):
         """
         Get X;Y coordinates for the upper-left Cell
         """
+        (x, y) = x_y
         p = y % 2
         nx = x - 1 + p
         ny = y - 1
         return (nx, ny)
 
 
-    def get_ne_xy(self, (x, y)):
+    def get_ne_xy(self, x_y):
         """
         Get X;Y coordinates for the upper-right Cell
         """
+        (x, y) = x_y
         p = y % 2
         nx = x + p
         ny = y - 1
         return (nx, ny)
 
 
-    def get_sw_xy(self, (x, y)):
+    def get_sw_xy(self, x_y):
         """
         Get X;Y coordinates for the lower-left Cell
         """
+        (x, y) = x_y
         p = y % 2
         nx = x - 1 + p
         ny = y + 1
         return (nx, ny)
 
 
-    def get_se_xy(self, (x, y)):
+    def get_se_xy(self, x_y):
         """
         Get X;Y coordinates for the lower-right Cell
         """
+        (x, y) = x_y
         p = y % 2
         nx = x + p
         ny = y + 1
         return (nx, ny)
 
 
-    def get_w_xy(self, (x, y)):
+    def get_w_xy(self, x_y):
         """
         Get X;Y coordinates for the left Cell
         """
+        (x, y) = x_y
         return (x-1, y)
 
 
-    def get_e_xy(self, (x, y)):
+    def get_e_xy(self, x_y):
         """
         Get X;Y coordinates for the right Cell
         """
+        (x, y) = x_y
         return (x+1, y)
 
 
