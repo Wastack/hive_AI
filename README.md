@@ -89,3 +89,10 @@ PYTHONPATH=. python hivegame/test/hive_test.py
 ```
 PYTHONPATH=. python hivegame/test/board_test.py
 ```
+
+Running the game:
+================
+
+```
+PYTHONPATH=. python bin/main.py
+```
