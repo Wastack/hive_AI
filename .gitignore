@@ -30,6 +30,7 @@ pip-log.txt
 .tox
 nosetests.xml
 
+.vscode/*
 # Translations
 *.mo
 
