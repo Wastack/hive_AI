@@ -16,7 +16,7 @@ class HiveShellClient(object):
         self.hive = Hive()
         self.view = HiveView(self.hive)
         self.input = sys.stdin
-        self.player = {1: None, 2: None}
+        self.player_pieces = {1: None, 2: None}
         self.logger = None
 
 
@@ -111,17 +111,17 @@ class HiveShellClient(object):
 
     def run(self):
         self.logger = open('game.log', 'w')
-        self.player[1] = self.piece_set('w')
-        self.player[2] = self.piece_set('b')
         self.hive.turn += 1 # white player start
         self.hive.setup()
 
         while self.hive.check_victory() == self.hive.UNFINISHED:
+            self.player_pieces[1] = self.hive.get_unplayed_pieces('w')
+            self.player_pieces[2] = self.hive.get_unplayed_pieces('b')
             print("Turn: %s" % self.hive.turn)
             active_player = (2 - (self.hive.turn % 2))
             print(self.view)
             print("pieces available: %s" % sorted(
-                self.player[active_player].keys()
+                self.player_pieces[active_player].keys()
             ))
             print("player %s play: " % active_player)
             try:
