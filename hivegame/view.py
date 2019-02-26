@@ -40,3 +40,13 @@ class HiveView(object):
         res += "\n"
 
         return res
+    
+    def print_pieces_with_coords(self):
+        firstCol, firstRow, lastCol, lastRow = self.game.get_board_boundaries()
+        for i in range(firstRow, lastRow + 1):
+            for j in range(firstCol, lastCol + 1):
+                pieces = self.game.get_pieces((j, i))
+                if len(pieces) != 0:
+                    pieceName = str(pieces[-1])[:3]
+                    print("({},{}): {}".format(i,j,pieceName))
+

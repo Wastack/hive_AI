@@ -2,6 +2,8 @@ from hivegame.hive import Hive
 from hivegame.piece import HivePiece
 from unittest import TestCase
 
+from hivegame.view import HiveView
+
 
 class TestHive(TestCase):
     """Verify the game logic"""
@@ -48,6 +50,9 @@ class TestHive(TestCase):
         self.hive.action('play', ('wG1', 'wB1', self.hive.SW))
         self.hive.place_piece(self.piece['bB1'], 'bS1', self.hive.NE)
 
+        view = HiveView(self.hive)
+        view.print_pieces_with_coords()
+
 
     def test_one_hive(self):
         self.assertFalse(self.hive._one_hive(self.piece['wS1']))
@@ -57,15 +62,15 @@ class TestHive(TestCase):
     def test_bee_moves(self):
         beePos = self.hive.locate('wQ1')  # (-1, 1)
         expected = [(-1, 0), (0, 1)]
-        self.assertEquals(expected, self.hive._bee_moves(beePos))
+        self.assertEqual(expected, self.hive._bee_moves(beePos))
 
         beePos = self.hive.locate('wS1')
         expected = []
-        self.assertEquals(expected, self.hive._bee_moves(beePos))
+        self.assertEqual(expected, self.hive._bee_moves(beePos))
 
         beePos = self.hive.locate('wS2')
         expected = [(-1, -2), (0, -1)]
-        self.assertEquals(expected, self.hive._bee_moves(beePos))
+        self.assertEqual(expected, self.hive._bee_moves(beePos))
 
 
     def test_ant_moves(self):
@@ -280,8 +285,8 @@ class TestHive(TestCase):
         self.hive.move_piece(bB1, 'bS1', self.hive.O)
         pieces = self.hive.get_pieces(cell)
 
-        self.assertEquals(cell, self.hive.locate('bB1'))
-        self.assertEquals(2, len(pieces))
+        self.assertEqual(cell, self.hive.locate('bB1'))
+        self.assertEqual(2, len(pieces))
         self.assertTrue('bB1' in pieces)
         self.assertTrue('bS1' in pieces)
 
