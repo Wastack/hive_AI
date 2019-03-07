@@ -300,7 +300,7 @@ class TestHive(TestCase):
 
 
     def test_first_move(self):
-        """Test that we can move a piece on the 3rd turn
+        r"""Test that we can move a piece on the 3rd turn
         wA1, bA1/*wA1, wG1*|wA1, bS1/*bA1, wQ1\*wA1, bA2*\\bA1, wG1|*wA1
         """
         hive = Hive()

@@ -334,7 +334,7 @@ class Hive(object):
         """
         Get possible bee_moves from cell.
 
-        A bee can move to a adjacent target position only if:
+        A bee can move to an adjacent target position only if:
         - target position is free
         - and there is a piece adjacent to both the bee and that position
         - and there is a free cell that is adjacent to both the bee and the
