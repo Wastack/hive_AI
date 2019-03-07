@@ -1,7 +1,6 @@
 from hivegame.board import HexBoard
 from hivegame.piece import HivePiece
 
-
 class HiveException(Exception):
     """Base class for exceptions."""
     pass
@@ -554,3 +553,48 @@ class Hive(object):
         return endCell in thirdStep
 
 # --- ---
+
+# Adjacency matrix of pieces
+# - rows in order: (22 pieces at the moment, i may change when adding extensions)
+#   ['wA1', 'wA2', 'wA3', 'wB1', 'wB2', 'wG1', 'wG2', 'wG3', 'wQ1', 'wS1', 'wS2',
+#    'bA1', 'bA2', 'bA3', 'bB1', 'bB2', 'bG1', 'bG2', 'bG3', 'bQ1', 'bS1', 'bS2']
+# - cells:
+#   + 0: they are not adjacent
+#
+#    2/ \3
+#   1|   |4
+#    6\ /5
+#
+#   + eg. in row of bA2 and column of bG1 there is a 3.
+#     That means bG1 is north-east from bA2.
+
+    def get_adjacency_state(self):
+        """
+        Returns a two dimensional dictionary, where both keys are the string representation of the pieces.
+        One cell represents the adjacency of the two pieces. 0 means they are not adjacent.
+        """
+        pieces = self._piece_set("w")
+        pieces.update(self._piece_set("b"))
+
+        # Initially nobody has a neighbor
+        result = {}
+        for row in pieces:
+            result[row] = {}
+            for col in pieces:
+                result[row][col] = 0
+
+        for piece, relations in result.items():
+            cell = self.locate(piece)
+
+            # the piece is not set yet
+            if not cell:
+                continue
+
+            surrounding_cells = self._occupied_surroundings(cell)
+            for neighbor_cell in surrounding_cells:
+                # get piece on the top of the neighbor cell
+                # TODO handle beetles
+                neighbor_piece = self.piecesInCell[neighbor_cell][-1]
+                relations[neighbor_piece] = self.board.get_line_dir(cell, neighbor_cell)
+        return result
+
