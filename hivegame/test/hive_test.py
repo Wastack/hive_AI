@@ -93,7 +93,6 @@ class TestHive(TestCase):
 
     def test_beetle_moves(self):
         # moving in the ground level
-        startCell = self.hive.locate('bB1')
         endCell = self.hive._poc2cell('wS2', self.hive.E)
         self.assertTrue(
             self.hive.playedPieces['bB1'].validate_move(self.hive, endCell)
@@ -107,7 +106,6 @@ class TestHive(TestCase):
         self.hive.turn = 11  # set turn to be white player turn
         self.hive.activePlayer = 0
         self.hive.place_piece(BeetlePiece('w', 2), 'wQ1', self.hive.W)
-        startCell = self.hive._poc2cell('wQ1', self.hive.W)
         endCell = self.hive._poc2cell('wQ1', self.hive.NW)
         self.assertFalse(
             self.hive.playedPieces['bB1'].validate_move(self.hive, endCell)
@@ -124,14 +122,12 @@ class TestHive(TestCase):
         self.hive.activePlayer = 1
         beetle = self.hive.playedPieces['bB1']
         self.hive.move_piece(beetle, 'bS1', self.hive.O)
-        startCell = self.hive.locate('bB1')
         endCell = self.hive._poc2cell('bS1', self.hive.W)
         self.assertTrue(
             self.hive.playedPieces['bB1'].validate_move(self.hive, endCell)
         )
 
         # moving from top to ground
-        startCell = self.hive.locate('bB1')
         endCell = self.hive._poc2cell('bS1', self.hive.SW)
         self.assertTrue(
             self.hive.playedPieces['bB1'].validate_move(self.hive, endCell)
