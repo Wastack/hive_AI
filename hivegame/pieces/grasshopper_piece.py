@@ -37,3 +37,7 @@ class GrassHopperPiece(HivePiece):
             return False
 
         return True
+
+            
+    def __repr__(self):
+        return "%s%s%s" % (self.color, "G", self.number)

@@ -29,3 +29,7 @@ class SpiderPiece(HivePiece):
         hive.piecesInCell[self.position].append(str(self))
 
         return endcell in thirdStep
+
+            
+    def __repr__(self):
+        return "%s%s%s" % (self.color, "S", self.number)

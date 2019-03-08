@@ -27,3 +27,6 @@ class AntPiece(HivePiece):
         hive.piecesInCell[self.position].append(str(self))
 
         return res
+    
+    def __repr__(self):
+        return "%s%s%s" % (self.color, "A", self.number)

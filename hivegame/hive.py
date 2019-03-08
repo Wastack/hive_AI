@@ -222,7 +222,7 @@ class Hive(object):
             return False
 
         # Tournament rule: no queen in the first move
-        if (self.turn == 1 or self.turn == 2) and piece.kind == 'Q':
+        if (self.turn == 1 or self.turn == 2) and isinstance(piece, BeePiece):
             return False
 
         # Move actions are only allowed after the queen is on the board
@@ -359,16 +359,16 @@ class Hive(object):
         """
         pieceSet = {}
         for i in range(3):
-            ant = AntPiece(color, 'A', i+1)
+            ant = AntPiece(color, i+1)
             pieceSet[str(ant)] = ant
-            grasshopper = GrassHopperPiece(color, 'G', i+1)
+            grasshopper = GrassHopperPiece(color, i+1)
             pieceSet[str(grasshopper)] = grasshopper
         for i in range(2):
-            spider = SpiderPiece(color, 'S', i+1)
+            spider = SpiderPiece(color, i+1)
             pieceSet[str(spider)] = spider
-            beetle = BeetlePiece(color, 'B', i+1)
+            beetle = BeetlePiece(color, i+1)
             pieceSet[str(beetle)] = beetle
-        queen = BeePiece(color, 'Q', 1)
+        queen = BeePiece(color, 1)
         pieceSet[str(queen)] = queen
         return pieceSet
 
