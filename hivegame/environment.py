@@ -4,8 +4,6 @@ import sys
 
 from hivegame.board import HexBoard
 from hivegame.hive import Hive, HiveException
-from hivegame.piece import HivePiece
-
 
 class Environment:
     """
@@ -58,6 +56,7 @@ class Environment:
             self.hive.action('play', (actPiece, refPiece, direction))
         except HiveException:
             return False
+        
         return True
 
     def parse_cmd(self, cmd):

@@ -1,5 +1,13 @@
 from hivegame.board import HexBoard
-from hivegame.piece import HivePiece
+
+from hivegame.pieces.ant_piece import AntPiece
+from hivegame.pieces.bee_piece import BeePiece
+from hivegame.pieces.beetle_piece import BeetlePiece
+from hivegame.pieces.grasshopper_piece import GrassHopperPiece
+from hivegame.pieces.spider_piece import SpiderPiece
+from hivegame.pieces.piece import HivePiece
+
+from pprint import pprint
 
 class HiveException(Exception):
     """Base class for exceptions."""
@@ -68,7 +76,7 @@ class Hive(object):
                 if ppiece is None:
                     raise HiveException
                 else:
-                    self.move_piece(ppiece['piece'], refPiece, direction)
+                    self.move_piece(ppiece, refPiece, direction)
 
         elif (actionType == 'non_play' and action == 'pass'):
             pass
@@ -106,8 +114,7 @@ class Hive(object):
         res = None
         pp = self.playedPieces.get(pieceName)
         if pp is not None:
-            res = pp['cell']
-
+            res = pp.position
         return res
 
 
@@ -127,14 +134,14 @@ class Hive(object):
             raise HiveException("Invalid Piece Movement")
 
         pp = self.playedPieces[pieceName]
-        startingCell = pp['cell']
+        startingCell = pp.position
 
         # remove the piece from its current location
         self.piecesInCell[startingCell].remove(pieceName)
 
         # places the piece at the target location
         self.board.resize(targetCell)
-        pp['cell'] = targetCell
+        pp.position = targetCell
         pic = self.piecesInCell.setdefault(targetCell, [])
         pic.append(str(piece))
 
@@ -161,7 +168,8 @@ class Hive(object):
 
         # places the piece at the target location
         self.board.resize(targetCell)
-        self.playedPieces[str(piece)] = {'piece': piece, 'cell': targetCell}
+        self.playedPieces[str(piece)] = piece
+        piece.position = targetCell
         pic = self.piecesInCell.setdefault(targetCell, [])
         pic.append(str(piece))
 
@@ -180,7 +188,7 @@ class Hive(object):
         queen = self.playedPieces.get('wQ1')
         if(
             queen is not None and
-            len(self._occupied_surroundings(queen['cell'])) == 6
+            len(self.occupied_surroundings(queen.position)) == 6
         ):
             black = True
             res = self.BLACK_WIN
@@ -189,7 +197,7 @@ class Hive(object):
         queen = self.playedPieces.get('bQ1')
         if(
             queen is not None and
-            len(self._occupied_surroundings(queen['cell'])) == 6
+            len(self.occupied_surroundings(queen.position)) == 6
         ):
             white = True
             res = self.WHITE_WIN
@@ -255,18 +263,7 @@ class Hive(object):
             print("break _one_hive rule")
             return False
 
-        validate_fun_map = {
-            'A': self._valid_ant_move,
-            'B': self._valid_beetle_move,
-            'G': self._valid_grasshopper_move,
-            'Q': self._valid_queen_move,
-            'S': self._valid_spider_move
-        }
-
-        return validate_fun_map[moving_piece.kind](
-            pp['piece'], pp['cell'], targetCell
-        )
-
+        return moving_piece.validate_move(self, targetCell)
 
     def _validate_place_piece(self, piece, targetCell):
         """
@@ -276,7 +273,7 @@ class Hive(object):
         """
 
         # targetCell must be free
-        if not self._is_cell_free(targetCell):
+        if not self.is_cell_free(targetCell):
             return False
 
         # the piece was already played
@@ -293,30 +290,30 @@ class Hive(object):
 
         playedColor = piece.color
 
-        occupiedCells = self._occupied_surroundings(targetCell)
+        occupiedCells = self.occupied_surroundings(targetCell)
         visiblePieces = [
             self.piecesInCell[oCell][-1] for oCell in occupiedCells
         ]
         res = True
         for pName in visiblePieces:
-            if self.playedPieces[pName]['piece'].color != playedColor:
+            if self.playedPieces[pName].color != playedColor:
                 res = False
                 break
 
         return res
 
 
-    def _is_cell_free(self, cell):
+    def is_cell_free(self, cell):
         pic = self.piecesInCell.get(cell, [])
         return len(pic) == 0
 
 
-    def _occupied_surroundings(self, cell):
+    def occupied_surroundings(self, cell):
         """
         Returns a list of surrounding cells that contain a piece.
         """
         surroundings = self.board.get_surrounding(cell)
-        return [c for c in surroundings if not self._is_cell_free(c)]
+        return [c for c in surroundings if not self.is_cell_free(c)]
 
 
     # TODO: rename/remove this function.
@@ -329,7 +326,7 @@ class Hive(object):
         return self.board.get_dir_cell(refCell, pointOfContact)
 
 
-    def _bee_moves(self, cell):
+    def bee_moves(self, cell):
         """
         Get possible bee_moves from cell.
 
@@ -344,13 +341,13 @@ class Hive(object):
         for i in range(6):
             target = surroundings[i-1]
             # is the target cell free?
-            if not self._is_cell_free(target):
+            if not self.is_cell_free(target):
                 continue
             # does it have an adjacent free and an adjancent occupied cell that
             # is also adjacent to the starting cell?
             if (
-                self._is_cell_free(surroundings[i])
-                != self._is_cell_free(surroundings[i-2])
+                self.is_cell_free(surroundings[i])
+                != self.is_cell_free(surroundings[i-2])
             ):
                 available_moves.append(target)
         return available_moves
@@ -362,16 +359,16 @@ class Hive(object):
         """
         pieceSet = {}
         for i in range(3):
-            ant = HivePiece(color, 'A', i+1)
+            ant = AntPiece(color, 'A', i+1)
             pieceSet[str(ant)] = ant
-            grasshopper = HivePiece(color, 'G', i+1)
+            grasshopper = GrassHopperPiece(color, 'G', i+1)
             pieceSet[str(grasshopper)] = grasshopper
         for i in range(2):
-            spider = HivePiece(color, 'S', i+1)
+            spider = SpiderPiece(color, 'S', i+1)
             pieceSet[str(spider)] = spider
-            beetle = HivePiece(color, 'B', i+1)
+            beetle = BeetlePiece(color, 'B', i+1)
             pieceSet[str(beetle)] = beetle
-        queen = HivePiece(color, 'Q', 1)
+        queen = BeePiece(color, 'Q', 1)
         pieceSet[str(queen)] = queen
         return pieceSet
 
@@ -399,7 +396,7 @@ class Hive(object):
 
         # Get all pieces that are in contact with the removed one and try to
         # reach all of them from one of them.
-        occupied = self._occupied_surroundings(originalPos)
+        occupied = self.occupied_surroundings(originalPos)
         visited = set()
         toExplore = set([occupied[0]])
         toReach = set(occupied[1:])
@@ -408,7 +405,7 @@ class Hive(object):
         while len(toExplore) > 0:
             found = []
             for cell in toExplore:
-                found += self._occupied_surroundings(cell)
+                found += self.occupied_surroundings(cell)
                 visited.add(cell)
             toExplore = set(found) - visited
             if toReach.issubset(visited):
@@ -419,147 +416,13 @@ class Hive(object):
         self.piecesInCell[originalPos] = pic
         return res
 
-# --- ---
-
-# +++                +++
-# +++ Movement rules +++
-# +++                +++
-    def _valid_ant_move(self, ant, startCell, endCell):
-        # check if ant has no piece on top blocking the move
-        if self.piecesInCell[startCell][-1] != str(ant):
-            return False
-        # temporarily remove ant
-        self.piecesInCell[startCell].remove(str(ant))
-
-        toExplore = set([startCell])
-        visited = set([startCell])
-        res = False
-
-        while len(toExplore) > 0:
-            found = set()
-            for c in toExplore:
-                found.update(self._bee_moves(c))
-            found.difference_update(visited)
-            # have we found the endCell?
-            if endCell in found:
-                res = True
-                break
-
-            visited.update(found)
-            toExplore = found
-
-        # restore ant to it's original position
-        self.piecesInCell[startCell].append(str(ant))
-
-        return res
-
-
-    def _valid_beetle_move(self, beetle, startCell, endCell):
-        # check if beetle has no piece on top blocking the move
-        if not self.piecesInCell[startCell][-1] == str(beetle):
-            return False
-        # temporarily remove beetle
-        self.piecesInCell[startCell].remove(str(beetle))
-
-        res = False
-        # are we on top of the hive?
-        if len(self.piecesInCell[startCell]) > 0:
-            res = endCell in self.board.get_surrounding(startCell)
-        else:
-            res = endCell in (
-                self._bee_moves(startCell) +
-                self._occupied_surroundings(startCell)
-            )
-
-        # restore beetle to it's original position
-        self.piecesInCell[startCell].append(str(beetle))
-
-        return res
-
-
-    def _valid_grasshopper_move(self, grasshopper, startCell, endCell):
-        # TODO: add function to HexBoard that find cells in a straight line
-
-        # is the move in only one direction?
-        (sx, sy) = startCell
-        (ex, ey) = endCell
-        dx = ex - sx
-        dy = ey - sy
-
-        # horizontal jump
-        if dy == 0:
-            # must jump at least over one piece
-            if abs(dx) <= 1:
-                return False
-        # diagonal jump (dy != 0)
-        else:
-            # must jump at least over one piece
-            if abs(dy) <= 1:
-                return False
-
-        moveDir = self.board.get_line_dir(startCell, endCell)
-        # must move in a straight line
-        if moveDir is None or moveDir == 0:
-            return False
-
-        # are all in-between cells occupied?
-        c = self.board.get_dir_cell(startCell, moveDir)
-        while c != endCell:
-            if self._is_cell_free(c):
-                return False
-            c = self.board.get_dir_cell(c, moveDir)
-
-        # is the endCell free?
-        if not self._is_cell_free(endCell):
-            return False
-
-        return True
-
-
-    def _valid_queen_move(self, queen, startCell, endCell):
-        return endCell in self._bee_moves(startCell)
-
-
-    def _valid_spider_move(self, spider, startCell, endCell):
-        # check if spider has no piece on top blocking the move
-        if not self.piecesInCell[startCell][-1] == str(spider):
-            return False
-        # temporarily remove spider
-        self.piecesInCell[startCell].remove(str(spider))
-
-
-        visited = set()
-        firstStep = set()
-        secondStep = set()
-        thirdStep = set()
-
-        visited.add(startCell)
-
-        firstStep.update(set(self._bee_moves(startCell)))
-        visited.update(firstStep)
-
-        for c in firstStep:
-            secondStep.update(set(self._bee_moves(c)))
-        secondStep.difference_update(visited)
-        visited.update(secondStep)
-
-        for c in secondStep:
-            thirdStep.update(set(self._bee_moves(c)))
-        thirdStep.difference_update(visited)
-
-        # restore spider to it's original position
-        self.piecesInCell[startCell].append(str(spider))
-
-        return endCell in thirdStep
-
-# --- ---
-
 # Adjacency matrix of pieces
 # - rows in order: (22 pieces at the moment, i may change when adding extensions)
 #   ['wA1', 'wA2', 'wA3', 'wB1', 'wB2', 'wG1', 'wG2', 'wG3', 'wQ1', 'wS1', 'wS2',
 #    'bA1', 'bA2', 'bA3', 'bB1', 'bB2', 'bG1', 'bG2', 'bG3', 'bQ1', 'bS1', 'bS2']
 # - cells:
 #   + 0: they are not adjacent
+#   + 7: is lower, 8: is upper
 #
 #    2/ \3
 #   1|   |4
@@ -590,11 +453,41 @@ class Hive(object):
             if not cell:
                 continue
 
-            surrounding_cells = self._occupied_surroundings(cell)
+            # check if there are more pieces at the same cell (beetles)
+            pieces_in_cell = self.piecesInCell[cell]
+            if len(pieces_in_cell) > 1:
+                position = pieces_in_cell.index(piece)
+                for lower_piece in pieces_in_cell[:position]:
+                    relations[lower_piece] = self.board.HX_LOW
+                if position + 1 < len(pieces_in_cell):
+                    for upper_piece in pieces_in_cell[position + 1:]:
+                        relations[upper_piece] = self.board.HX_UP
+
+            surrounding_cells = self.occupied_surroundings(cell)
             for neighbor_cell in surrounding_cells:
                 # get piece on the top of the neighbor cell
-                # TODO handle beetles
                 neighbor_piece = self.piecesInCell[neighbor_cell][-1]
                 relations[neighbor_piece] = self.board.get_line_dir(cell, neighbor_cell)
         return result
 
+    def adjacent_pretty_print(self, matrix):
+        #pprint(self.hive.get_adjacency_state())
+        print("DEBUG")
+        adja_state = self.get_adjacency_state()
+        for key, row in adja_state.items():
+            print(key + ":", end=" ")
+            pprint(row.values())
+        print("----------------------------")
+    
+    def get_possible_actions(self):
+        result = []
+        for piece in self.playedPieces:
+            result += self._get_possible_action(piece)
+        return result
+
+    def _get_possible_action(self, piece):
+        """
+        Returns every possible action in a list which can be done
+        with the piece given as parameter.
+        """
+        raise NotImplementedError

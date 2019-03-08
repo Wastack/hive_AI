@@ -144,6 +144,8 @@ class HexBoard(Board):
     HX_E = 4   # east
     HX_SE = 5  # south-east
     HX_SW = 6  # south-west
+    HX_LOW = 7 # lower
+    HX_UP = 8  # upper
 
 
     def __init__(self):
@@ -285,6 +287,29 @@ class HexBoard(Board):
         else:
             # must move in a diagonal with slope = 2
             nx = (abs(dy) + (1 - p)) // 2
+
+            # TODO probably they should be placed out as a constant
+            possible_adjacent_even_delta = {
+                (-1,-1): self.HX_NW, 
+                (0,-1): self.HX_NE,
+                (0,1): self.HX_SE,
+                (-1,1): self.HX_SW
+            }
+
+            possible_adjacent_odd_delta = {
+                (0,-1): self.HX_NW, 
+                (1,-1): self.HX_NE,
+                (1,1): self.HX_SE,
+                (0,1): self.HX_SW
+            }
+
+            # adjacent
+            if abs(dy) == 1:
+                if p == 0:
+                    return possible_adjacent_even_delta.get((dx,dy))
+                else:
+                    return possible_adjacent_odd_delta.get((dx,dy))
+
             if abs(dx) != abs(nx):
                 return None
 

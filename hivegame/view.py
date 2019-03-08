@@ -42,6 +42,7 @@ class HiveView(object):
         return res
     
     def print_pieces_with_coords(self):
+        """Print coordinates of pieces for debug purposes"""
         firstCol, firstRow, lastCol, lastRow = self.game.get_board_boundaries()
         for i in range(firstRow, lastRow + 1):
             for j in range(firstCol, lastCol + 1):

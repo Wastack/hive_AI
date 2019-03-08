@@ -4,7 +4,6 @@ import time
 import sys
 from hivegame.board import HexBoard
 from hivegame.hive import Hive, HiveException
-from hivegame.piece import HivePiece
 from hivegame.view import HiveView
 from hivegame.environment import Environment
 
