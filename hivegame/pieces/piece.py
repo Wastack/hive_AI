@@ -2,6 +2,7 @@
 # Classes representing playing pieces
 
 import abc
+import functools
 
 class HivePiece(metaclass=abc.ABCMeta):
     """Representation of Playing Piece"""
@@ -20,10 +21,18 @@ class HivePiece(metaclass=abc.ABCMeta):
         """
         Check if the piece is blocked by a beetle. Returns True if blocked
         """
-        if hive.piecesInCell[self.position][-1] == str(self):
+        if hive.piecesInCell[self.position][-1] == self:
             return False
         return True
+
+    @abc.abstractproperty
+    def kind(self):
+        return "?"
     
     @abc.abstractmethod
     def validate_move(self, hive, endcell):
         return
+
+    @abc.abstractmethod
+    def available_moves(self, hive):
+        return []

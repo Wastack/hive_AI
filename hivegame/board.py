@@ -106,6 +106,11 @@ class Board(object):
         lastCol = len(self.board[0]) + firstCol - 1
         lastRow = len(self.board) + firstRow - 1
         return firstCol, firstRow, lastCol, lastRow
+    
+    def valid_cell(self, cell):
+        (x, y) = cell
+        firstCol, firstRow, lastCol, lastRow = self.get_boundaries()
+        return firstCol <= x <= lastCol and firstRow <= y <= lastRow 
 
 
     def get_surrounding(self, x_y):

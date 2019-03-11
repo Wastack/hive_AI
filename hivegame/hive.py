@@ -102,8 +102,8 @@ class Hive(object):
 
 
     def get_pieces(self, cell):
-        """return the pieces that are in the cell (x, y)."""
-        return self.piecesInCell.get(cell, [])
+        """return the names of pieces that are in the cell (x, y)."""
+        return [str(piece) for piece in self.piecesInCell.get(cell, [])]
 
 
     def locate(self, pieceName):
@@ -116,37 +116,63 @@ class Hive(object):
         if pp is not None:
             res = pp.position
         return res
+    
+    def action_piece_to(self, piece, target_cell):
+        if(not piece.position or not piece.position[0]):
+            self.place_piece_to(piece, target_cell)
+            del self.unplayedPieces[self.get_active_player()][str(piece)]
+        else:
+            self.move_piece_to(piece, target_cell)
+        self.turn += 1
+        self.activePlayer ^= 1  # switch active player
 
+    def move_piece_to(self, piece, target_cell):
+        # is the move valid
+        if not self._validate_turn(piece, 'move'):
+            raise HiveException("Invalid Piece Placement")
+
+        if not self._validate_move_piece(piece, target_cell):
+            raise HiveException("Invalid Piece Movement")
+
+        pp = self.playedPieces[str(piece)]
+        startingCell = pp.position
+
+        # remove the piece from its current location
+        self.piecesInCell[startingCell].remove(piece)
+
+        # places the piece at the target location
+        self.board.resize(target_cell)
+        pp.position = target_cell
+        pic = self.piecesInCell.setdefault(target_cell, [])
+        pic.append(piece)
+
+        return target_cell
 
     def move_piece(self, piece, refPiece, refDirection):
         """
         Moves a piece on the playing board.
         """
 
-        pieceName = str(piece)
-        targetCell = self._poc2cell(refPiece, refDirection)
+        targetCell = self.poc2cell(refPiece, refDirection)
+        self.move_piece_to(piece, targetCell)
 
-        # is the move valid
-        if not self._validate_turn(piece, 'move'):
+        
+    def place_piece_to(self, piece, to_cell):
+        # is the placement valid
+        if not self._validate_turn(piece, 'place'):
             raise HiveException("Invalid Piece Placement")
 
-        if not self._validate_move_piece(piece, targetCell):
-            raise HiveException("Invalid Piece Movement")
-
-        pp = self.playedPieces[pieceName]
-        startingCell = pp.position
-
-        # remove the piece from its current location
-        self.piecesInCell[startingCell].remove(pieceName)
+        if not self._validate_place_piece(piece, to_cell):
+            raise HiveException("Invalid Piece Placement")
 
         # places the piece at the target location
-        self.board.resize(targetCell)
-        pp.position = targetCell
-        pic = self.piecesInCell.setdefault(targetCell, [])
-        pic.append(str(piece))
+        self.board.resize(to_cell)
+        self.playedPieces[str(piece)] = piece
+        piece.position = to_cell
+        pic = self.piecesInCell.setdefault(to_cell, [])
+        pic.append(piece)
 
-        return targetCell
-
+        return to_cell
 
     def place_piece(self, piece, refPieceName=None, refDirection=None):
         """
@@ -157,23 +183,8 @@ class Hive(object):
         if refPieceName is None and self.turn == 1:
             targetCell = (0, 0)
         else:
-            targetCell = self._poc2cell(refPieceName, refDirection)
-
-        # is the placement valid
-        if not self._validate_turn(piece, 'place'):
-            raise HiveException("Invalid Piece Placement")
-
-        if not self._validate_place_piece(piece, targetCell):
-            raise HiveException("Invalid Piece Placement")
-
-        # places the piece at the target location
-        self.board.resize(targetCell)
-        self.playedPieces[str(piece)] = piece
-        piece.position = targetCell
-        pic = self.piecesInCell.setdefault(targetCell, [])
-        pic.append(str(piece))
-
-        return targetCell
+            targetCell = self.poc2cell(refPieceName, refDirection)
+        return self.place_piece_to(piece, targetCell)
 
 
     def check_victory(self):
@@ -208,22 +219,12 @@ class Hive(object):
 
         return res
 
-
-    def _validate_turn(self, piece, action):
-        """
-        Verifies if the action is valid on this turn.
-        """
-        whiteTurn = self.activePlayer == 0
-        blackTurn = self.activePlayer == 1
-        if whiteTurn and piece.color != 'w':
-            return False
-
-        if blackTurn and piece.color != 'b':
-            return False
-
+    def _validate_queen_rules(self, piece, action):
         # Tournament rule: no queen in the first move
         if (self.turn == 1 or self.turn == 2) and isinstance(piece, BeePiece):
             return False
+        whiteTurn = self.activePlayer == 0
+        blackTurn = self.activePlayer == 1
 
         # Move actions are only allowed after the queen is on the board
         if action == 'move':
@@ -245,6 +246,24 @@ class Hive(object):
                     return False
         return True
 
+    def _validate_turn(self, piece, action):
+        """
+        Verifies if the action is valid on this turn.
+        """
+        whiteTurn = self.activePlayer == 0
+        blackTurn = self.activePlayer == 1
+        if whiteTurn and piece.color != 'w':
+            return False
+
+        if blackTurn and piece.color != 'b':
+            return False
+
+
+        if not self._validate_queen_rules(piece, action):
+            return False
+        
+        return True
+
 
     def _validate_move_piece(self, moving_piece, targetCell):
         # check if the piece has been placed
@@ -254,7 +273,7 @@ class Hive(object):
             return False
 
         # check if the move it's to a different targetCell
-        if str(moving_piece) in self.piecesInCell.get(targetCell, []):
+        if moving_piece in self.piecesInCell.get(targetCell, []):
             print("moving to the same place")
             return False
 
@@ -295,8 +314,8 @@ class Hive(object):
             self.piecesInCell[oCell][-1] for oCell in occupiedCells
         ]
         res = True
-        for pName in visiblePieces:
-            if self.playedPieces[pName].color != playedColor:
+        for piece in visiblePieces:
+            if self.playedPieces[str(piece)].color != playedColor:
                 res = False
                 break
 
@@ -316,8 +335,7 @@ class Hive(object):
         return [c for c in surroundings if not self.is_cell_free(c)]
 
 
-    # TODO: rename/remove this function.
-    def _poc2cell(self, refPiece, pointOfContact):
+    def poc2cell(self, refPiece, pointOfContact):
         """
         Translates a relative position (piece, point of contact) into
         a board cell (x, y).
@@ -424,7 +442,7 @@ class Hive(object):
 #   + 0: they are not adjacent
 #   + 7: is lower, 8: is upper
 #
-#    2/ \3
+#    2/ \3_move_piece_to
 #   1|   |4
 #    6\ /5
 #
@@ -469,25 +487,69 @@ class Hive(object):
                 neighbor_piece = self.piecesInCell[neighbor_cell][-1]
                 relations[neighbor_piece] = self.board.get_line_dir(cell, neighbor_cell)
         return result
-
-    def adjacent_pretty_print(self, matrix):
-        #pprint(self.hive.get_adjacency_state())
-        print("DEBUG")
-        adja_state = self.get_adjacency_state()
-        for key, row in adja_state.items():
-            print(key + ":", end=" ")
-            pprint(row.values())
-        print("----------------------------")
     
-    def get_possible_actions(self):
-        result = []
-        for piece in self.playedPieces:
-            result += self._get_possible_action(piece)
+    def get_all_possible_actions(self):
+        result = set()
+        # TODO order of actions can be important here
+
+        # choose the current players played pieces
+        turn = "w" if self.activePlayer == 0 else "b"
+        my_pieces = [piece for piece in self.playedPieces.values() if piece.color == turn]
+
+        if not my_pieces:
+            # no piece of that player has been played yet
+            if not self.piecesInCell.get((0,0)):
+                return [(piece, (0, 0)) for piece in self.unplayedPieces[turn].values()]
+            else:
+                for sur in self.board.get_surrounding((0,0)):
+                    result.update([(piece, sur) for piece in self.unplayedPieces[turn].values()]) 
+                return result
+
+        # pieces which can be put down from hand
+        pieces_to_put_down = []
+        # cells where the player van put an unplayed piece to
+        available_cells = set()
+
+        if turn + 'Q1' in self.playedPieces:
+            # Actions of pieces already on board
+            for piece in my_pieces:
+                if not self._one_hive(piece):
+                    continue
+                end_cells = self._get_possible_end_cells(piece)
+                result.update([(piece, end_cell) for end_cell in end_cells if end_cell != piece.position])
+
+        print("DEBUG: Unplayed pieces: ")
+        print(self.unplayedPieces[turn])
+        if self.turn >= 7 and turn + 'Q1' not in self.playedPieces:
+            pieces_to_put_down.append(self.unplayedPieces[turn][turn + 'Q1'])
+        else:
+            pieces_to_put_down += self.unplayedPieces[turn].values()
+        
+        # tournament rule
+        if 1 <= self.turn <= 2:
+            pieces_to_put_down.remove(self.unplayedPieces[turn][turn + 'Q1'])
+
+        # get all boundary free cells
+        for piece in my_pieces:
+            surroundings = self.board.get_surrounding(piece.position)
+            available_cells.update([sur for sur in surroundings if self.is_cell_free(sur)])
+        # Keep only those which have no opposite side neighbors
+        cells_to_remove = set()
+        for cell in available_cells:
+            surroundings = self.board.get_surrounding(cell)
+            if not all(self.is_cell_free(sur) or self.piecesInCell.get(sur)[-1].color == turn for sur in surroundings):
+                cells_to_remove.add(cell)
+        available_cells.difference_update(cells_to_remove)
+
+        # You can place all of your pieces there
+        for piece in pieces_to_put_down:
+            result.update([(piece, end_cell) for end_cell in available_cells])
         return result
 
-    def _get_possible_action(self, piece):
+    def _get_possible_end_cells(self, piece):
         """
-        Returns every possible action in a list which can be done
+        Returns every possible end cells
+         in a list which can be done
         with the piece given as parameter.
         """
-        raise NotImplementedError
+        return piece.available_moves(self)

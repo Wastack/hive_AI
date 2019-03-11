@@ -2,9 +2,13 @@ from hivegame.pieces.piece import HivePiece
 
 class SpiderPiece(HivePiece):
     def validate_move(self, hive, endcell):
-        self.check_blocked(hive)
+        return endcell in self.available_moves(hive)
+    
+    def available_moves(self, hive):
+        if self.check_blocked(hive):
+            return []
         # temporarily remove spider
-        hive.piecesInCell[self.position].remove(str(self))
+        hive.piecesInCell[self.position].remove(self)
 
         visited = set()
         firstStep = set()
@@ -26,10 +30,12 @@ class SpiderPiece(HivePiece):
         thirdStep.difference_update(visited)
 
         # restore spider to it's original position
-        hive.piecesInCell[self.position].append(str(self))
+        hive.piecesInCell[self.position].append(self)
 
-        return endcell in thirdStep
-
+        return thirdStep
             
+    def kind(self):
+        return "S"
+
     def __repr__(self):
         return "%s%s%s" % (self.color, "S", self.number)
