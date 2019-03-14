@@ -1,8 +1,8 @@
 import random
 
 class RandomAI:
-    def step(self, hive):
-        actions = hive.get_all_possible_actions()
+    def step(self, environment):
+        actions = environment.get_all_possible_actions()
         print("DEBUG: length of action space: {}".format(len(actions)))
         if(not actions):
             return None

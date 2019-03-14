@@ -25,7 +25,7 @@ class HiveShellClient(object):
 
         while self.env.check_victory() == Hive.UNFINISHED:
             if self.env.current_player() == "b":
-                response = ai1.step(self.env.hive)
+                response = ai1.step(self.env)
                 if not response:
                     self.env.exec_cmd("pass")
                     print("DEBUG: AI passed")
@@ -58,7 +58,7 @@ class HiveShellClient(object):
         else:
             print("invalid play!")
         return True
-
+    
 
 def main():
 

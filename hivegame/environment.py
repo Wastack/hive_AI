@@ -105,3 +105,6 @@ class Environment:
     
     def get_turn_count(self):
         return self.hive.turn
+    
+    def get_all_possible_actions(self):
+        return self.hive.get_all_possible_actions()

@@ -509,10 +509,10 @@ class Hive(object):
         if not my_pieces:
             # no piece of that player has been played yet
             if not self.piecesInCell.get((0,0)):
-                return [(piece, (0, 0)) for piece in self.unplayedPieces[turn].values()]
+                return [(piece, (0, 0)) for piece in self.unplayedPieces[turn].values() if not isinstance(piece, BeePiece)]
             else:
                 for sur in self.board.get_surrounding((0,0)):
-                    result.update([(piece, sur) for piece in self.unplayedPieces[turn].values()]) 
+                    result.update([(piece, sur) for piece in self.unplayedPieces[turn].values() if not isinstance(piece, BeePiece)]) 
                 return result
 
         # pieces which can be put down from hand
@@ -533,10 +533,6 @@ class Hive(object):
             pieces_to_put_down.append(self.unplayedPieces[turn][turn + 'Q1'])
         else:
             pieces_to_put_down += self.unplayedPieces[turn].values()
-        
-        # tournament rule
-        if 1 <= self.turn <= 2:
-            pieces_to_put_down.remove(self.unplayedPieces[turn][turn + 'Q1'])
 
         # get all boundary free cells
         for piece in my_pieces:
