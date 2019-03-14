@@ -114,15 +114,25 @@ class Hive(object):
         return res
     
     def action_piece_to(self, piece, target_cell):
+        """
+        Performs an action with the given piece to the given target cell.
+        If the place is already on board it meands a movement. Otherwise it
+        means a piece placement.
+        """
         if(piece.position is None or piece.position[0] is None):
-            self.place_piece_to(piece, target_cell)
+            self._place_piece_to(piece, target_cell)
             del self.unplayedPieces[self.get_active_player()][str(piece)]
         else:
-            self.move_piece_to(piece, target_cell)
+            self._move_piece_to(piece, target_cell)
         self.turn += 1
         self.activePlayer ^= 1  # switch active player
 
-    def move_piece_to(self, piece, target_cell):
+    def _move_piece_to(self, piece, target_cell):
+        """
+        Moves the given piece to the target cell.
+        It does start a complete action, since it does
+        not increment the turn value.
+        """
         # is the move valid
         if not self._validate_turn(piece, 'move'):
             raise HiveException("Invalid Piece Placement")
@@ -146,14 +156,19 @@ class Hive(object):
 
     def move_piece_without_action(self, piece, refPiece, refDirection):
         """
-        Moves a piece on the playing board.
+        Moves a piece on the playing board without performing an action.
         """
 
         targetCell = self.poc2cell(refPiece, refDirection)
-        self.move_piece_to(piece, targetCell)
+        self._move_piece_to(piece, targetCell)
 
         
-    def place_piece_to(self, piece, to_cell):
+    def _place_piece_to(self, piece, to_cell):
+        """
+        Places a piece to the given target cell.
+        It does start a complete action, since it does
+        not increment the turn value.
+        """
         # is the placement valid
         if not self._validate_turn(piece, 'place'):
             raise HiveException("Invalid Piece Placement")
@@ -172,7 +187,7 @@ class Hive(object):
 
     def place_piece_without_action(self, piece, refPieceName=None, refDirection=None):
         """
-        Place a piece on the playing board.
+        Place a piece on the playing board without performing an action.
         """
 
         # if it's the first piece we put it at cell (0, 0)
@@ -180,7 +195,7 @@ class Hive(object):
             targetCell = (0, 0)
         else:
             targetCell = self.poc2cell(refPieceName, refDirection)
-        return self.place_piece_to(piece, targetCell)
+        return self._place_piece_to(piece, targetCell)
 
 
     def check_victory(self):
@@ -216,6 +231,9 @@ class Hive(object):
         return res
 
     def _validate_queen_rules(self, piece, action):
+        """
+        Validate rules related to the queen.
+        """
         # Tournament rule: no queen in the first move
         if (self.turn == 1 or self.turn == 2) and isinstance(piece, BeePiece):
             return False
@@ -386,10 +404,6 @@ class Hive(object):
         pieceSet[str(queen)] = queen
         return pieceSet
 
-
-# +++               +++
-# +++ One Hive rule +++
-# +++               +++
     def _one_hive(self, piece):
         """
         Check if removing a piece doesn't break the one hive rule.
@@ -438,7 +452,7 @@ class Hive(object):
 #   + 0: they are not adjacent
 #   + 7: is lower, 8: is upper
 #
-#    2/ \3_move_piece_to
+#    2/ \3
 #   1|   |4
 #    6\ /5
 #
@@ -514,7 +528,6 @@ class Hive(object):
                 end_cells = self._get_possible_end_cells(piece)
                 result.update([(piece, end_cell) for end_cell in end_cells if end_cell != piece.position])
 
-        print("DEBUG: Unplayed pieces: ")
         print(self.unplayedPieces[turn])
         if self.turn >= 7 and turn + 'Q1' not in self.playedPieces:
             pieces_to_put_down.append(self.unplayedPieces[turn][turn + 'Q1'])

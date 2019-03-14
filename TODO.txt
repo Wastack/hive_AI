@@ -1,11 +1,9 @@
 TODO
 ====
 
-- Rename Hive.poc2cell
+- Add logging functionality
 
-- Keep track of the pieces available to each player
-
-- Testes for check_victory()
+- refactor: move environment logic from hive to environment
 
 - Tests for Queen in the first 4 moves rule
 
