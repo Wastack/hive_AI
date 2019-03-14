@@ -48,7 +48,7 @@ class TestHive(TestCase):
         self.hive.action('play', ('wB1', 'wS2', self.hive.W))
         self.hive.action('play', ('bA1', 'bQ1', self.hive.SW))
         self.hive.action('play', ('wG1', 'wB1', self.hive.SW))
-        self.hive.place_piece(BeetlePiece('b', 1), 'bS1', self.hive.NE)
+        self.hive.place_piece_without_action(BeetlePiece('b', 1), 'bS1', self.hive.NE)
 
 
     def test_one_hive(self):
@@ -115,7 +115,7 @@ class TestHive(TestCase):
 
         self.hive.turn = 11  # set turn to be white player turn
         self.hive.activePlayer = 0
-        self.hive.place_piece(BeetlePiece('w', 2), 'wQ1', self.hive.W)
+        self.hive.place_piece_without_action(BeetlePiece('w', 2), 'wQ1', self.hive.W)
         endCell = self.hive.poc2cell('wQ1', self.hive.NW)
         self.assertFalse(
             self.hive.playedPieces['bB1'].validate_move(self.hive, endCell)
@@ -131,7 +131,7 @@ class TestHive(TestCase):
         self.hive.turn = 12  # set turn to be black player turn
         self.hive.activePlayer = 1
         beetle = self.hive.playedPieces['bB1']
-        self.hive.move_piece(beetle, 'bS1', self.hive.O)
+        self.hive.move_piece_without_action(beetle, 'bS1', self.hive.O)
         endCell = self.hive.poc2cell('bS1', self.hive.W)
         self.assertTrue(
             self.hive.playedPieces['bB1'].validate_move(self.hive, endCell)
@@ -180,10 +180,10 @@ class TestHive(TestCase):
         # moving out of a surrounding situation
         self.hive.turn = 11  # set turn to be white player turn
         self.hive.activePlayer = 0
-        self.hive.move_piece(self.hive.playedPieces['wQ1'], 'wS1', self.hive.W)
+        self.hive.move_piece_without_action(self.hive.playedPieces['wQ1'], 'wS1', self.hive.W)
         self.hive.turn = 12  # set turn to be black player turn
         self.hive.activePlayer = 1
-        self.hive.move_piece(self.hive.playedPieces['bA1'], 'wG1', self.hive.SE)
+        self.hive.move_piece_without_action(self.hive.playedPieces['bA1'], 'wG1', self.hive.SE)
 
         endCell = self.hive.poc2cell('wS1', self.hive.SW)
         self.assertFalse(
@@ -192,7 +192,7 @@ class TestHive(TestCase):
 
 
     def test_spider_moves(self):
-        self.hive.place_piece(SpiderPiece('b', 2), 'bA1', self.hive.SE)
+        self.hive.place_piece_without_action(SpiderPiece('b', 2), 'bA1', self.hive.SE)
 
         endCell = self.hive.poc2cell('wQ1', self.hive.E)
         self.assertFalse(
@@ -222,7 +222,7 @@ class TestHive(TestCase):
 
     def test_spider_moves2(self):
         spider = SpiderPiece('b', 2)
-        self.hive.place_piece(spider, 'bB1', self.hive.NE)
+        self.hive.place_piece_without_action(spider, 'bB1', self.hive.NE)
 
         endCell = self.hive.poc2cell('wS2', self.hive.NE)
         self.assertTrue(
@@ -257,7 +257,7 @@ class TestHive(TestCase):
         # move beetle over spider
         bB1 = self.hive.playedPieces['bB1']
         cell = self.hive.locate('bS1')
-        self.hive.move_piece(bB1, 'bS1', self.hive.O)
+        self.hive.move_piece_without_action(bB1, 'bS1', self.hive.O)
         pieces = self.hive.get_pieces(cell)
 
         self.assertEqual(cell, self.hive.locate('bB1'))

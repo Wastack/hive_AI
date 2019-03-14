@@ -61,29 +61,25 @@ class Hive(object):
         """
         if (actionType == 'play'):
             if (isinstance(action, tuple)):
-                (actPiece, refPiece, direction) = action
+                (actPieceName, refPieceName, direction) = action
             elif (isinstance(action, str)):
-                (actPiece, refPiece, direction) = (action, None, None)
+                (actPieceName, refPieceName, direction) = (action, None, None)
                 
             player = self.get_active_player()
-            piece = self.unplayedPieces[player].get(actPiece, None)
-            if piece is not None:
-                self.place_piece(piece, refPiece, direction)
-                # Remove piece from the unplayed set
-                del self.unplayedPieces[player][actPiece]
+
+            if refPieceName is None and self.turn == 1:
+                targetCell = (0, 0)
             else:
-                ppiece = self.playedPieces.get(actPiece, None)
-                if ppiece is None:
-                    raise HiveException
-                else:
-                    self.move_piece(ppiece, refPiece, direction)
+                targetCell = self.poc2cell(refPieceName, direction)
+
+            piece = self.unplayedPieces[player].get(actPieceName, self.playedPieces.get(actPieceName, None))
+            if piece is None:
+                raise HiveException
+            self.action_piece_to(piece, targetCell)
 
         elif (actionType == 'non_play' and action == 'pass'):
             pass
 
-        # perform turn increment - TODO:if succesful
-        self.turn += 1
-        self.activePlayer ^= 1  # switch active player
         return True
 
     def get_unplayed_pieces(self, player):
@@ -118,7 +114,7 @@ class Hive(object):
         return res
     
     def action_piece_to(self, piece, target_cell):
-        if(not piece.position or not piece.position[0]):
+        if(piece.position is None or piece.position[0] is None):
             self.place_piece_to(piece, target_cell)
             del self.unplayedPieces[self.get_active_player()][str(piece)]
         else:
@@ -148,7 +144,7 @@ class Hive(object):
 
         return target_cell
 
-    def move_piece(self, piece, refPiece, refDirection):
+    def move_piece_without_action(self, piece, refPiece, refDirection):
         """
         Moves a piece on the playing board.
         """
@@ -174,7 +170,7 @@ class Hive(object):
 
         return to_cell
 
-    def place_piece(self, piece, refPieceName=None, refDirection=None):
+    def place_piece_without_action(self, piece, refPieceName=None, refDirection=None):
         """
         Place a piece on the playing board.
         """
