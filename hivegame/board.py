@@ -316,6 +316,8 @@ class HexBoard(Board):
                     return possible_adjacent_odd_delta.get((dx,dy))
 
             if abs(dx) != abs(nx):
+                print("DEBUG: abs(dx) != abs(nx) :(")
+                print("nx = {}".format(nx))
                 return None
 
             if dx < 0:

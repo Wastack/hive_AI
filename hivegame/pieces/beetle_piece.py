@@ -24,7 +24,7 @@ class BeetlePiece(HivePiece):
 
         return res
     
-
+    @property
     def kind(self):
         return "B"
             

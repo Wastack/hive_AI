@@ -50,6 +50,7 @@ class AntPiece(HivePiece):
         hive.piecesInCell[self.position].append(self)
         return visited
 
+    @property
     def kind(self):
         return "A"
     

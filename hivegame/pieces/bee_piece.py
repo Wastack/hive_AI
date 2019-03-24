@@ -11,7 +11,7 @@ class BeePiece(HivePiece):
             return []
         return hive.bee_moves(self.position)
     
-
+    @property
     def kind(self):
         return "Q"
             

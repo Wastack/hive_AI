@@ -29,6 +29,8 @@ class Environment:
         self.player_pieces[1] = self.hive.get_unplayed_pieces('w')
         self.player_pieces[2] = self.hive.get_unplayed_pieces('b')
         self.active_player = (2 - (self.hive.turn % 2))
+        if self.logger is not None:
+            self.logger.close()
         self.logger = open('game.log', 'w')
 
     def exec_cmd(self, cmd):
@@ -108,3 +110,6 @@ class Environment:
     
     def get_all_possible_actions(self):
         return self.hive.get_all_possible_actions()
+    
+    def action_piece_to(self, piece, to_cell):
+        return self.hive.action_piece_to(piece, to_cell)

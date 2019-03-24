@@ -33,7 +33,8 @@ class SpiderPiece(HivePiece):
         hive.piecesInCell[self.position].append(self)
 
         return thirdStep
-            
+
+    @property       
     def kind(self):
         return "S"
 

@@ -8,6 +8,7 @@ from hivegame.pieces.spider_piece import SpiderPiece
 from hivegame.pieces.piece import HivePiece
 
 from pprint import pprint
+import logging
 
 class HiveException(Exception):
     """Base class for exceptions."""
@@ -48,6 +49,7 @@ class Hive(object):
         """
         Prepare the game to be played
         """
+        self.__init__()
         # Add pieces to the players hands
         self.unplayedPieces['w'] = self._piece_set('w')
         self.unplayedPieces['b'] = self._piece_set('b')
@@ -78,7 +80,8 @@ class Hive(object):
             self.action_piece_to(piece, targetCell)
 
         elif (actionType == 'non_play' and action == 'pass'):
-            pass
+            self.turn += 1
+            self.activePlayer ^= 1  # switch active player
 
         return True
 
@@ -528,7 +531,7 @@ class Hive(object):
                 end_cells = self._get_possible_end_cells(piece)
                 result.update([(piece, end_cell) for end_cell in end_cells if end_cell != piece.position])
 
-        print(self.unplayedPieces[turn])
+        logging.info("Unplayed pieces: {}".format(self.unplayedPieces[turn]))
         if self.turn >= 7 and turn + 'Q1' not in self.playedPieces:
             pieces_to_put_down.append(self.unplayedPieces[turn][turn + 'Q1'])
         else:

@@ -8,6 +8,8 @@ from hivegame.view import HiveView
 from hivegame.environment import Environment
 from hivegame.AI.random_ai import RandomAI
 
+import logging
+
 
 class HiveShellClient(object):
     """HiveShellClient is a command line client to the Hive game."""
@@ -28,11 +30,11 @@ class HiveShellClient(object):
                 response = ai1.step(self.env)
                 if not response:
                     self.env.exec_cmd("pass")
-                    print("DEBUG: AI passed")
+                    logging.info("AI passed")
                     continue
                 (piece, coord) = response
-                print("DEBUG: choosen action is: ({}, {})".format(piece,coord) )
-                self.env.hive.action_piece_to(piece, coord)
+                logging.info("choosen action is: ({}, {})".format(piece,coord) )
+                self.env.action_piece_to(piece, coord)
             else:
                 if not self.human_turn():
                     break
@@ -61,7 +63,7 @@ class HiveShellClient(object):
     
 
 def main():
-
+    logging.basicConfig(level=logging.INFO)
     game = HiveShellClient()
     game.run()
 
