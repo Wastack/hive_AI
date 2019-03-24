@@ -5,6 +5,7 @@ from hivegame.pieces.bee_piece import BeePiece
 from hivegame.pieces.beetle_piece import BeetlePiece
 from hivegame.pieces.grasshopper_piece import GrassHopperPiece
 from hivegame.pieces.spider_piece import SpiderPiece
+from hivegame.utils import Direction
 
 import logging
 
@@ -468,10 +469,10 @@ class Hive(object):
             if len(pieces_in_cell) > 1:
                 position = pieces_in_cell.index(piece)
                 for lower_piece in pieces_in_cell[:position]:
-                    relations[lower_piece] = self.board.HX_LOW
+                    relations[lower_piece] = Direction.HX_LOW
                 if position + 1 < len(pieces_in_cell):
                     for upper_piece in pieces_in_cell[position + 1:]:
-                        relations[upper_piece] = self.board.HX_UP
+                        relations[upper_piece] = Direction.HX_UP
 
             surrounding_cells = self.occupied_surroundings(cell)
             for neighbor_cell in surrounding_cells:

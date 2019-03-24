@@ -1,4 +1,5 @@
-# board.py
+from hivegame.utils import Direction
+
 # classes that represent generic boards
 
 # Board layout:
@@ -136,27 +137,17 @@ class Board(object):
 class HexBoard(Board):
     """Hexagonal Tile Board"""
 
-    # Directions
-    HX_O = 0    # origin/on-top
-    HX_W = 1    # west
-    HX_NW = 2   # north-west
-    HX_NE = 3   # north-east
-    HX_E = 4    # east
-    HX_SE = 5   # south-east
-    HX_SW = 6   # south-west
-    HX_LOW = 7  # lower
-    HX_UP = 8   # upper
-
     def __init__(self):
+
         super(HexBoard, self).__init__()
         self.dir2func = {
-            0: lambda x: x,
-            1: self.get_w_xy,
-            2: self.get_nw_xy,
-            3: self.get_ne_xy,
-            4: self.get_e_xy,
-            5: self.get_se_xy,
-            6: self.get_sw_xy
+            Direction.HX_O: lambda x: x,
+            Direction.HX_W: self.get_w_xy,
+            Direction.HX_NW: self.get_nw_xy,
+            Direction.HX_NE: self.get_ne_xy,
+            Direction.HX_E: self.get_e_xy,
+            Direction.HX_SE: self.get_se_xy,
+            Direction.HX_SW: self.get_sw_xy
         }
 
     def get_surrounding(self, x_y):
@@ -268,16 +259,16 @@ class HexBoard(Board):
 
         # is the same cell
         if dx == dy == 0:
-            return self.HX_O
+            return Direction.HX_O
 
         # horizontal jump
         if dy == 0:
             # moving west
             if dx < 0:
-                move_dir = self.HX_W
+                move_dir = Direction.HX_W
             # moving east
             else:
-                move_dir = self.HX_E
+                move_dir = Direction.HX_E
 
         # diagonal jump (dy != 0)
         else:
@@ -286,17 +277,17 @@ class HexBoard(Board):
 
             # TODO probably they should be placed out as a constant
             possible_adjacent_even_delta = {
-                (-1, -1): self.HX_NW,
-                (0, -1): self.HX_NE,
-                (0, 1): self.HX_SE,
-                (-1, 1): self.HX_SW
+                (-1, -1): Direction.HX_NW,
+                (0, -1): Direction.HX_NE,
+                (0, 1): Direction.HX_SE,
+                (-1, 1): Direction.HX_SW
             }
 
             possible_adjacent_odd_delta = {
-                (0, -1): self.HX_NW,
-                (1, -1): self.HX_NE,
-                (1, 1): self.HX_SE,
-                (0, 1): self.HX_SW
+                (0, -1): Direction.HX_NW,
+                (1, -1): Direction.HX_NE,
+                (1, 1): Direction.HX_SE,
+                (0, 1): Direction.HX_SW
             }
 
             # adjacent
@@ -313,13 +304,13 @@ class HexBoard(Board):
 
             if dx < 0:
                 if dy < 0:
-                    move_dir = self.HX_NW
+                    move_dir = Direction.HX_NW
                 else:
-                    move_dir = self.HX_SW
+                    move_dir = Direction.HX_SW
             else:
                 if dy < 0:
-                    move_dir = self.HX_NE
+                    move_dir = Direction.HX_NE
                 else:
-                    move_dir = self.HX_SE
+                    move_dir = Direction.HX_SE
 
         return move_dir

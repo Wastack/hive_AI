@@ -1,13 +1,12 @@
-""" def debug_possible_actions:
-        print("-------------------------")
-        print(sorted(self.hive.get_all_possible_actions(), key=lambda k: str(k[0])))
-        print("-------------------------")
+from enum import Enum
 
-def adjacent_pretty_print(self, matrix):
-    #pprint(self.hive.get_adjacency_state())
-    print("DEBUG")
-    adja_state = self.get_adjacency_state()
-    for key, row in adja_state.items():
-        print(key + ":", end=" ")
-        pprint(row.values())
-    print("----------------------------") """
+class Direction(Enum):
+    HX_O = 0  # origin/on-top
+    HX_W = 1  # west
+    HX_NW = 2  # north-west
+    HX_NE = 3  # north-east
+    HX_E = 4  # east
+    HX_SE = 5  # south-east
+    HX_SW = 6  # south-west
+    HX_LOW = 7  # lower
+    HX_UP = 8  # upper

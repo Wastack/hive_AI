@@ -1,16 +1,11 @@
-from hivegame.hive import Hive
+from hivegame.hive import Hive, HiveException
 from unittest import TestCase
 
-from hivegame.view import HiveView
 
 from hivegame.pieces.ant_piece import AntPiece
-from hivegame.pieces.bee_piece import BeePiece
 from hivegame.pieces.beetle_piece import BeetlePiece
-from hivegame.pieces.grasshopper_piece import GrassHopperPiece
 from hivegame.pieces.spider_piece import SpiderPiece
-from hivegame.pieces.piece import HivePiece
-
-from pprint import pprint
+from hivegame.utils import Direction
 
 class TestHive(TestCase):
     """Verify the game logic"""
@@ -39,225 +34,216 @@ class TestHive(TestCase):
         self.hive = Hive()
         self.hive.setup()
 
-        self.hive.action('play', ('wS1'))
-        self.hive.action('play', ('bS1', 'wS1', self.hive.E))
-        self.hive.action('play', ('wQ1', 'wS1', self.hive.SW))
-        self.hive.action('play', ('bQ1', 'bS1', self.hive.SE))
-        self.hive.action('play', ('wS2', 'wS1', self.hive.NW))
-        self.hive.action('play', ('bG1', 'bS1', self.hive.E))
-        self.hive.action('play', ('wB1', 'wS2', self.hive.W))
-        self.hive.action('play', ('bA1', 'bQ1', self.hive.SW))
-        self.hive.action('play', ('wG1', 'wB1', self.hive.SW))
-        self.hive.place_piece_without_action(BeetlePiece('b', 1), 'bS1', self.hive.NE)
-
+        self.hive.action('play', 'wS1')
+        self.hive.action('play', ('bS1', 'wS1', Direction.HX_E))
+        self.hive.action('play', ('wQ1', 'wS1', Direction.HX_SW))
+        self.hive.action('play', ('bQ1', 'bS1', Direction.HX_SE))
+        self.hive.action('play', ('wS2', 'wS1', Direction.HX_NW))
+        self.hive.action('play', ('bG1', 'bS1', Direction.HX_E))
+        self.hive.action('play', ('wB1', 'wS2', Direction.HX_W))
+        self.hive.action('play', ('bA1', 'bQ1', Direction.HX_SW))
+        self.hive.action('play', ('wG1', 'wB1', Direction.HX_SW))
+        self.hive.place_piece_without_action(BeetlePiece('b', 1), 'bS1', Direction.HX_NE)
 
     def test_one_hive(self):
         self.assertFalse(self.hive._one_hive(self.hive.playedPieces['wS1']))
         self.assertTrue(self.hive._one_hive(self.hive.playedPieces['wQ1']))
 
     def testbee_moves(self):
-        beePos = self.hive.locate('wQ1')  # (-1, 1)
+        bee_pos = self.hive.locate('wQ1')  # (-1, 1)
         expected = [(-1, 0), (0, 1)]
-        self.assertEqual(expected, self.hive.bee_moves(beePos))
+        self.assertEqual(expected, self.hive.bee_moves(bee_pos))
 
-        beePos = self.hive.locate('wS1')
+        bee_pos = self.hive.locate('wS1')
         expected = []
-        self.assertEqual(expected, self.hive.bee_moves(beePos))
+        self.assertEqual(expected, self.hive.bee_moves(bee_pos))
 
-        beePos = self.hive.locate('wS2')
+        bee_pos = self.hive.locate('wS2')
         expected = [(-1, -2), (0, -1)]
-        self.assertEqual(expected, self.hive.bee_moves(beePos))
-
+        self.assertEqual(expected, self.hive.bee_moves(bee_pos))
 
     def test_ant_moves(self):
-        endCell = self.hive.poc2cell('wS1', self.hive.W)
+        end_cell = self.hive.poc2cell('wS1', Direction.HX_W)
         self.assertFalse(
-            self.hive.playedPieces['bA1'].validate_move(self.hive, endCell)
+            self.hive.playedPieces['bA1'].validate_move(self.hive, end_cell)
         )
 
-        endCell = (-2, 2)
+        end_cell = (-2, 2)
         self.assertFalse(
-            self.hive.playedPieces['bA1'].validate_move(self.hive, endCell)
+            self.hive.playedPieces['bA1'].validate_move(self.hive, end_cell)
         )
 
-        endCell = self.hive.poc2cell('bA1', self.hive.SW)
+        end_cell = self.hive.poc2cell('bA1', Direction.HX_SW)
         self.assertFalse(
-            self.hive.playedPieces['bA1'].validate_move(self.hive, endCell)
+            self.hive.playedPieces['bA1'].validate_move(self.hive, end_cell)
         )
 
-        endCell = self.hive.poc2cell('bS1', self.hive.SW)
+        end_cell = self.hive.poc2cell('bS1', Direction.HX_SW)
         self.assertTrue(
-            self.hive.playedPieces['bA1'].validate_move(self.hive, endCell)
+            self.hive.playedPieces['bA1'].validate_move(self.hive, end_cell)
         )
 
-        endCell = self.hive.poc2cell('wS1', self.hive.NE)
+        end_cell = self.hive.poc2cell('wS1', Direction.HX_NE)
         self.assertTrue(
-            self.hive.playedPieces['bA1'].validate_move(self.hive, endCell)
+            self.hive.playedPieces['bA1'].validate_move(self.hive, end_cell)
         )
 
-        endCell = self.hive.poc2cell('wQ1', self.hive.W)
+        end_cell = self.hive.poc2cell('wQ1', Direction.HX_W)
         self.assertTrue(
-            self.hive.playedPieces['bA1'].validate_move(self.hive, endCell)
+            self.hive.playedPieces['bA1'].validate_move(self.hive, end_cell)
         )
-
 
     def test_beetle_moves(self):
         # moving in the ground level
-        endCell = self.hive.poc2cell('wS2', self.hive.E)
+        end_cell = self.hive.poc2cell('wS2', Direction.HX_E)
         self.assertTrue(
-            self.hive.playedPieces['bB1'].validate_move(self.hive, endCell)
+            self.hive.playedPieces['bB1'].validate_move(self.hive, end_cell)
         )
 
-        endCell = self.hive.poc2cell('bB1', self.hive.NW)
+        end_cell = self.hive.poc2cell('bB1', Direction.HX_NW)
         self.assertFalse(
-            self.hive.playedPieces['bB1'].validate_move(self.hive, endCell)
+            self.hive.playedPieces['bB1'].validate_move(self.hive, end_cell)
         )
 
         self.hive.turn = 11  # set turn to be white player turn
         self.hive.activePlayer = 0
-        self.hive.place_piece_without_action(BeetlePiece('w', 2), 'wQ1', self.hive.W)
-        endCell = self.hive.poc2cell('wQ1', self.hive.NW)
+        self.hive.place_piece_without_action(BeetlePiece('w', 2), 'wQ1', Direction.HX_W)
+        end_cell = self.hive.poc2cell('wQ1', Direction.HX_NW)
         self.assertFalse(
-            self.hive.playedPieces['bB1'].validate_move(self.hive, endCell)
+            self.hive.playedPieces['bB1'].validate_move(self.hive, end_cell)
         )
 
         # moving from ground to top
-        endCell = self.hive.poc2cell('bS1', self.hive.O)
+        end_cell = self.hive.poc2cell('bS1', Direction.HX_O)
         self.assertTrue(
-            self.hive.playedPieces['bB1'].validate_move(self.hive, endCell)
+            self.hive.playedPieces['bB1'].validate_move(self.hive, end_cell)
         )
 
         # moving on top of the pieces
         self.hive.turn = 12  # set turn to be black player turn
         self.hive.activePlayer = 1
         beetle = self.hive.playedPieces['bB1']
-        self.hive.move_piece_without_action(beetle, 'bS1', self.hive.O)
-        endCell = self.hive.poc2cell('bS1', self.hive.W)
+        self.hive.move_piece_without_action(beetle, 'bS1', Direction.HX_O)
+        end_cell = self.hive.poc2cell('bS1', Direction.HX_W)
         self.assertTrue(
-            self.hive.playedPieces['bB1'].validate_move(self.hive, endCell)
+            self.hive.playedPieces['bB1'].validate_move(self.hive, end_cell)
         )
 
         # moving from top to ground
-        endCell = self.hive.poc2cell('bS1', self.hive.SW)
+        end_cell = self.hive.poc2cell('bS1', Direction.HX_W)
         self.assertTrue(
-            self.hive.playedPieces['bB1'].validate_move(self.hive, endCell)
+            self.hive.playedPieces['bB1'].validate_move(self.hive, end_cell)
         )
-
 
     def test_grasshopper_moves(self):
-        endCell = self.hive.poc2cell('wS1', self.hive.W)
+        end_cell = self.hive.poc2cell('wS1', Direction.HX_W)
         self.assertTrue(
-            self.hive.playedPieces['bG1'].validate_move(self.hive, endCell)
+            self.hive.playedPieces['bG1'].validate_move(self.hive, end_cell)
         )
 
-        endCell = self.hive.poc2cell('bA1', self.hive.SW)
+        end_cell = self.hive.poc2cell('bA1', Direction.HX_SW)
         self.assertTrue(
-            self.hive.playedPieces['bG1'].validate_move(self.hive, endCell)
+            self.hive.playedPieces['bG1'].validate_move(self.hive, end_cell)
         )
 
-        endCell = self.hive.poc2cell('wG1', self.hive.W)
+        end_cell = self.hive.poc2cell('wG1', Direction.HX_W)
         self.assertFalse(
-            self.hive.playedPieces['bG1'].validate_move(self.hive, endCell)
+            self.hive.playedPieces['bG1'].validate_move(self.hive, end_cell)
         )
 
-        endCell = self.hive.poc2cell('wB1', self.hive.NE)
+        end_cell = self.hive.poc2cell('wB1', Direction.HX_NE)
         self.assertTrue(
-            self.hive.playedPieces['wG1'].validate_move(self.hive, endCell)
+            self.hive.playedPieces['wG1'].validate_move(self.hive, end_cell)
         )
-
 
     def test_queen_moves(self):
-        endCell = self.hive.poc2cell('bQ1', self.hive.E)
+        end_cell = self.hive.poc2cell('bQ1', Direction.HX_E)
         self.assertTrue(
-            self.hive.playedPieces['bQ1'].validate_move(self.hive, endCell)
+            self.hive.playedPieces['bQ1'].validate_move(self.hive, end_cell)
         )
 
-        endCell = self.hive.poc2cell('bQ1', self.hive.SW)
+        end_cell = self.hive.poc2cell('bQ1', Direction.HX_SW)
         self.assertFalse(
-            self.hive.playedPieces['bQ1'].validate_move(self.hive, endCell)
+            self.hive.playedPieces['bQ1'].validate_move(self.hive, end_cell)
         )
 
         # moving out of a surrounding situation
         self.hive.turn = 11  # set turn to be white player turn
         self.hive.activePlayer = 0
-        self.hive.move_piece_without_action(self.hive.playedPieces['wQ1'], 'wS1', self.hive.W)
+        self.hive.move_piece_without_action(self.hive.playedPieces['wQ1'], 'wS1', Direction.HX_W)
         self.hive.turn = 12  # set turn to be black player turn
         self.hive.activePlayer = 1
-        self.hive.move_piece_without_action(self.hive.playedPieces['bA1'], 'wG1', self.hive.SE)
+        self.hive.move_piece_without_action(self.hive.playedPieces['bA1'], 'wG1', Direction.HX_SE)
 
-        endCell = self.hive.poc2cell('wS1', self.hive.SW)
+        end_cell = self.hive.poc2cell('wS1', Direction.HX_SW)
         self.assertFalse(
-            self.hive.playedPieces['wQ1'].validate_move(self.hive, endCell)
+            self.hive.playedPieces['wQ1'].validate_move(self.hive, end_cell)
         )
-
 
     def test_spider_moves(self):
-        self.hive.place_piece_without_action(SpiderPiece('b', 2), 'bA1', self.hive.SE)
+        self.hive.place_piece_without_action(SpiderPiece('b', 2), 'bA1', Direction.HX_SE)
 
-        endCell = self.hive.poc2cell('wQ1', self.hive.E)
+        end_cell = self.hive.poc2cell('wQ1', Direction.HX_E)
         self.assertFalse(
-            self.hive.playedPieces['bS2'].validate_move(self.hive, endCell)
+            self.hive.playedPieces['bS2'].validate_move(self.hive, end_cell)
         )
 
-        endCell = self.hive.poc2cell('wQ1', self.hive.SW)
+        end_cell = self.hive.poc2cell('wQ1', Direction.HX_SW)
         self.assertTrue(
-            self.hive.playedPieces['bS2'].validate_move(self.hive, endCell)
+            self.hive.playedPieces['bS2'].validate_move(self.hive, end_cell)
         )
 
-        endCell = self.hive.poc2cell('wQ1', self.hive.W)
+        end_cell = self.hive.poc2cell('wQ1', Direction.HX_W)
         self.assertFalse(
-            self.hive.playedPieces['bS2'].validate_move(self.hive, endCell)
+            self.hive.playedPieces['bS2'].validate_move(self.hive, end_cell)
         )
 
-        endCell = self.hive.poc2cell('bG1', self.hive.E)
+        end_cell = self.hive.poc2cell('bG1', Direction.HX_E)
         self.assertTrue(
-            self.hive.playedPieces['bS2'].validate_move(self.hive, endCell)
+            self.hive.playedPieces['bS2'].validate_move(self.hive, end_cell)
         )
 
-        endCell = self.hive.poc2cell('bA1', self.hive.E)
+        end_cell = self.hive.poc2cell('bA1', Direction.HX_E)
         self.assertFalse(
-            self.hive.playedPieces['bS2'].validate_move(self.hive, endCell)
+            self.hive.playedPieces['bS2'].validate_move(self.hive, end_cell)
         )
-
 
     def test_spider_moves2(self):
         spider = SpiderPiece('b', 2)
-        self.hive.place_piece_without_action(spider, 'bB1', self.hive.NE)
+        self.hive.place_piece_without_action(spider, 'bB1', Direction.HX_NE)
 
-        endCell = self.hive.poc2cell('wS2', self.hive.NE)
+        end_cell = self.hive.poc2cell('wS2', Direction.HX_NE)
         self.assertTrue(
-            self.hive.playedPieces['bS2'].validate_move(self.hive, endCell)
+            self.hive.playedPieces['bS2'].validate_move(self.hive, end_cell)
         )
 
-
     def test_validate_place_piece(self):
-        wA1 = AntPiece('w', 1)
-        bB2 = BeetlePiece('b', 2)
+        white_ant_1 = AntPiece('w', 1)
+        black_beetle_2 = BeetlePiece('b', 2)
 
         # place over another piece
-        cell = self.hive.poc2cell('wS1', self.hive.SW)
+        cell = self.hive.poc2cell('wS1', Direction.HX_SW)
         self.assertFalse(
-            self.hive._validate_place_piece(wA1, cell)
+            self.hive._validate_place_piece(white_ant_1, cell)
         )
 
         # valid placement
-        cell = self.hive.poc2cell('bG1', self.hive.E)
+        cell = self.hive.poc2cell('bG1', Direction.HX_E)
         self.assertTrue(
-            self.hive._validate_place_piece(bB2, cell)
+            self.hive._validate_place_piece(black_beetle_2, cell)
         )
 
         # wrong color
-        cell = self.hive.poc2cell('wQ1', self.hive.E)
+        cell = self.hive.poc2cell('wQ1', Direction.HX_E)
         self.assertFalse(
-            self.hive._validate_place_piece(wA1, cell)
+            self.hive._validate_place_piece(white_ant_1, cell)
         )
-
 
     def test_move_piece(self):
         # move beetle over spider
-        bB1 = self.hive.playedPieces['bB1']
+        black_beetle_1 = self.hive.playedPieces['bB1']
         cell = self.hive.locate('bS1')
-        self.hive.move_piece_without_action(bB1, 'bS1', self.hive.O)
+        self.hive.move_piece_without_action(black_beetle_1, 'bS1', Direction.HX_O)
         pieces = self.hive.get_pieces(cell)
 
         self.assertEqual(cell, self.hive.locate('bB1'))
@@ -265,14 +251,12 @@ class TestHive(TestCase):
         self.assertTrue('bB1' in pieces)
         self.assertTrue('bS1' in pieces)
 
-
     def test_action(self):
-        # place a piece and verify unplayedPieces dict
-        self.hive.action('play', ('bS2', 'bQ1', self.hive.E))
-        unplayedPieces = self.hive.get_unplayed_pieces('b')
+        """ place a piece and verify unplayed_pieces dict """
+        self.hive.action('play', ('bS2', 'bQ1', Direction.HX_E))
+        unplayed_pieces = self.hive.get_unplayed_pieces('b')
 
-        self.assertFalse('bS2' in unplayedPieces)
-
+        self.assertFalse('bS2' in unplayed_pieces)
 
     def test_first_move(self):
         r"""Test that we can move a piece on the 3rd turn
@@ -281,14 +265,13 @@ class TestHive(TestCase):
         hive = Hive()
         hive.setup()
 
-        hive.action('play', ('wA1'))
-        hive.action('play', ('bA1', 'wA1', hive.NW))
-        hive.action('play', ('wG1', 'wA1', hive.E))
-        hive.action('play', ('bS1', 'bA1', hive.NW))
-        hive.action('play', ('wQ1', 'wA1', hive.SW))
-        hive.action('play', ('bA2', 'bA1', hive.NE))
-        hive.action('play', ('wG1', 'wA1', hive.W))
-
+        hive.action('play', 'wA1')
+        hive.action('play', ('bA1', 'wA1', Direction.HX_NW))
+        hive.action('play', ('wG1', 'wA1', Direction.HX_E))
+        hive.action('play', ('bS1', 'bA1', Direction.HX_NW))
+        hive.action('play', ('wQ1', 'wA1', Direction.HX_SW))
+        hive.action('play', ('bA2', 'bA1', Direction.HX_NE))
+        hive.action('play', ('wG1', 'wA1', Direction.HX_W))
 
     def test_fail_placement(self):
         """Test that we can place a piece after an incorrect try.
@@ -297,33 +280,32 @@ class TestHive(TestCase):
         hive = Hive()
         hive.setup()
 
-        hive.action('play', ('wA1'))
-        hive.action('play', ('bA1', 'wA1', hive.NW))
+        hive.action('play', 'wA1')
+        hive.action('play', ('bA1', 'wA1', Direction.HX_NW))
         try:
             # This placement fails
-            hive.action('play', ('wG1', 'bA1', hive.W))
-        except:
+            hive.action('play', ('wG1', 'bA1', Direction.HX_W))
+        except HiveException:
             pass
         # This placement is correct
-        hive.action('play', ('wG1', 'wA1', hive.E))
-
+        hive.action('play', ('wG1', 'wA1', Direction.HX_E))
 
     def test_victory_conditions(self):
         """Test that we end the game when a victory/draw condition is meet."""
         hive = Hive()
         hive.setup()
 
-        hive.action('play', ('wS1'))
-        hive.action('play', ('bS1', 'wS1', hive.E))
-        hive.action('play', ('wQ1', 'wS1', hive.NW))
-        hive.action('play', ('bQ1', 'bS1', hive.NE))
-        hive.action('play', ('wG1', 'wQ1', hive.W))
-        hive.action('play', ('bS2', 'bS1', hive.E))
-        hive.action('play', ('wA1', 'wQ1', hive.NE))
-        hive.action('play', ('bA1', 'bQ1', hive.E))
-        hive.action('play', ('wG1', 'wQ1', hive.E))
-        hive.action('play', ('bG2', 'bQ1', hive.NE))
-        hive.action('play', ('wA1', 'wG1', hive.NE))
+        hive.action('play', 'wS1')
+        hive.action('play', ('bS1', 'wS1', Direction.HX_E))
+        hive.action('play', ('wQ1', 'wS1', Direction.HX_NW))
+        hive.action('play', ('bQ1', 'bS1', Direction.HX_NE))
+        hive.action('play', ('wG1', 'wQ1', Direction.HX_W))
+        hive.action('play', ('bS2', 'bS1', Direction.HX_E))
+        hive.action('play', ('wA1', 'wQ1', Direction.HX_NE))
+        hive.action('play', ('bA1', 'bQ1', Direction.HX_E))
+        hive.action('play', ('wG1', 'wQ1', Direction.HX_E))
+        hive.action('play', ('bG2', 'bQ1', Direction.HX_NE))
+        hive.action('play', ('wA1', 'wG1', Direction.HX_NE))
 
         self.assertTrue(hive.check_victory() == hive.WHITE_WIN)
 

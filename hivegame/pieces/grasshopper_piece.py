@@ -1,14 +1,14 @@
 from hivegame.pieces.piece import HivePiece
-from hivegame.board import HexBoard
+from hivegame.utils import Direction
 
 class GrassHopperPiece(HivePiece):
     directions = [
-        HexBoard.HX_W,
-        HexBoard.HX_NW,
-        HexBoard.HX_NE,
-        HexBoard.HX_E,
-        HexBoard.HX_SE,
-        HexBoard.HX_SW
+        Direction.HX_W,
+        Direction.HX_NW,
+        Direction.HX_NE,
+        Direction.HX_E,
+        Direction.HX_SE,
+        Direction.HX_SW
     ]
 
     def validate_move(self, hive, endcell):
