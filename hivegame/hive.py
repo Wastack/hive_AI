@@ -119,7 +119,7 @@ class Hive(object):
     def action_piece_to(self, piece, target_cell):
         """
         Performs an action with the given piece to the given target cell.
-        If the place is already on board it meands a movement. Otherwise it
+        If the place is already on board it means a movement. Otherwise it
         means a piece placement.
         """
         if(piece.position is None or piece.position[0] is None):
@@ -531,7 +531,7 @@ class Hive(object):
                 end_cells = self._get_possible_end_cells(piece)
                 result.update([(piece, end_cell) for end_cell in end_cells if end_cell != piece.position])
 
-        logging.info("Unplayed pieces: {}".format(self.unplayedPieces[turn]))
+        logging.info("Hive: Unplayed pieces: {}".format(self.unplayedPieces[turn]))
         if self.turn >= 7 and turn + 'Q1' not in self.playedPieces:
             pieces_to_put_down.append(self.unplayedPieces[turn][turn + 'Q1'])
         else:

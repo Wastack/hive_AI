@@ -1,14 +1,14 @@
 from hivegame.pieces.piece import HivePiece
 
 class AntPiece(HivePiece):
-    def validate_move(self, hive, endcell):
+    def validate_move(self, hive, end_cell):
         if self.check_blocked(hive):
             return False
          # temporarily remove ant
         hive.piecesInCell[self.position].remove(self)
 
-        toExplore = set([self.position])
-        visited = set([self.position])
+        toExplore = {self.position}
+        visited = {self.position}
         res = False
 
         while len(toExplore) > 0:
@@ -17,7 +17,7 @@ class AntPiece(HivePiece):
                 found.update(hive.bee_moves(c))
             found.difference_update(visited)
             # have we found the endCell?
-            if endcell in found:
+            if end_cell in found:
                 res = True
                 break
 
@@ -35,8 +35,8 @@ class AntPiece(HivePiece):
             return []
         hive.piecesInCell[self.position].remove(self)
 
-        toExplore = set([self.position])
-        visited = set([self.position])
+        toExplore = {self.position}
+        visited = {self.position}
 
         while len(toExplore) > 0:
             found = set()

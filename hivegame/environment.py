@@ -4,6 +4,7 @@ import sys
 
 from hivegame.board import HexBoard
 from hivegame.hive import Hive, HiveException
+from hivegame.view import HiveView
 
 class Environment:
     """
@@ -18,11 +19,15 @@ class Environment:
 
     def __init__(self):
         self.hive = Hive()
+        self.view = HiveView(self.hive)
         self.input = sys.stdin
         self.player_pieces = {1: None, 2: None}
         self.logger = None
         self.reset_game()
         self.logger = None
+
+    def ascii_board(self):
+        return str(self.view)
 
     def reset_game(self):
         self.hive.setup()
@@ -112,4 +117,8 @@ class Environment:
         return self.hive.get_all_possible_actions()
     
     def action_piece_to(self, piece, to_cell):
-        return self.hive.action_piece_to(piece, to_cell)
+        try:
+            self.hive.action_piece_to(piece, to_cell)
+            return True
+        except:
+            return False
