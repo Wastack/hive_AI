@@ -446,6 +446,8 @@ class Hive(object):
         """
         Returns a two dimensional dictionary, where both keys are the string representation of the pieces.
         One cell represents the adjacency of the two pieces. 0 means they are not adjacent.
+
+        The first X rows represents the white pieces. The next X rows contain the black player's pieces.
         """
         pieces = self._piece_set("w")
         pieces.update(self._piece_set("b"))
@@ -455,7 +457,8 @@ class Hive(object):
         for row in pieces:
             result[row] = {}
             for col in pieces:
-                result[row][col] = 0
+                if col != row:
+                    result[row][col] = 0
 
         for piece, relations in result.items():
             cell = self.locate(piece)
@@ -480,7 +483,27 @@ class Hive(object):
                 neighbor_piece = self.piecesInCell[neighbor_cell][-1]
                 relations[neighbor_piece] = self.board.get_line_dir(cell, neighbor_cell)
         return result
-    
+
+    def canonical_adjacency_state(self):
+        """
+        Representation of state with adjacency matrix. From the players point of view. Instead of having a white and
+        a black player, there are my pieces and the opponent's pieces
+        """
+
+        # sorted by their names. That means black piece are at front.
+        matrix = self.get_adjacency_state()
+        result_matrix = []
+        for row_name in sorted(matrix.keys()):
+            row_list = []
+            row = matrix[row_name]
+            for col_name in sorted(row.keys(), key=lambda k: str(k)):
+                row_list.append(row[col_name])
+            result_matrix.append(row_list)
+        if self.activePlayer == 0:  # white, swap them
+            result_matrix[:len(result_matrix)//2], result_matrix[len(result_matrix)//2:] =\
+                result_matrix[len(result_matrix)//2:], result_matrix[:len(result_matrix)//2]
+        return result_matrix
+
     def get_all_possible_actions(self):
         result = set()
         # TODO order of actions can be important here
