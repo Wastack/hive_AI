@@ -6,6 +6,7 @@ from hivegame.board import HexBoard
 from hivegame.hive import Hive, HiveException
 from hivegame.view import HiveView
 
+
 class Environment:
     """
     Environment controls the game. It contains all the methods to
@@ -21,7 +22,6 @@ class Environment:
         self.hive = Hive()
         self.view = HiveView(self.hive)
         self.input = sys.stdin
-        self.player_pieces = {1: None, 2: None}
         self.logger = None
         self.reset_game()
         self.logger = None
@@ -31,9 +31,6 @@ class Environment:
 
     def reset_game(self):
         self.hive.setup()
-        self.player_pieces[1] = self.hive.get_unplayed_pieces('w')
-        self.player_pieces[2] = self.hive.get_unplayed_pieces('b')
-        self.active_player = (2 - (self.hive.turn % 2))
         if self.logger is not None:
             self.logger.close()
         self.logger = open('game.log', 'w')
@@ -41,26 +38,29 @@ class Environment:
     def exec_cmd(self, cmd):
         try:
             (cmdType, value) = self.parse_cmd(cmd)
-            if cmdType == 'play':
-                (actPiece, pointOfContact, refPiece) = value
-            if cmdType == 'non_play' and value == 'pass':
-                self.hive.action(cmdType, value)
-                return True
-        except:
+        except HiveException:
             return False
+        if cmdType == 'non_play' and value == 'pass':
+            self.hive.action(cmdType, value)
+            return True
 
-        if pointOfContact is None and self.hive.turn > 1:
+        if cmdType != 'play':
+            return False  # invalid command type
+
+        (actPiece, point_of_contact, ref_piece) = value
+
+        if point_of_contact is None and self.hive.turn > 1:
             return False
 
         try:
             direction = None
-            if pointOfContact is not None:
-                direction = self.poc2direction(pointOfContact)
-        except Exception:
+            if point_of_contact is not None:
+                direction = self.poc2direction(point_of_contact)
+        except ValueError:
             return False
 
         try:
-            self.hive.action('play', (actPiece, refPiece, direction))
+            self.hive.action('play', (actPiece, ref_piece, direction))
         except HiveException:
             return False
         
@@ -70,36 +70,37 @@ class Environment:
         self.logger.write(cmd+'\n')
 
         if cmd == 'pass':
-            return ('non_play', cmd)
+            return 'non_play', cmd
         if len(cmd) == 3:
-            movingPiece = cmd
-            pointOfContact = None
-            refPiece = None
+            moving_piece = cmd
+            point_of_contact = None
+            ref_piece = None
         else:
             if len(cmd) != 8:
                 raise Exception("Failed to parse command.")
-            movingPiece = cmd[:3]
-            pointOfContact = cmd[3:5]
-            refPiece = cmd[5:]
-        return ('play', (movingPiece, pointOfContact, refPiece))
+            moving_piece = cmd[:3]
+            point_of_contact = cmd[3:5]
+            ref_piece = cmd[5:]
+        return 'play', (moving_piece, point_of_contact, ref_piece)
 
-    def poc2direction(self, pointOfContact):
-        "Parse point of contact to a Hive.direction"
-        if pointOfContact == '|*':
-            return Hive.W
-        if pointOfContact == '/*':
-            return Hive.NW
-        if pointOfContact == '*\\':
-            return Hive.NE
-        if pointOfContact == '*|':
-            return Hive.E
-        if pointOfContact == '*/':
-            return Hive.SE
-        if pointOfContact == '\\*':
-            return Hive.SW
-        if pointOfContact == '=*':
-            return Hive.O
-        raise ValueError('Invalid input for point of contact: "%s"' % pointOfContact)
+    @staticmethod
+    def poc2direction(point_of_contact):
+        """Parse point of contact to a Hive.direction"""""
+        if point_of_contact == '|*':
+            return HexBoard.HX_W
+        if point_of_contact == '/*':
+            return HexBoard.HX_NW
+        if point_of_contact == '*\\':
+            return HexBoard.HX_NE
+        if point_of_contact == '*|':
+            return HexBoard.HX_E
+        if point_of_contact == '*/':
+            return HexBoard.HX_SE
+        if point_of_contact == '\\*':
+            return HexBoard.HX_SW
+        if point_of_contact == '=*':
+            return HexBoard.HX_O
+        raise ValueError('Invalid input for point of contact: "%s"' % point_of_contact)
 
     def check_victory(self):
         return self.hive.check_victory()
@@ -120,5 +121,5 @@ class Environment:
         try:
             self.hive.action_piece_to(piece, to_cell)
             return True
-        except:
+        except HiveException:
             return False

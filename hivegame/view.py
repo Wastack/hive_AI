@@ -5,37 +5,36 @@ class HiveView(object):
         """game is an instance of the Hive class."""
         self.game = game
 
-
     def __repr__(self):
         """text representation of the board + pieces."""
-        firstCol, firstRow, lastCol, lastRow = self.game.get_board_boundaries()
+        first_col, first_row, last_col, last_row = self.game.get_board_boundaries()
         res = "\n"
-        for i in range(firstRow, lastRow + 1):
+        for i in range(first_row, last_row + 1):
             p = i % 2
             # Top of the cells is also the bottom of the cells
             # for the previous row.
-            if i > firstRow:
+            if i > first_row:
                 res += " \\" * p
             else:
                 res += "  " * p
-            for j in range(firstCol, lastCol + 1):
+            for j in range(first_col, last_col + 1):
                 res += " / \\"
-            if i > firstRow and p == 0:
+            if i > first_row and p == 0:
                 res += " /"
             res += "\n"
             # Center of the cells
             res += "  " * p
-            for j in range(firstCol, lastCol + 1):
+            for j in range(first_col, last_col + 1):
                 pieces = self.game.get_pieces((j, i))
                 if len(pieces) != 0:
-                    pieceName = str(pieces[-1])[:3]
+                    piece_name = str(pieces[-1])[:3]
                 else:
-                    pieceName = "   "
-                res += "|" + pieceName
+                    piece_name = "   "
+                res += "|" + piece_name
             res += "|\n"
-        p = (lastRow) % 2
+        p = last_row % 2
         res += "  " * p
-        for j in range(firstCol, lastCol + 1):
+        for j in range(first_col, last_col + 1):
             res += " \\ /"
         res += "\n"
 
@@ -43,11 +42,10 @@ class HiveView(object):
     
     def print_pieces_with_coords(self):
         """Print coordinates of pieces for debug purposes"""
-        firstCol, firstRow, lastCol, lastRow = self.game.get_board_boundaries()
-        for i in range(firstRow, lastRow + 1):
-            for j in range(firstCol, lastCol + 1):
+        first_col, first_row, last_col, last_row = self.game.get_board_boundaries()
+        for i in range(first_row, last_row + 1):
+            for j in range(first_col, last_col + 1):
                 pieces = self.game.get_pieces((j, i))
                 if len(pieces) != 0:
-                    pieceName = str(pieces[-1])[:3]
-                    print("({},{}): {}".format(i,j,pieceName))
-
+                    piece_name = str(pieces[-1])[:3]
+                    print("({},{}): {}".format(i, j, piece_name))

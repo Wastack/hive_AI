@@ -5,14 +5,14 @@ from hivegame.pieces.bee_piece import BeePiece
 from hivegame.pieces.beetle_piece import BeetlePiece
 from hivegame.pieces.grasshopper_piece import GrassHopperPiece
 from hivegame.pieces.spider_piece import SpiderPiece
-from hivegame.pieces.piece import HivePiece
 
-from pprint import pprint
 import logging
+
 
 class HiveException(Exception):
     """Base class for exceptions."""
     pass
+
 
 class Hive(object):
     """
@@ -20,21 +20,11 @@ class Hive(object):
     This class enforces the game rules and keeps the state of the game.
     """
 
-    # Directions
-    O = HexBoard.HX_O    # origin/on-top
-    W = HexBoard.HX_W    # west
-    NW = HexBoard.HX_NW  # north-west
-    NE = HexBoard.HX_NE  # north-east
-    E = HexBoard.HX_E    # east
-    SE = HexBoard.HX_SE  # south-east
-    SW = HexBoard.HX_SW  # south-west
-
     # End game status
     UNFINISHED = 0
     WHITE_WIN = 1
     BLACK_WIN = 2
     DRAW = 3
-
 
     def __init__(self):
         self.turn = 0
@@ -55,31 +45,31 @@ class Hive(object):
         self.unplayedPieces['b'] = self._piece_set('b')
         self.turn = 1
 
-
-    def action(self, actionType, action):
+    def action(self, action_type, action):
         """Perform the player action.
         return True or ExceptionType
-        TODO: elaborate on the exceptions
         """
-        if (actionType == 'play'):
-            if (isinstance(action, tuple)):
-                (actPieceName, refPieceName, direction) = action
-            elif (isinstance(action, str)):
-                (actPieceName, refPieceName, direction) = (action, None, None)
+        if action_type == 'play':
+            if isinstance(action, tuple):
+                (current_piece_name, ref_piece_name, direction) = action
+            elif isinstance(action, str):
+                (current_piece_name, ref_piece_name, direction) = (action, None, None)
+            else:
+                raise HiveException  # invalid format
                 
             player = self.get_active_player()
 
-            if refPieceName is None and self.turn == 1:
-                targetCell = (0, 0)
+            if ref_piece_name is None and self.turn == 1:
+                target_cell = (0, 0)
             else:
-                targetCell = self.poc2cell(refPieceName, direction)
+                target_cell = self.poc2cell(ref_piece_name, direction)
 
-            piece = self.unplayedPieces[player].get(actPieceName, self.playedPieces.get(actPieceName, None))
+            piece = self.unplayedPieces[player].get(current_piece_name, self.playedPieces.get(current_piece_name, None))
             if piece is None:
                 raise HiveException
-            self.action_piece_to(piece, targetCell)
+            self.action_piece_to(piece, target_cell)
 
-        elif (actionType == 'non_play' and action == 'pass'):
+        elif action_type == 'non_play' and action == 'pass':
             self.turn += 1
             self.activePlayer ^= 1  # switch active player
 
@@ -87,7 +77,6 @@ class Hive(object):
 
     def get_unplayed_pieces(self, player):
         return self.unplayedPieces[player]
-
 
     def get_active_player(self):
         if self.turn <= 0:
@@ -99,19 +88,17 @@ class Hive(object):
         """returns the coordinates of the board limits."""
         return self.board.get_boundaries()
 
-
     def get_pieces(self, cell):
         """return the names of pieces that are in the cell (x, y)."""
         return [str(piece) for piece in self.piecesInCell.get(cell, [])]
 
-
-    def locate(self, pieceName):
+    def locate(self, piece_name):
         """
         Returns the cell where the piece is positioned.
-        pieceName is a piece identifier (string)
+        piece_name is a piece identifier (string)
         """
         res = None
-        pp = self.playedPieces.get(pieceName)
+        pp = self.playedPieces.get(piece_name)
         if pp is not None:
             res = pp.position
         return res
@@ -122,7 +109,7 @@ class Hive(object):
         If the place is already on board it means a movement. Otherwise it
         means a piece placement.
         """
-        if(piece.position is None or piece.position[0] is None):
+        if piece.position is None or piece.position[0] is None:
             self._place_piece_to(piece, target_cell)
             del self.unplayedPieces[self.get_active_player()][str(piece)]
         else:
@@ -144,10 +131,10 @@ class Hive(object):
             raise HiveException("Invalid Piece Movement")
 
         pp = self.playedPieces[str(piece)]
-        startingCell = pp.position
+        starting_cell = pp.position
 
         # remove the piece from its current location
-        self.piecesInCell[startingCell].remove(piece)
+        self.piecesInCell[starting_cell].remove(piece)
 
         # places the piece at the target location
         self.board.resize(target_cell)
@@ -157,15 +144,14 @@ class Hive(object):
 
         return target_cell
 
-    def move_piece_without_action(self, piece, refPiece, refDirection):
+    def move_piece_without_action(self, piece, ref_piece, ref_direction):
         """
         Moves a piece on the playing board without performing an action.
         """
 
-        targetCell = self.poc2cell(refPiece, refDirection)
-        self._move_piece_to(piece, targetCell)
+        target_cell = self.poc2cell(ref_piece, ref_direction)
+        self._move_piece_to(piece, target_cell)
 
-        
     def _place_piece_to(self, piece, to_cell):
         """
         Places a piece to the given target cell.
@@ -188,18 +174,17 @@ class Hive(object):
 
         return to_cell
 
-    def place_piece_without_action(self, piece, refPieceName=None, refDirection=None):
+    def place_piece_without_action(self, piece, ref_piece_name=None, ref_direction=None):
         """
         Place a piece on the playing board without performing an action.
         """
 
         # if it's the first piece we put it at cell (0, 0)
-        if refPieceName is None and self.turn == 1:
-            targetCell = (0, 0)
+        if ref_piece_name is None and self.turn == 1:
+            target_cell = (0, 0)
         else:
-            targetCell = self.poc2cell(refPieceName, refDirection)
-        return self._place_piece_to(piece, targetCell)
-
+            target_cell = self.poc2cell(ref_piece_name, ref_direction)
+        return self._place_piece_to(piece, target_cell)
 
     def check_victory(self):
         """
@@ -240,14 +225,14 @@ class Hive(object):
         # Tournament rule: no queen in the first move
         if (self.turn == 1 or self.turn == 2) and isinstance(piece, BeePiece):
             return False
-        whiteTurn = self.activePlayer == 0
-        blackTurn = self.activePlayer == 1
+        white_turn = self.activePlayer == 0
+        black_turn = self.activePlayer == 1
 
         # Move actions are only allowed after the queen is on the board
         if action == 'move':
-            if blackTurn and ('bQ1' not in self.playedPieces):
+            if black_turn and ('bQ1' not in self.playedPieces):
                 return False
-            if whiteTurn and ('wQ1' not in self.playedPieces):
+            if white_turn and ('wQ1' not in self.playedPieces):
                 return False
 
         # White Queen must be placed by turn 7 (4th white action)
@@ -267,30 +252,28 @@ class Hive(object):
         """
         Verifies if the action is valid on this turn.
         """
-        whiteTurn = self.activePlayer == 0
-        blackTurn = self.activePlayer == 1
-        if whiteTurn and piece.color != 'w':
+        white_turn = self.activePlayer == 0
+        black_turn = self.activePlayer == 1
+        if white_turn and piece.color != 'w':
             return False
 
-        if blackTurn and piece.color != 'b':
+        if black_turn and piece.color != 'b':
             return False
-
 
         if not self._validate_queen_rules(piece, action):
             return False
         
         return True
 
-
-    def _validate_move_piece(self, moving_piece, targetCell):
+    def _validate_move_piece(self, moving_piece, target_cell):
         # check if the piece has been placed
         pp = self.playedPieces.get(str(moving_piece))
         if pp is None:
             print("piece was not played yet")
             return False
 
-        # check if the move it's to a different targetCell
-        if moving_piece in self.piecesInCell.get(targetCell, []):
+        # check if the move it's to a different target_cell
+        if moving_piece in self.piecesInCell.get(target_cell, []):
             print("moving to the same place")
             return False
 
@@ -299,17 +282,17 @@ class Hive(object):
             print("break _one_hive rule")
             return False
 
-        return moving_piece.validate_move(self, targetCell)
+        return moving_piece.validate_move(self, target_cell)
 
-    def _validate_place_piece(self, piece, targetCell):
+    def _validate_place_piece(self, piece, target_cell):
         """
-        Verifies if a piece can be played from hand into a given targetCell.
+        Verifies if a piece can be played from hand into a given target_cell.
         The piece must be placed touching at least one piece of the same color
         and can only be touching pieces of the same color.
         """
 
-        # targetCell must be free
-        if not self.is_cell_free(targetCell):
+        # target_cell must be free
+        if not self.is_cell_free(target_cell):
             return False
 
         # the piece was already played
@@ -324,25 +307,23 @@ class Hive(object):
         if self.turn == 2:
             return True
 
-        playedColor = piece.color
+        played_color = piece.color
 
-        occupiedCells = self.occupied_surroundings(targetCell)
-        visiblePieces = [
-            self.piecesInCell[oCell][-1] for oCell in occupiedCells
+        occupied_cells = self.occupied_surroundings(target_cell)
+        visible_pieces = [
+            self.piecesInCell[oCell][-1] for oCell in occupied_cells
         ]
         res = True
-        for piece in visiblePieces:
-            if self.playedPieces[str(piece)].color != playedColor:
+        for piece in visible_pieces:
+            if self.playedPieces[str(piece)].color != played_color:
                 res = False
                 break
 
         return res
 
-
     def is_cell_free(self, cell):
         pic = self.piecesInCell.get(cell, [])
         return len(pic) == 0
-
 
     def occupied_surroundings(self, cell):
         """
@@ -351,15 +332,13 @@ class Hive(object):
         surroundings = self.board.get_surrounding(cell)
         return [c for c in surroundings if not self.is_cell_free(c)]
 
-
-    def poc2cell(self, refPiece, pointOfContact):
+    def poc2cell(self, ref_piece, point_of_contract):
         """
         Translates a relative position (piece, point of contact) into
         a board cell (x, y).
         """
-        refCell = self.locate(refPiece)
-        return self.board.get_dir_cell(refCell, pointOfContact)
-
+        ref_cell = self.locate(ref_piece)
+        return self.board.get_dir_cell(ref_cell, point_of_contract)
 
     def bee_moves(self, cell):
         """
@@ -387,64 +366,64 @@ class Hive(object):
                 available_moves.append(target)
         return available_moves
 
-
-    def _piece_set(self, color):
+    @staticmethod
+    def _piece_set(color):
         """
         Return a full set of hive pieces
         """
-        pieceSet = {}
+        piece_set = {}
         for i in range(3):
             ant = AntPiece(color, i+1)
-            pieceSet[str(ant)] = ant
+            piece_set[str(ant)] = ant
             grasshopper = GrassHopperPiece(color, i+1)
-            pieceSet[str(grasshopper)] = grasshopper
+            piece_set[str(grasshopper)] = grasshopper
         for i in range(2):
             spider = SpiderPiece(color, i+1)
-            pieceSet[str(spider)] = spider
+            piece_set[str(spider)] = spider
             beetle = BeetlePiece(color, i+1)
-            pieceSet[str(beetle)] = beetle
+            piece_set[str(beetle)] = beetle
         queen = BeePiece(color, 1)
-        pieceSet[str(queen)] = queen
-        return pieceSet
+        piece_set[str(queen)] = queen
+        return piece_set
 
     def _one_hive(self, piece):
         """
         Check if removing a piece doesn't break the one hive rule.
         Returns False if the hive is broken.
         """
-        originalPos = self.locate(str(piece))
+        origional_pos = self.locate(str(piece))
         # if the piece is not in the board then moving it won't break the hive
-        if originalPos is None:
+        if origional_pos is None:
             return True
         # if there is another piece in the same cell then the one hive rule
         # won't be broken
-        pic = self.piecesInCell[originalPos]
+        pic = self.piecesInCell[origional_pos]
         if len(pic) > 1:
             return True
 
         # temporarily remove the piece
-        del self.piecesInCell[originalPos]
+        del self.piecesInCell[origional_pos]
 
         # Get all pieces that are in contact with the removed one and try to
         # reach all of them from one of them.
-        occupied = self.occupied_surroundings(originalPos)
+        occupied = self.occupied_surroundings(origional_pos)
         visited = set()
-        toExplore = set([occupied[0]])
-        toReach = set(occupied[1:])
+        to_explore = {occupied[0]}
+        to_reach = set(occupied[1:])
         res = False
 
-        while len(toExplore) > 0:
+        while len(to_explore) > 0:
             found = []
-            for cell in toExplore:
+            for cell in to_explore:
                 found += self.occupied_surroundings(cell)
                 visited.add(cell)
-            toExplore = set(found) - visited
-            if toReach.issubset(visited):
+            to_explore = set(found) - visited
+            if to_reach.issubset(visited):
                 res = True
                 break
 
         # restore the removed piece
-        self.piecesInCell[originalPos] = pic
+        self.piecesInCell[origional_pos] = pic
         return res
 
 # Adjacency matrix of pieces
@@ -511,11 +490,13 @@ class Hive(object):
 
         if not my_pieces:
             # no piece of that player has been played yet
-            if not self.piecesInCell.get((0,0)):
-                return [(piece, (0, 0)) for piece in self.unplayedPieces[turn].values() if not isinstance(piece, BeePiece)]
+            if not self.piecesInCell.get((0, 0)):
+                return [(piece, (0, 0)) for piece in self.unplayedPieces[turn].values() if
+                        not isinstance(piece, BeePiece)]
             else:
-                for sur in self.board.get_surrounding((0,0)):
-                    result.update([(piece, sur) for piece in self.unplayedPieces[turn].values() if not isinstance(piece, BeePiece)]) 
+                for sur in self.board.get_surrounding((0, 0)):
+                    result.update([(piece, sur) for piece in self.unplayedPieces[turn].values() if
+                                   not isinstance(piece, BeePiece)])
                 return result
 
         # pieces which can be put down from hand

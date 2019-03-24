@@ -54,18 +54,16 @@ class Board(object):
         self.ref0x = 0
         self.ref0y = 0
 
-
     def _add_row(self, before=False):
-        newRow = []
-        rowSize = len(self.board[0])
-        for _ in range(rowSize):
-            newRow.append([])
+        new_row = []
+        row_size = len(self.board[0])
+        for _ in range(row_size):
+            new_row.append([])
         if not before:
-            self.board.append(newRow)
+            self.board.append(new_row)
         else:
             self.ref0y += 1
-            self.board.insert(0, newRow)
-
+            self.board.insert(0, new_row)
 
     def _add_column(self, before=False):
         if before:
@@ -75,7 +73,6 @@ class Board(object):
                 row.append([])
             else:
                 row.insert(0, [])
-
 
     def resize(self, x_y):
         """
@@ -96,22 +93,20 @@ class Board(object):
             yy += 1
         while yy >= len(self.board):
             self._add_row()
-        return (xx, yy)
-
+        return xx, yy
 
     def get_boundaries(self):
         """returns the coordinates of the board limits."""
-        firstCol = -self.ref0x
-        firstRow = -self.ref0y
-        lastCol = len(self.board[0]) + firstCol - 1
-        lastRow = len(self.board) + firstRow - 1
-        return firstCol, firstRow, lastCol, lastRow
+        first_col = -self.ref0x
+        first_row = -self.ref0y
+        last_col = len(self.board[0]) + first_col - 1
+        last_row = len(self.board) + first_row - 1
+        return first_col, first_row, last_col, last_row
     
     def valid_cell(self, cell):
         (x, y) = cell
-        firstCol, firstRow, lastCol, lastRow = self.get_boundaries()
-        return firstCol <= x <= lastCol and firstRow <= y <= lastRow 
-
+        first_col, first_row, last_col, last_row = self.get_boundaries()
+        return first_col <= x <= last_col and first_row <= y <= last_row 
 
     def get_surrounding(self, x_y):
         """
@@ -121,37 +116,36 @@ class Board(object):
         (x, y) = x_y
         return [(x-1, y), (x, y-1), (x+1, y), (x, y+1)]
 
-
-    def get_w_xy(self, x_y):
+    @staticmethod
+    def get_w_xy(x_y):
         """
         Get X;Y coordinates for the west/left Cell
         """
         (x, y) = x_y
-        return (x-1, y)
+        return x-1, y
 
-
-    def get_e_xy(self, x_y):
+    @staticmethod
+    def get_e_xy(x_y):
         """
         Get X;Y coordinates for the east/right Cell
         """
         (x, y) = x_y
-        return (x+1, y)
+        return x+1, y
 
 
 class HexBoard(Board):
     """Hexagonal Tile Board"""
 
     # Directions
-    HX_O = 0   # origin/on-top
-    HX_W = 1   # west
-    HX_NW = 2  # north-west
-    HX_NE = 3  # north-east
-    HX_E = 4   # east
-    HX_SE = 5  # south-east
-    HX_SW = 6  # south-west
-    HX_LOW = 7 # lower
-    HX_UP = 8  # upper
-
+    HX_O = 0    # origin/on-top
+    HX_W = 1    # west
+    HX_NW = 2   # north-west
+    HX_NE = 3   # north-east
+    HX_E = 4    # east
+    HX_SE = 5   # south-east
+    HX_SW = 6   # south-west
+    HX_LOW = 7  # lower
+    HX_UP = 8   # upper
 
     def __init__(self):
         super(HexBoard, self).__init__()
@@ -164,7 +158,6 @@ class HexBoard(Board):
             5: self.get_se_xy,
             6: self.get_sw_xy
         }
-
 
     def get_surrounding(self, x_y):
         """
@@ -184,7 +177,6 @@ class HexBoard(Board):
             res.insert(4, (x+1, y+1))
         return res
 
-
     def get_dir_cell(self, cell, direction):
         """
         Translates a relative position (cell, direction) to the referred
@@ -201,8 +193,8 @@ class HexBoard(Board):
         """
         return self.dir2func[direction](cell)
 
-
-    def get_nw_xy(self, x_y):
+    @staticmethod
+    def get_nw_xy(x_y):
         """
         Get X;Y coordinates for the upper-left Cell
         """
@@ -210,10 +202,10 @@ class HexBoard(Board):
         p = y % 2
         nx = x - 1 + p
         ny = y - 1
-        return (nx, ny)
+        return nx, ny
 
-
-    def get_ne_xy(self, x_y):
+    @staticmethod
+    def get_ne_xy(x_y):
         """
         Get X;Y coordinates for the upper-right Cell
         """
@@ -221,10 +213,10 @@ class HexBoard(Board):
         p = y % 2
         nx = x + p
         ny = y - 1
-        return (nx, ny)
+        return nx, ny
 
-
-    def get_sw_xy(self, x_y):
+    @staticmethod
+    def get_sw_xy(x_y):
         """
         Get X;Y coordinates for the lower-left Cell
         """
@@ -232,10 +224,10 @@ class HexBoard(Board):
         p = y % 2
         nx = x - 1 + p
         ny = y + 1
-        return (nx, ny)
+        return nx, ny
 
-
-    def get_se_xy(self, x_y):
+    @staticmethod
+    def get_se_xy(x_y):
         """
         Get X;Y coordinates for the lower-right Cell
         """
@@ -243,30 +235,30 @@ class HexBoard(Board):
         p = y % 2
         nx = x + p
         ny = y + 1
-        return (nx, ny)
+        return nx, ny
 
-
-    def get_w_xy(self, x_y):
+    @staticmethod
+    def get_w_xy(x_y):
         """
         Get X;Y coordinates for the left Cell
         """
         (x, y) = x_y
-        return (x-1, y)
+        return x-1, y
 
-
-    def get_e_xy(self, x_y):
+    @staticmethod
+    def get_e_xy(x_y):
         """
         Get X;Y coordinates for the right Cell
         """
         (x, y) = x_y
-        return (x+1, y)
-
+        return x+1, y
 
     def get_line_dir(self, cell0, cell1):
         """
         Returns the direction to take to go from cell0 to cell1 or None if it's
         not possible to go in a straight line.
         """
+        # TODO FIXME functionally wrong sometimes
 
         (sx, sy) = cell0
         (ex, ey) = cell1
@@ -278,15 +270,14 @@ class HexBoard(Board):
         if dx == dy == 0:
             return self.HX_O
 
-        moveDir = None
         # horizontal jump
         if dy == 0:
             # moving west
             if dx < 0:
-                moveDir = self.HX_W
+                move_dir = self.HX_W
             # moving east
             else:
-                moveDir = self.HX_E
+                move_dir = self.HX_E
 
         # diagonal jump (dy != 0)
         else:
@@ -295,25 +286,25 @@ class HexBoard(Board):
 
             # TODO probably they should be placed out as a constant
             possible_adjacent_even_delta = {
-                (-1,-1): self.HX_NW, 
-                (0,-1): self.HX_NE,
-                (0,1): self.HX_SE,
-                (-1,1): self.HX_SW
+                (-1, -1): self.HX_NW,
+                (0, -1): self.HX_NE,
+                (0, 1): self.HX_SE,
+                (-1, 1): self.HX_SW
             }
 
             possible_adjacent_odd_delta = {
-                (0,-1): self.HX_NW, 
-                (1,-1): self.HX_NE,
-                (1,1): self.HX_SE,
-                (0,1): self.HX_SW
+                (0, -1): self.HX_NW,
+                (1, -1): self.HX_NE,
+                (1, 1): self.HX_SE,
+                (0, 1): self.HX_SW
             }
 
             # adjacent
             if abs(dy) == 1:
                 if p == 0:
-                    return possible_adjacent_even_delta.get((dx,dy))
+                    return possible_adjacent_even_delta.get((dx, dy))
                 else:
-                    return possible_adjacent_odd_delta.get((dx,dy))
+                    return possible_adjacent_odd_delta.get((dx, dy))
 
             if abs(dx) != abs(nx):
                 print("DEBUG: abs(dx) != abs(nx) :(")
@@ -322,13 +313,13 @@ class HexBoard(Board):
 
             if dx < 0:
                 if dy < 0:
-                    moveDir = self.HX_NW
+                    move_dir = self.HX_NW
                 else:
-                    moveDir = self.HX_SW
+                    move_dir = self.HX_SW
             else:
                 if dy < 0:
-                    moveDir = self.HX_NE
+                    move_dir = self.HX_NE
                 else:
-                    moveDir = self.HX_SE
+                    move_dir = self.HX_SE
 
-        return moveDir
+        return move_dir

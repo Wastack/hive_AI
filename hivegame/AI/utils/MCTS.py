@@ -4,7 +4,7 @@ EPS = 1e-8
 
 class MCTS():
     """
-    This class handles the MCTS tree.
+    Monte carlo tree search algorithm
     """
 
     def __init__(self, game, nnet, args):
