@@ -2,9 +2,9 @@
 
 import sys
 
-from hivegame.board import HexBoard
 from hivegame.hive import Hive, HiveException
 from hivegame.view import HiveView
+from hivegame.utils import Direction
 
 
 class Environment:
@@ -87,19 +87,19 @@ class Environment:
     def poc2direction(point_of_contact):
         """Parse point of contact to a Hive.direction"""""
         if point_of_contact == '|*':
-            return HexBoard.HX_W
+            return Direction.HX_W
         if point_of_contact == '/*':
-            return HexBoard.HX_NW
+            return Direction.HX_NW
         if point_of_contact == '*\\':
-            return HexBoard.HX_NE
+            return Direction.HX_NE
         if point_of_contact == '*|':
-            return HexBoard.HX_E
+            return Direction.HX_E
         if point_of_contact == '*/':
-            return HexBoard.HX_SE
+            return Direction.HX_SE
         if point_of_contact == '\\*':
-            return HexBoard.HX_SW
+            return Direction.HX_SW
         if point_of_contact == '=*':
-            return HexBoard.HX_O
+            return Direction.HX_O
         raise ValueError('Invalid input for point of contact: "%s"' % point_of_contact)
 
     def check_victory(self):
