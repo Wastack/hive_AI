@@ -7,6 +7,8 @@ from hivegame.pieces.beetle_piece import BeetlePiece
 from hivegame.pieces.spider_piece import SpiderPiece
 from hivegame.utils import Direction
 
+from hivegame.view import HiveView
+
 class TestHive(TestCase):
     """Verify the game logic"""
 
@@ -49,7 +51,12 @@ class TestHive(TestCase):
         self.assertFalse(self.hive._one_hive(self.hive.playedPieces['wS1']))
         self.assertTrue(self.hive._one_hive(self.hive.playedPieces['wQ1']))
 
-    def testbee_moves(self):
+    def test_one_hive_with_load_state(self):
+        self.hive.load_state((self.hive.get_adjacency_state(), self.hive.turn))
+        self.assertFalse(self.hive._one_hive(self.hive.playedPieces['wS1']))
+        self.assertTrue(self.hive._one_hive(self.hive.playedPieces['wQ1']))
+
+    def test_bee_moves(self):
         bee_pos = self.hive.locate('wQ1')  # (-1, 1)
         expected = [(-1, 0), (0, 1)]
         self.assertEqual(expected, self.hive.bee_moves(bee_pos))
@@ -105,8 +112,7 @@ class TestHive(TestCase):
             self.hive.playedPieces['bB1'].validate_move(self.hive, end_cell)
         )
 
-        self.hive.turn = 11  # set turn to be white player turn
-        self.hive.activePlayer = 0
+        self.hive.set_turn(11)  # WHITE
         self.hive.place_piece_without_action(BeetlePiece('w', 2), 'wQ1', Direction.HX_W)
         end_cell = self.hive.poc2cell('wQ1', Direction.HX_NW)
         self.assertFalse(
@@ -120,8 +126,7 @@ class TestHive(TestCase):
         )
 
         # moving on top of the pieces
-        self.hive.turn = 12  # set turn to be black player turn
-        self.hive.activePlayer = 1
+        self.hive.set_turn(12)  # BLACK
         beetle = self.hive.playedPieces['bB1']
         self.hive.move_piece_without_action(beetle, 'bS1', Direction.HX_O)
         end_cell = self.hive.poc2cell('bS1', Direction.HX_W)
@@ -168,11 +173,9 @@ class TestHive(TestCase):
         )
 
         # moving out of a surrounding situation
-        self.hive.turn = 11  # set turn to be white player turn
-        self.hive.activePlayer = 0
+        self.hive.set_turn(11)  # WHITE
         self.hive.move_piece_without_action(self.hive.playedPieces['wQ1'], 'wS1', Direction.HX_W)
-        self.hive.turn = 12  # set turn to be black player turn
-        self.hive.activePlayer = 1
+        self.hive.set_turn(12)  # BLACK
         self.hive.move_piece_without_action(self.hive.playedPieces['bA1'], 'wG1', Direction.HX_SE)
 
         end_cell = self.hive.poc2cell('wS1', Direction.HX_SW)

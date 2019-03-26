@@ -1,6 +1,6 @@
-from enum import Enum
+from enum import IntEnum
 
-class Direction(Enum):
+class Direction(IntEnum):
     HX_O = 0  # origin/on-top
     HX_W = 1  # west
     HX_NW = 2  # north-west

@@ -52,9 +52,9 @@ class MCTS():
         has the maximum upper confidence bound as in the paper.
 
         Once a leaf node is found, the neural network is called to return an
-        initial policy P and a value v for the state. This value is propogated
+        initial policy P and a value v for the state. This value is propagated
         up the search path. In case the leaf node is a terminal state, the
-        outcome is propogated up the search path. The values of Ns, Nsa, Qsa are
+        outcome is propagated up the search path. The values of Ns, Nsa, Qsa are
         updated.
 
         NOTE: the return values are the negative of the value of the current

@@ -123,3 +123,6 @@ class Environment:
             return True
         except HiveException:
             return False
+
+    def string_representation(self, state):
+        return ','.join(str(item) for inner_list in state for item in inner_list)
