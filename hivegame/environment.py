@@ -133,26 +133,26 @@ class Environment(Game):
         return random.choice(tuple(hive.get_all_possible_actions()))
 
 # Methods for Game.py interface
-    def stringRepresentation(self, state):
-        return self.hive.string_representation(state)
+    def stringRepresentation(self, board):
+        return self.hive.string_representation(board)
 
-    def getActionSize(self, state):
+    def getActionSize(self, board, player):
         """
         :param state: A tuple of an adjacency matrix representing the board and the number of turns.
         :return: Number of possible actions in the given state
         """
         hive = Hive()
-        hive.load_state(state)
+        hive.load_state_with_player(board, player)
         return len(hive.get_all_possible_actions())
 
-    def getCanonicalForm(self, state, _player):
+    def getCanonicalForm(self, board, player):
         hive = Hive()
-        hive.load_state(state)
-        return (hive.canonical_adjacency_state(),  state[1])
+        hive.load_state_with_player(board, player)
+        return Hive.list_representation(hive.canonical_adjacency_state())
 
-    def getGameEnded(self, state, player):
+    def getGameEnded(self, board, player):
         hive = Hive()
-        hive.load_state(state)
+        hive.load_state_with_player(board, player)
         status = hive.check_victory()
         if status == Hive.UNFINISHED:
             return 0
@@ -163,14 +163,37 @@ class Environment(Game):
         else:
             raise ValueError('unexpected player')
 
-    def getValidMoves(self, state, _player):
+    def getValidMoves(self, board, player):
         # TODO create load_state with player
         hive = Hive()
-        hive.load_state(state)
+        hive.load_state_with_player(board, player)
         return hive.get_all_possible_actions()
 
-    def getNextState(self, state, _player, action):
+    def getNextState(self, board, player, action):
         hive = Hive()
-        hive.load_state(state)
+        hive.load_state_with_player(board, player)
         (piece, to_cell) = action
         hive.action_piece_to(piece, to_cell)
+
+    def getInitBoard(self):
+        hive = Hive()
+        return Hive.list_representation(hive.get_adjacency_state())
+
+    def getSymmetries(self, board_list_repr, pi):
+        symmetries = []
+        # Rotate the board 5 times
+        for i in range(5):
+            symmetries.append(self._rotate_adjacency(board_list_repr))
+        return map(lambda sim: (sim, pi), symmetries)
+
+    @staticmethod
+    def _rotate_adjacency(adjacency_list):
+        result = []
+        for dir in adjacency_list:
+            if 0 < dir <= 5:
+                result.append(dir + 1)
+            elif dir == 6:
+                result.append(1)  # overflow of directions
+            else:
+                result.append(dir)
+        return result

@@ -28,7 +28,7 @@ class Game(metaclass=abc.ABCMeta):
         """
         pass
 
-    def getActionSize(self):
+    def getActionSize(self, board, player):
         """
         Returns:
             actionSize: number of all possible actions

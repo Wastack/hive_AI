@@ -53,7 +53,7 @@ class TestHive(TestCase):
 
     def test_one_hive_with_load_state(self):
         self.hive.load_state((self.hive.get_adjacency_state(), self.hive.turn))
-        print(Hive.string_representation((self.hive.canonical_adjacency_state(), self.hive.turn)))
+        print(Hive.string_representation(self.hive.canonical_adjacency_state()))
         self.assertFalse(self.hive._one_hive(self.hive.playedPieces['wS1']))
         self.assertTrue(self.hive._one_hive(self.hive.playedPieces['wQ1']))
 

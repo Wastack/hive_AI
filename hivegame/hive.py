@@ -527,14 +527,17 @@ class Hive(object):
         return inverse_matrix
 
     @staticmethod
-    def string_representation(state):
-        (adjacency_matrix, turn) = state
-        directions = [turn]  # current turn number is the first data
-        for sorted_row in [v for (k, v) in sorted(adjacency_matrix.items(), key=lambda row: row[0]) ]:
-            for sorted_dir in [v for (_k, v) in sorted(sorted_row.items(), key=lambda col: col[0]) ]:
+    def list_representation(adjacency):
+        directions = []  # current turn number is the first data
+        for sorted_row in [v for (k, v) in sorted(adjacency.items(), key=lambda row: row[0])]:
+            for sorted_dir in [v for (_k, v) in sorted(sorted_row.items(), key=lambda col: col[0])]:
                 directions.append(sorted_dir)
+        return directions
+
+    @staticmethod
+    def string_representation(adjacency):
         # We need to use comma as separator, because turn number can consist of more digits.
-        return ",".join(str(x) for x in directions)
+        return ",".join(str(x) for x in Hive.list_representation(adjacency))
 
     @staticmethod
     def _toggle_color(piece_name):
@@ -662,6 +665,7 @@ class Hive(object):
 
         # turn number is at least that much
         turn = played_count + 1
+        assert turn > 0
 
         # turn should be an even number
         if current_player == self.BLACK:
