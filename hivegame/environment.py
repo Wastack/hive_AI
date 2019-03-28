@@ -5,9 +5,11 @@ import sys
 from hivegame.hive import Hive, HiveException
 from hivegame.view import HiveView
 from hivegame.utils import Direction
+from hivegame.AI.utils.Game import Game
+import random
 
 
-class Environment:
+class Environment(Game):
     """
     Environment controls the game. It contains all the methods to
     create a game, move or put down pieces, ask information about
@@ -19,6 +21,7 @@ class Environment:
     WHITE = 'w'
 
     def __init__(self):
+        super(Environment, self).__init__()
         self.hive = Hive()
         self.view = HiveView(self.hive)
         self.input = sys.stdin
@@ -124,6 +127,11 @@ class Environment:
         except HiveException:
             return False
 
+    def randomActionInState(self, state):
+        hive = Hive()
+        hive.load_state(state)
+        return random.choice(tuple(hive.get_all_possible_actions()))
+
 # Methods for Game.py interface
     def stringRepresentation(self, state):
         return self.hive.string_representation(state)
@@ -137,25 +145,32 @@ class Environment:
         hive.load_state(state)
         return len(hive.get_all_possible_actions())
 
+    def getCanonicalForm(self, state, _player):
+        hive = Hive()
+        hive.load_state(state)
+        return (hive.canonical_adjacency_state(),  state[1])
+
     def getGameEnded(self, state, player):
         hive = Hive()
         hive.load_state(state)
         status = hive.check_victory()
         if status == Hive.UNFINISHED:
             return 0
-        if player == Hive.BLACK:
+        if player == 1:  # Hive.BLACK
             return 1 if status == Hive.BLACK_WIN else -1
-        elif player == Hive.WHITE:
+        elif player == -1:  # Hive.WHITE
             return 1 if status == Hive.WHITE_WIN else -1
         else:
             raise ValueError('unexpected player')
 
-    def getValidMoves(self, board, player):
+    def getValidMoves(self, state, _player):
         # TODO create load_state with player
         hive = Hive()
         hive.load_state(state)
         return hive.get_all_possible_actions()
 
-    def getNextMove(self, board, player, action):
+    def getNextState(self, state, _player, action):
         hive = Hive()
         hive.load_state(state)
+        (piece, to_cell) = action
+        hive.action_piece_to(piece, to_cell)

@@ -7,9 +7,9 @@ class MCTS():
     Monte carlo tree search algorithm
     """
 
-    def __init__(self, game, nnet, args):
+    def __init__(self, game, predictor, args):
         self.game = game
-        self.nnet = nnet
+        self.predictor = predictor
         self.args = args
         self.Qsa = {}       # stores Q values for s,a (as defined in the paper)
         self.Nsa = {}       # stores #times edge s,a was visited
@@ -45,7 +45,6 @@ class MCTS():
         probs = [x/float(sum(counts)) for x in counts]
         return probs
 
-    # TODO board mellé kellene a turn number is
     def search(self, canonicalBoard):
         """
         This function performs one iteration of MCTS. It is recursively called
@@ -76,7 +75,7 @@ class MCTS():
 
         if s not in self.Ps:
             # leaf node
-            self.Ps[s], v = self.nnet.predict(canonicalBoard)
+            self.Ps[s], v = self.predictor.predict(canonicalBoard)
             valids = self.game.getValidMoves(canonicalBoard, 1)
             self.Ps[s] = self.Ps[s]*valids      # masking invalid moves
             sum_Ps_s = np.sum(self.Ps[s])
