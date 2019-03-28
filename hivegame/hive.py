@@ -510,22 +510,38 @@ class Hive(object):
     def canonical_adjacency_state(self):
         """
         Representation of state with adjacency matrix. From the players point of view. Instead of having a white and
-        a black player, there are my pieces and the opponent's pieces
+        a black player, there are my pieces and the opponent's pieces.
+
+        Practically it means that we have to switch colors of each piece.
         """
 
         # sorted by their names. That means black piece are at front.
         matrix = self.get_adjacency_state()
-        result_matrix = []
-        for row_name in sorted(matrix.keys()):
-            row_list = []
-            row = matrix[row_name]
-            for col_name in sorted(row.keys()):
-                row_list.append(row[col_name])
-            result_matrix.append(row_list)
-        if self.activePlayer == 0:  # white, swap them
-            result_matrix[:len(result_matrix)//2], result_matrix[len(result_matrix)//2:] =\
-                result_matrix[len(result_matrix)//2:], result_matrix[:len(result_matrix)//2]
-        return result_matrix
+        inverse_matrix = {}
+        for (row_name, row) in matrix.items():
+            inverse_row = {}
+            for (col_name, cell) in row.items():
+                inverse_row[self._toggle_color(col_name)] = cell
+            inverse_matrix[self._toggle_color(row_name)] = inverse_row
+
+        return inverse_matrix
+
+    @staticmethod
+    def string_representation(state):
+        (adjacency_matrix, turn) = state
+        directions = [turn]  # current turn number is the first data
+        for sorted_row in [v for (k, v) in sorted(adjacency_matrix.items(), key=lambda row: row[0]) ]:
+            for sorted_dir in [v for (_k, v) in sorted(sorted_row.items(), key=lambda col: col[0]) ]:
+                directions.append(sorted_dir)
+        # We need to use comma as separator, because turn number can consist of more digits.
+        return ",".join(str(x) for x in directions)
+
+    @staticmethod
+    def _toggle_color(piece_name):
+        assert(len(piece_name) == 3)
+        s = list(piece_name)
+        s[0] = Hive.BLACK if s[0] == Hive.WHITE else Hive.WHITE
+        return "".join(s)
 
     def get_all_possible_actions(self):
         result = set()
@@ -598,16 +614,10 @@ class Hive(object):
         (adjacency_matrix, turn) = state
         self.__init__()
         self.setup()
-        to_be_placed = []
-        for (piece_name, row) in adjacency_matrix.items():
-            if all([cell == 0 for cell in row.values()]):
-                continue  # not played, nothing to do here
-            # put down the first bug which is already played
-            if len(self.playedPieces) < 1:
-                self.action("play", piece_name)
-                continue
+        to_be_placed = Hive._getPieceNamesOnBoard(adjacency_matrix)
 
-            to_be_placed.append(piece_name)
+        # put down the first bug which is already played
+        self._place_without_validation(self._name_to_piece(to_be_placed.pop()), (0, 0))
 
         can_have_new_neighbor = self.playedPieces.keys()
         can_have_next = []
@@ -631,7 +641,31 @@ class Hive(object):
         return True
 
     @staticmethod
+    def _getPieceNamesOnBoard(adjacency):
+        result = []
+        for (piece_name, row) in adjacency.items():
+            if all([cell == 0 for cell in row.values()]):
+                continue  # not played, nothing to do here
+            result.append(piece_name)
+        return result
+
+    @staticmethod
     def _name_to_piece(name):
         letters = list(name)
         assert (len(letters) == 3)  # color, type, number
         return letter_to_piece[letters[1]](letters[0], letters[2])
+
+    def load_state_with_player(self, adjacency, current_player):
+        # count number of pieces already on board
+        # It is needed in order to guess turn number
+        played_count = len(Hive._getPieceNamesOnBoard(adjacency))
+
+        # turn number is at least that much
+        turn = played_count + 1
+
+        # turn should be an even number
+        if current_player == self.BLACK:
+            turn += turn % 2
+
+        return self.load_state((adjacency, turn))
+

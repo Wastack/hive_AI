@@ -124,5 +124,38 @@ class Environment:
         except HiveException:
             return False
 
-    def string_representation(self, state):
-        return ','.join(str(item) for inner_list in state for item in inner_list)
+# Methods for Game.py interface
+    def stringRepresentation(self, state):
+        return self.hive.string_representation(state)
+
+    def getActionSize(self, state):
+        """
+        :param state: A tuple of an adjacency matrix representing the board and the number of turns.
+        :return: Number of possible actions in the given state
+        """
+        hive = Hive()
+        hive.load_state(state)
+        return len(hive.get_all_possible_actions())
+
+    def getGameEnded(self, state, player):
+        hive = Hive()
+        hive.load_state(state)
+        status = hive.check_victory()
+        if status == Hive.UNFINISHED:
+            return 0
+        if player == Hive.BLACK:
+            return 1 if status == Hive.BLACK_WIN else -1
+        elif player == Hive.WHITE:
+            return 1 if status == Hive.WHITE_WIN else -1
+        else:
+            raise ValueError('unexpected player')
+
+    def getValidMoves(self, board, player):
+        # TODO create load_state with player
+        hive = Hive()
+        hive.load_state(state)
+        return hive.get_all_possible_actions()
+
+    def getNextMove(self, board, player, action):
+        hive = Hive()
+        hive.load_state(state)

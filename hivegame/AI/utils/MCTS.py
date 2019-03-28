@@ -32,7 +32,8 @@ class MCTS():
             self.search(canonicalBoard)
 
         s = self.game.stringRepresentation(canonicalBoard)
-        counts = [self.Nsa[(s,a)] if (s,a) in self.Nsa else 0 for a in range(self.game.getActionSize())]
+        # TODO FIXME is it a problem, that action size is depending on the state?
+        counts = [self.Nsa[(s,a)] if (s,a) in self.Nsa else 0 for a in range(self.game.getActionSize(canonicalBoard))]
 
         if temp==0:
             bestA = np.argmax(counts)
@@ -44,7 +45,7 @@ class MCTS():
         probs = [x/float(sum(counts)) for x in counts]
         return probs
 
-
+    # TODO board mellé kellene a turn number is
     def search(self, canonicalBoard):
         """
         This function performs one iteration of MCTS. It is recursively called
