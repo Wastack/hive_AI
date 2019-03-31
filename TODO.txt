@@ -13,3 +13,9 @@ TODO
   e.g. white is 0 and black is 1
 
 - Create a plugin system to support new pieces and rules
+
+### AI
+
+- rewrite Arena usage in Coach.py
+
+- connect Coach to NeuralNet.py and Game.py
