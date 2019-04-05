@@ -1,7 +1,9 @@
 import random
 import logging
 
-class RandomAI:
+from hivegame.AI.player import Player
+
+class RandomPlayer(Player):
     def step(self, environment):
         actions = environment.get_all_possible_actions()
         logging.info("RandomAI: Length of action space: {}".format(len(actions)))

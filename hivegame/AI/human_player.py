@@ -1,6 +1,7 @@
 import logging
+from hivegame.AI.player import Player
 
-class HumanAI:
+class HumanPlayer(Player):
     def __init__(self, input_stream):
         self._input = input_stream
 

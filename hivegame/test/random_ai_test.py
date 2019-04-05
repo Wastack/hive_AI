@@ -1,10 +1,6 @@
-from unittest import TestCase
 import time
 
-from hivegame.AI.random_ai import RandomAI
-from hivegame.environment import Environment
-from hivegame.hive import Hive
-from hivegame.view import HiveView
+from hivegame.AI.random_player import RandomPlayer
 
 from arena import Arena
 
@@ -14,7 +10,7 @@ class TestRandomAi(TestCase):
     """Verify the HexBoard logic"""
 
     def setUp(self):
-        self.game = Arena(RandomAI(), RandomAI())
+        self.game = Arena(RandomPlayer(), RandomPlayer())
 
     def test_run_against_itself(self):
         timeout = time.time() + 10 # 10 sec from now

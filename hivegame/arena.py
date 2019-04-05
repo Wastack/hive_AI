@@ -3,8 +3,8 @@
 import sys
 from hivegame.hive import Hive
 from hivegame.environment import Environment
-from hivegame.AI.random_ai import RandomAI
-from hivegame.AI.human_ai import HumanAI
+from hivegame.AI.random_player import RandomPlayer
+from hivegame.AI.human_player import HumanPlayer
 
 import logging
 
@@ -27,7 +27,7 @@ class Arena(object):
                 self.env.exec_cmd("pass")
                 continue
             # TODO refactor human AI to look the same from outside
-            if isinstance(current_player, HumanAI):
+            if isinstance(current_player, HumanPlayer):
                 if not response:
                     break
                 feedback = self.env.exec_cmd(response)
@@ -42,7 +42,7 @@ class Arena(object):
 def main():
     logging.basicConfig(level=logging.INFO)
     # game = Arena(HumanAI(sys.stdin), RandomAI())
-    game = Arena(RandomAI(), RandomAI())
+    game = Arena(RandomPlayer(), RandomPlayer())
     game.run()
 
 
