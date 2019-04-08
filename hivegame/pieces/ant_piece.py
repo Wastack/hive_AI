@@ -1,6 +1,7 @@
 from hivegame.pieces.piece import HivePiece
 
 class AntPiece(HivePiece):
+    MAX_STEP_COUNT = 50
     def validate_move(self, hive, end_cell):
         if self.check_blocked(hive):
             return False
@@ -30,7 +31,10 @@ class AntPiece(HivePiece):
         return res
     
     def available_moves(self, hive):
-        # TODO make this a generator and use it for validation
+        """
+        :return: available moves. The order of the list depends on the distance of the target cell.
+        Cells in a shorter distance come first.
+        """
         if self.check_blocked(hive):
             return []
         hive.piecesInCell[self.position].remove(self)
@@ -50,9 +54,23 @@ class AntPiece(HivePiece):
         hive.piecesInCell[self.position].append(self)
         return visited
 
+    def available_moves_vector(self, hive):
+        """
+        It assumes that the ant can step onto a maximum of pre-specified number of cells
+        """
+        available_moves_count = len(self.available_moves(hive))
+        assert available_moves_count < AntPiece.MAX_STEP_COUNT
+        result = [1] * available_moves_count + [0] * (AntPiece.MAX_STEP_COUNT - available_moves_count)
+        assert len(result) == AntPiece.MAX_STEP_COUNT
+        return result
+
     @property
     def kind(self):
         return "A"
+
+    @property
+    def move_vector_size(self):
+        return AntPiece.MAX_STEP_COUNT
     
     def __repr__(self):
         return "%s%s%s" % (self.color, "A", self.number)

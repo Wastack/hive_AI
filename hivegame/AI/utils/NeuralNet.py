@@ -1,4 +1,7 @@
-class NeuralNet():
+import abc
+
+
+class NeuralNet(metaclass=abc.ABCMeta):
     """
     This class specifies the base NeuralNet class. To define your own neural
     network, subclass this class and implement the functions below. The neural
@@ -11,6 +14,7 @@ class NeuralNet():
     def __init__(self, game):
         pass
 
+    @abc.abstractmethod
     def train(self, examples):
         """
         This function trains the neural network with examples obtained from
@@ -24,6 +28,7 @@ class NeuralNet():
         """
         pass
 
+    @abc.abstractmethod
     def predict(self, board):
         """
         Input:
@@ -36,6 +41,7 @@ class NeuralNet():
         """
         pass
 
+    @abc.abstractmethod
     def save_checkpoint(self, folder, filename):
         """
         Saves the current neural network (with its parameters) in
@@ -43,6 +49,7 @@ class NeuralNet():
         """
         pass
 
+    @abc.abstractmethod
     def load_checkpoint(self, folder, filename):
         """
         Loads parameters of the neural network from folder/filename

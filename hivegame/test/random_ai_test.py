@@ -15,7 +15,7 @@ class TestRandomAi(TestCase):
     def test_run_against_itself(self):
         timeout = time.time() + 10 # 10 sec from now
         while time.time() < timeout:
-            self.game.run()
+            self.game.playGame()
         self.game.env.logger.close()
 
 

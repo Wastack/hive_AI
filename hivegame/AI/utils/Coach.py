@@ -8,6 +8,8 @@ import time, os, sys
 from pickle import Pickler, Unpickler
 from random import shuffle
 
+from hivegame.AI.alpha_player import AlphaPlayer
+
 
 class Coach():
     """
@@ -113,14 +115,13 @@ class Coach():
             # training new network, keeping a copy of the old one
             self.nnet.save_checkpoint(folder=self.args.checkpoint, filename='temp.pth.tar')
             self.pnet.load_checkpoint(folder=self.args.checkpoint, filename='temp.pth.tar')
-            pmcts = MCTS(self.game, self.pnet, self.args)
+            pAlphaPlayer = AlphaPlayer(self.game, self.pnet, self.args)
             
             self.nnet.train(trainExamples)
-            nmcts = MCTS(self.game, self.nnet, self.args)
+            nAplhaPlayer = AlphaPlayer(self.game, self.nnet, self.args)
 
             print('PITTING AGAINST PREVIOUS VERSION')
-            arena = Arena(lambda x: np.argmax(pmcts.getActionProb(x, temp=0)),
-                          lambda x: np.argmax(nmcts.getActionProb(x, temp=0)), self.game)
+            arena = Arena(pAlphaPlayer, nAplhaPlayer, self.game)
             pwins, nwins, draws = arena.playGames(self.args.arenaCompare)
 
             print('NEW/PREV WINS : %d / %d ; DRAWS : %d' % (nwins, pwins, draws))
@@ -142,7 +143,6 @@ class Coach():
         filename = os.path.join(folder, self.getCheckpointFile(iteration)+".examples")
         with open(filename, "wb+") as f:
             Pickler(f).dump(self.trainExamplesHistory)
-        f.closed
 
     def loadTrainExamples(self):
         modelFile = os.path.join(self.args.load_folder_file[0], self.args.load_folder_file[1])
@@ -156,6 +156,5 @@ class Coach():
             print("File with trainExamples found. Read it.")
             with open(examplesFile, "rb") as f:
                 self.trainExamplesHistory = Unpickler(f).load()
-            f.closed
             # examples based on the model were already collected (loaded)
             self.skipFirstSelfPlay = True

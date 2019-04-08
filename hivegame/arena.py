@@ -11,22 +11,22 @@ import logging
 
 class Arena(object):
 
-    def __init__(self, player1, player2):
+    def __init__(self, player1, player2, environment = None):
         super(Arena, self).__init__()
-        self.env = Environment()
+        if environment is not None:
+            self.env = environment
+        else:
+            self.env = Environment()
         self._player1 = player1
         self._player2 = player2
 
-    def run(self):
-        self.env.reset_game()
-
+    def playGame(self):
         while self.env.check_victory() == Hive.UNFINISHED:
             current_player = self._player1 if self.env.current_player() == "w" else self._player2
             response = current_player.step(self.env)
             if response == "pass":
                 self.env.exec_cmd("pass")
                 continue
-            # TODO refactor human AI to look the same from outside
             if isinstance(current_player, HumanPlayer):
                 if not response:
                     break
@@ -36,14 +36,44 @@ class Arena(object):
                 feedback = self.env.action_piece_to(piece, coord)
             current_player.feedback(feedback)
 
-        print("\nThanks for playing Hive. Have a nice day!")
+        return self.env.check_victory()
+
+
+    def _playNumberOfGames(self, num):
+        whiteWon = 0
+        blackWon = 0
+        draws = 0
+        for _ in range(num):
+            gameResult = self.playGame()
+            if gameResult == Hive.WHITE_WIN:
+                whiteWon += 1
+            elif gameResult == Hive.BLACK_WIN:
+                blackWon += 1
+            elif gameResult == Hive.DRAW:
+                draws += 1
+            else:
+                raise ValueError  # Invalid response of environment
+        return whiteWon, blackWon, draws
+
+    def playGames(self, num):
+        logging.INFO("playGames CALLED")
+        # White starts
+        (white_won, black_won, draw) = self._playNumberOfGames(num//2)
+        self.player1, self.player2 = self.player2, self.player1
+        # Black starts
+        (black_won2, white_won2, draw2) = self._playNumberOfGames(num//2)
+        # Switch it back
+        self.player1, self.player2 = self.player2, self.player1
+        return white_won + white_won2, black_won + black_won2, draw + draw2
 
 
 def main():
     logging.basicConfig(level=logging.INFO)
     # game = Arena(HumanAI(sys.stdin), RandomAI())
     game = Arena(RandomPlayer(), RandomPlayer())
-    game.run()
+    game.env.reset_game()
+    game.playGame()
+    print("\nThanks for playing Hive. Have a nice day!")
 
 
 if __name__ == '__main__':

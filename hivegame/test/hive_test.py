@@ -5,7 +5,7 @@ from unittest import TestCase
 from hivegame.pieces.ant_piece import AntPiece
 from hivegame.pieces.beetle_piece import BeetlePiece
 from hivegame.pieces.spider_piece import SpiderPiece
-from hivegame.utils import Direction
+from hivegame.hive_utils import Direction
 
 from hivegame.view import HiveView
 
@@ -50,6 +50,8 @@ class TestHive(TestCase):
     def test_one_hive(self):
         self.assertFalse(self.hive._one_hive(self.hive.playedPieces['wS1']))
         self.assertTrue(self.hive._one_hive(self.hive.playedPieces['wQ1']))
+        print("[DEBUG] Action vector: ")
+        print(self.hive.get_all_action_vector())
 
     def test_one_hive_with_load_state(self):
         self.hive.load_state((self.hive.get_adjacency_state(), self.hive.turn))

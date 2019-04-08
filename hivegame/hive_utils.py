@@ -1,5 +1,9 @@
 from enum import IntEnum
 
+class dotdict(dict):
+    def __getattr__(self, name):
+        return self[name]
+
 class Direction(IntEnum):
     HX_O = 0  # origin/on-top
     HX_W = 1  # west

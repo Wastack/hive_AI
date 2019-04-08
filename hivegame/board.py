@@ -1,4 +1,4 @@
-from hivegame.utils import Direction
+from hivegame.hive_utils import Direction
 
 # classes that represent generic boards
 

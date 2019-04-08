@@ -12,12 +12,12 @@ class MCTS():
         self.predictor = predictor
         self.args = args
         self.Qsa = {}       # stores Q values for s,a (as defined in the paper)
-        self.Nsa = {}       # stores #times edge s,a was visited
-        self.Ns = {}        # stores #times board s was visited
-        self.Ps = {}        # stores initial policy (returned by neural net)
+        self.visit_number_s_a = {}       # stores #times edge s,a was visited
+        self.visit_number_s = {}        # stores #times board s was visited
+        self.policy_s = {}        # stores initial policy (returned by neural net)
 
-        self.Es = {}        # stores game.getGameEnded ended for board s
-        self.Vs = {}        # stores game.getValidMoves for board s
+        self.game_ended_s = {}        # stores game.getGameEnded ended for board s
+        self.valid_moves_s = {}        # stores game.getValidMoves for board s
 
     def getActionProb(self, canonicalBoard, temp=1):
         """
@@ -33,7 +33,7 @@ class MCTS():
 
         s = self.game.stringRepresentation(canonicalBoard)
         # TODO FIXME is it a problem, that action size is depending on the state?
-        counts = [self.Nsa[(s,a)] if (s,a) in self.Nsa else 0 for a in range(self.game.getActionSize(canonicalBoard))]
+        counts = [self.visit_number_s_a[(s, a)] if (s, a) in self.visit_number_s_a else 0 for a in range(self.game.getActionSize(canonicalBoard))]
 
         if temp==0:
             bestA = np.argmax(counts)
@@ -67,34 +67,35 @@ class MCTS():
 
         s = self.game.stringRepresentation(canonicalBoard)
 
-        if s not in self.Es:
-            self.Es[s] = self.game.getGameEnded(canonicalBoard, 1)
-        if self.Es[s]!=0:
+        if s not in self.game_ended_s:
+            self.game_ended_s[s] = self.game.getGameEnded(canonicalBoard, 1)
+        if self.game_ended_s[s]!=0:
             # terminal node
-            return -self.Es[s]
+            return -self.game_ended_s[s]
 
-        if s not in self.Ps:
+        if s not in self.policy_s:
             # leaf node
-            self.Ps[s], v = self.predictor.predict(canonicalBoard)
+            self.policy_s[s], value = self.predictor.predict(canonicalBoard)
             valids = self.game.getValidMoves(canonicalBoard, 1)
-            self.Ps[s] = self.Ps[s]*valids      # masking invalid moves
-            sum_Ps_s = np.sum(self.Ps[s])
-            if sum_Ps_s > 0:
-                self.Ps[s] /= sum_Ps_s    # renormalize
+            print("[DEBUG]: MCTS.search: self.Ps[s] = {}, v = {}, valids = {}".format(self.policy_s[s], value, valids))
+            self.policy_s[s] = self.policy_s[s] * valids      # masking invalid moves
+            sum_current_policy = np.sum(self.policy_s[s])
+            if sum_current_policy > 0:
+                self.policy_s[s] /= sum_current_policy    # re-normalize
             else:
                 # if all valid moves were masked make all valid moves equally probable
                 
                 # NB! All valid moves may be masked if either your NNet architecture is insufficient or you've get overfitting or something else.
-                # If you have got dozens or hundreds of these messages you should pay attention to your NNet and/or training process.   
+                # If you have got dozens or hundreds of these messages you should pay attention to your NNet and/or training process.
                 print("All valid moves were masked, do workaround.")
-                self.Ps[s] = self.Ps[s] + valids
-                self.Ps[s] /= np.sum(self.Ps[s])
+                self.policy_s[s] = self.policy_s[s] + valids
+                self.policy_s[s] /= np.sum(self.policy_s[s])
 
-            self.Vs[s] = valids
-            self.Ns[s] = 0
-            return -v
+            self.valid_moves_s[s] = valids
+            self.visit_number_s[s] = 0
+            return -value
 
-        valids = self.Vs[s]
+        valids = self.valid_moves_s[s]
         cur_best = -float('inf')
         best_act = -1
 
@@ -102,9 +103,9 @@ class MCTS():
         for a in range(self.game.getActionSize()):
             if valids[a]:
                 if (s,a) in self.Qsa:
-                    u = self.Qsa[(s,a)] + self.args.cpuct*self.Ps[s][a]*math.sqrt(self.Ns[s])/(1+self.Nsa[(s,a)])
+                    u = self.Qsa[(s,a)] + self.args.cpuct * self.policy_s[s][a] * math.sqrt(self.visit_number_s[s]) / (1 + self.visit_number_s_a[(s, a)])
                 else:
-                    u = self.args.cpuct*self.Ps[s][a]*math.sqrt(self.Ns[s] + EPS)     # Q = 0 ?
+                    u = self.args.cpuct * self.policy_s[s][a] * math.sqrt(self.visit_number_s[s] + EPS)     # Q = 0 ?
 
                 if u > cur_best:
                     cur_best = u
@@ -114,15 +115,15 @@ class MCTS():
         next_s, next_player = self.game.getNextState(canonicalBoard, 1, a)
         next_s = self.game.getCanonicalForm(next_s, next_player)
 
-        v = self.search(next_s)
+        value = self.search(next_s)
 
         if (s,a) in self.Qsa:
-            self.Qsa[(s,a)] = (self.Nsa[(s,a)]*self.Qsa[(s,a)] + v)/(self.Nsa[(s,a)]+1)
-            self.Nsa[(s,a)] += 1
+            self.Qsa[(s,a)] = (self.visit_number_s_a[(s, a)] * self.Qsa[(s, a)] + value) / (self.visit_number_s_a[(s, a)] + 1)
+            self.visit_number_s_a[(s, a)] += 1
 
         else:
-            self.Qsa[(s,a)] = v
-            self.Nsa[(s,a)] = 1
+            self.Qsa[(s,a)] = value
+            self.visit_number_s_a[(s, a)] = 1
 
-        self.Ns[s] += 1
-        return -v
+        self.visit_number_s[s] += 1
+        return -value

@@ -1,5 +1,5 @@
 from hivegame.pieces.piece import HivePiece
-from hivegame.utils import Direction
+from hivegame.hive_utils import Direction
 
 class GrassHopperPiece(HivePiece):
     directions = [
@@ -28,9 +28,27 @@ class GrassHopperPiece(HivePiece):
             result.append(next_cell)
         return result
 
+    def available_moves_vector(self, hive):
+        if self.check_blocked(hive):
+            return [0] * 6
+        result = []
+        for direction in self.directions:
+            next_cell = hive.board.get_dir_cell(self.position, direction)
+            # cannot jump if there is no adjacent tile that way
+            result.append(0 if hive.is_cell_free(next_cell) else 1)
+        assert len(result) == 6
+        return result
+
     @property
     def kind(self):
         return "G"
+
+    @property
+    def move_vector_size(self):
+        """
+        :return: Size of the fixed-size move vector. Grasshopper can step to a maximum of 6 directions.
+        """
+        return 6
             
     def __repr__(self):
         return "%s%s%s" % (self.color, "G", self.number)

@@ -4,7 +4,7 @@ import sys
 
 from hivegame.hive import Hive, HiveException
 from hivegame.view import HiveView
-from hivegame.utils import Direction
+from hivegame.hive_utils import Direction
 from hivegame.AI.utils.Game import Game
 import random
 
@@ -21,13 +21,16 @@ class Environment(Game):
     WHITE = 'w'
 
     def __init__(self):
+        """
+        Creates an environment which is reset to initial state. That means no
+        bugs are placed yet, etc.
+        """
         super(Environment, self).__init__()
         self.hive = Hive()
         self.view = HiveView(self.hive)
         self.input = sys.stdin
         self.logger = None
         self.reset_game()
-        self.logger = None
 
     def ascii_board(self):
         return str(self.view)
@@ -106,6 +109,13 @@ class Environment(Game):
         raise ValueError('Invalid input for point of contact: "%s"' % point_of_contact)
 
     def check_victory(self):
+        """
+        UNFINISHED = 0
+        WHITE_WIN = 1
+        BLACK_WIN = 2
+        DRAW = 3
+        :return: status of the game
+        """
         return self.hive.check_victory()
     
     def current_player(self):

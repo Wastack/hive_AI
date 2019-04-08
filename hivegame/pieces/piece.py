@@ -36,3 +36,12 @@ class HivePiece(metaclass=abc.ABCMeta):
     @abc.abstractmethod
     def available_moves(self, hive):
         return []
+
+    @abc.abstractmethod
+    def available_moves_vector(self, hive):
+        return []
+
+    # TODO this can be static. Also deprecated annotation
+    @abc.abstractproperty
+    def move_vector_size(self):
+        return None

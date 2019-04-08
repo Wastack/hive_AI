@@ -21,7 +21,7 @@ import torchvision.datasets as datasets
 import torchvision.models as models
 import models.imagenet as customized_models
 
-from utils import Bar, Logger, AverageMeter, accuracy, mkdir_p, savefig
+from hive_utils import Bar, Logger, AverageMeter, accuracy, mkdir_p, savefig
 
 # Models
 default_model_names = sorted(name for name in models.__dict__

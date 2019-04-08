@@ -5,7 +5,7 @@ from hivegame.pieces.bee_piece import BeePiece
 from hivegame.pieces.beetle_piece import BeetlePiece
 from hivegame.pieces.grasshopper_piece import GrassHopperPiece
 from hivegame.pieces.spider_piece import SpiderPiece
-from hivegame.utils import Direction
+from hivegame.hive_utils import Direction
 
 import logging
 
@@ -372,17 +372,32 @@ class Hive(object):
         available_moves = []
         surroundings = self.board.get_surrounding(cell)
         for i in range(6):
-            target = surroundings[i-1]
+            target = surroundings[i]
             # is the target cell free?
             if not self.is_cell_free(target):
                 continue
             # does it have an adjacent free and an adjancent occupied cell that
             # is also adjacent to the starting cell?
             if (
-                self.is_cell_free(surroundings[i])
-                != self.is_cell_free(surroundings[i-2])
+                self.is_cell_free(surroundings[(i+1) % 6])
+                != self.is_cell_free(surroundings[i-1])
             ):
                 available_moves.append(target)
+        return available_moves
+
+    def bee_moves_vector(self, cell):
+        available_moves = []
+        # Clockwise, starting from west
+        surroundings = self.board.get_surrounding(cell)
+        for i in range(6):
+            target = surroundings[i]
+            if not self.is_cell_free(target):
+                available_moves.append(0)
+            if (self.is_cell_free(surroundings[(i+1) % 6])
+                    != self.is_cell_free(surroundings[i-1])):
+                available_moves.append(1)
+            else:
+                available_moves.append(0)
         return available_moves
 
     def set_turn(self, turn):
@@ -535,9 +550,32 @@ class Hive(object):
         return directions
 
     @staticmethod
-    def string_representation(adjacency):
+    def dict_representation(adjacency_list):
+        """
+        :param adjacency_list: List representation of the state
+        :return: Dictionary representation of the state
+        """
+        print("[DEBUG] dict_representation: len(adjacency_list) == {}".format(len(adjacency_list)))
+        # get list of bug names sorted by name alphabetically
+        list_of_names = sorted(list(Hive._piece_set(Hive.WHITE).keys()) + list(Hive._piece_set(Hive.BLACK).keys()))
+        print("[DEBUG] dict_representation: len(list_of_names) == {}".format(len(list_of_names)))
+
+        adjacency_iter = iter(adjacency_list)
+        # Create a dictionary
+        result = {}
+        for bug_name in list_of_names:
+            column = {}
+            result[bug_name] = column
+            for inner_name in list_of_names:
+                if inner_name == bug_name:
+                    break  # adjacency with itself is not stored
+                column[inner_name] = next(adjacency_iter)
+        return result
+
+    @staticmethod
+    def string_representation(adjacency_list_repr):
         # We need to use comma as separator, because turn number can consist of more digits.
-        return ",".join(str(x) for x in Hive.list_representation(adjacency))
+        return ",".join(str(x) for x in adjacency_list_repr)
 
     @staticmethod
     def _toggle_color(piece_name):
@@ -546,9 +584,81 @@ class Hive(object):
         s[0] = Hive.BLACK if s[0] == Hive.WHITE else Hive.WHITE
         return "".join(s)
 
+    def get_all_action_vector(self):
+        """
+        :return: A one-hot encoded representation of possible actions.
+        The size of the vector returned is fixed.
+        """
+        result = []
+        direction_count = 6
+        # Pieces not played yet:
+        piece_set = self._piece_set(self.activePlayer)
+        print("[DEBUG] piece set length: %d" % len(piece_set))
+        possible_neighbor_count = len(piece_set) - 1  # it can't be adjacent to itself
+
+        my_pieces = [piece for piece in self.playedPieces.values() if piece.color == self.activePlayer]
+        # The first row is about placing the first piece. However, the player in the second turn can place his
+        # bug to 6 different places, those states are identical, so the AI can be restricted to only one
+        # direction.
+        # Also, we do not need action for placing the queen, because that is forbidden in the first turn.
+        if not my_pieces:
+            result += [1] * (len(piece_set) - 1)
+        else:
+            result += [0] * (len(piece_set) - 1)
+
+        # Placing pieces
+        for piece_name in piece_set.keys():
+            if piece_name in self.playedPieces.keys():
+                result += [0] * (possible_neighbor_count * direction_count)
+            else:
+                for adj_piece_name in piece_set.keys():
+                    # It cannot move next to itself
+                    if adj_piece_name == piece_name:
+                        continue
+                    adj_piece = self.playedPieces.get(adj_piece_name, None)
+                    if adj_piece is None:
+                        # neighbor candidate not placed yet
+                        result += [0] * direction_count
+                        continue
+                    # get all boundary free cells
+                    surroundings = self.board.get_surrounding(adj_piece.position)
+                    for sur in surroundings:
+                        if not self.is_cell_free(sur):
+                            result.append(0)
+                        elif not all(self.is_cell_free(s) or self.piecesInCell.get(s)[-1].color ==
+                                     self.activePlayer for s in self.board.get_surrounding(sur)):
+                            result.append(0)
+                        else:
+                            result.append(1)
+        print("[DEBUG] result length of placing only: %d" % (len(result)))
+        # moving pieces
+        for piece_name, piece_without_pos in piece_set.items():
+            piece = self.playedPieces.get(piece_name, None)
+            if piece is None:
+                result += [0] * piece_without_pos.move_vector_size
+                continue
+
+            # It cannot move unless queen is already placed
+            if self.activePlayer + 'Q1' not in self.playedPieces:
+                result += [0] * piece.move_vector_size
+                continue
+
+            # It cannot move if that breaks the one_hive rule
+            if not self._one_hive(piece):
+                result += [0] * piece.move_vector_size
+                continue
+
+            result += piece.available_moves_vector(self)
+
+        print("[DEBUG]: Resulting move vector is: {}".format(result))
+        expected_len = len(piece_set) - 1 + (possible_neighbor_count * direction_count) * len(piece_set) +\
+            1*6 + 3*6 + 3*AntPiece.MAX_STEP_COUNT + 2*SpiderPiece.MAX_STEP_COUNT + 2*6
+        print("[DEBUG] len of result: %d, and expected len is: %d" % (len(result), expected_len))
+        assert len(result) == expected_len
+        return result
+
     def get_all_possible_actions(self):
         result = set()
-        # TODO order of actions can be important here
 
         # choose the current players played pieces
         my_pieces = [piece for piece in self.playedPieces.values() if piece.color == self.activePlayer]
@@ -566,7 +676,7 @@ class Hive(object):
 
         # pieces which can be put down from hand
         pieces_to_put_down = []
-        # cells where the player van put an unplayed piece to
+        # cells where the player can put an unplayed piece to
         available_cells = set()
 
         if self.activePlayer + 'Q1' in self.playedPieces:
@@ -617,7 +727,10 @@ class Hive(object):
         (adjacency_matrix, turn) = state
         self.__init__()
         self.setup()
-        to_be_placed = Hive._getPieceNamesOnBoard(adjacency_matrix)
+        to_be_placed = Hive._get_piece_names_on_board(adjacency_matrix)
+
+        if len(to_be_placed) <= 0:
+            return True  # initial state
 
         # put down the first bug which is already played
         self._place_without_validation(self._name_to_piece(to_be_placed.pop()), (0, 0))
@@ -630,7 +743,6 @@ class Hive(object):
                     continue
                 for to_place_name in to_be_placed:
                     if row[to_place_name] > 0:
-                        # TODO put that piece down
                         pos = self.poc2cell(piece_name, row[to_place_name])
                         can_have_next.append(to_place_name)
                         to_be_placed.remove(to_place_name)
@@ -644,7 +756,7 @@ class Hive(object):
         return True
 
     @staticmethod
-    def _getPieceNamesOnBoard(adjacency):
+    def _get_piece_names_on_board(adjacency):
         result = []
         for (piece_name, row) in adjacency.items():
             if all([cell == 0 for cell in row.values()]):
@@ -658,10 +770,12 @@ class Hive(object):
         assert (len(letters) == 3)  # color, type, number
         return letter_to_piece[letters[1]](letters[0], letters[2])
 
-    def load_state_with_player(self, adjacency, current_player):
+    def load_state_with_player(self, canonical_list_repr, current_player):
         # count number of pieces already on board
         # It is needed in order to guess turn number
-        played_count = len(Hive._getPieceNamesOnBoard(adjacency))
+        adjacency = Hive.dict_representation(canonical_list_repr)
+        played_count = len(Hive._get_piece_names_on_board(adjacency))
+        print("[DEBUG]: load_state_with_player: played count: %d" % played_count)
 
         # turn number is at least that much
         turn = played_count + 1
@@ -672,4 +786,3 @@ class Hive(object):
             turn += turn % 2
 
         return self.load_state((adjacency, turn))
-
