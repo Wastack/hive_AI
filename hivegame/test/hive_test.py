@@ -5,9 +5,8 @@ from unittest import TestCase
 from hivegame.pieces.ant_piece import AntPiece
 from hivegame.pieces.beetle_piece import BeetlePiece
 from hivegame.pieces.spider_piece import SpiderPiece
-from hivegame.hive_utils import Direction
+from hivegame.hive_utils import Direction, GameStatus
 
-from hivegame.view import HiveView
 
 class TestHive(TestCase):
     """Verify the game logic"""
@@ -313,7 +312,7 @@ class TestHive(TestCase):
         hive.action('play', ('bG2', 'bQ1', Direction.HX_NE))
         hive.action('play', ('wA1', 'wG1', Direction.HX_NE))
 
-        self.assertTrue(hive.check_victory() == hive.WHITE_WIN)
+        self.assertTrue(hive.check_victory() == GameStatus.WHITE_WIN)
 
 
 if __name__ == '__main__':

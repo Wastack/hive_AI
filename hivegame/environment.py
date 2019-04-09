@@ -4,7 +4,7 @@ import sys
 
 from hivegame.hive import Hive, HiveException
 from hivegame.view import HiveView
-from hivegame.hive_utils import Direction
+from hivegame.hive_utils import Direction, GameStatus
 from hivegame.AI.utils.Game import Game
 import random
 
@@ -15,10 +15,6 @@ class Environment(Game):
     create a game, move or put down pieces, ask information about
     current state etc.
     """
-
-    # Current player
-    BLACK = 'b'
-    WHITE = 'w'
 
     def __init__(self):
         """
@@ -119,7 +115,7 @@ class Environment(Game):
         return self.hive.check_victory()
     
     def current_player(self):
-        return Environment.WHITE if self.hive.turn % 2 > 0 else Environment.BLACK
+        return self.hive.activePlayer
     
     def unplayed_pieces(self, player):
         return self.hive.get_unplayed_pieces(player)
@@ -164,12 +160,12 @@ class Environment(Game):
         hive = Hive()
         hive.load_state_with_player(board, player)
         status = hive.check_victory()
-        if status == Hive.UNFINISHED:
+        if status == GameStatus.UNFINISHED:
             return 0
         if player == 1:  # Hive.BLACK
-            return 1 if status == Hive.BLACK_WIN else -1
+            return 1 if status == GameStatus.BLACK_WIN else -1
         elif player == -1:  # Hive.WHITE
-            return 1 if status == Hive.WHITE_WIN else -1
+            return 1 if status == GameStatus.WHITE_WIN else -1
         else:
             raise ValueError('unexpected player')
 

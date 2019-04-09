@@ -5,7 +5,7 @@ from hivegame.pieces.bee_piece import BeePiece
 from hivegame.pieces.beetle_piece import BeetlePiece
 from hivegame.pieces.grasshopper_piece import GrassHopperPiece
 from hivegame.pieces.spider_piece import SpiderPiece
-from hivegame.hive_utils import Direction, HiveException
+from hivegame.hive_utils import Direction, HiveException, Player, GameStatus
 
 from collections import OrderedDict
 import logging
@@ -25,20 +25,10 @@ class Hive(object):
     This class enforces the game rules and keeps the state of the game.
     """
 
-    # players
-    WHITE = 'w'
-    BLACK = 'b'
-
-    # End game status
-    UNFINISHED = 0
-    WHITE_WIN = 1
-    BLACK_WIN = 2
-    DRAW = 3
-
     def __init__(self):
         self.turn = 0
-        self.activePlayer = self.WHITE
-        self.players = [self.WHITE, self.BLACK]
+        self.activePlayer = Player.WHITE
+        self.players = [Player.WHITE, Player.BLACK]
         self.board = HexBoard()
         self.playedPieces = {}
         self.piecesInCell = {}
@@ -50,8 +40,8 @@ class Hive(object):
         """
         self.__init__()
         # Add pieces to the players hands
-        self.unplayedPieces[self.WHITE] = self._piece_set(self.WHITE)
-        self.unplayedPieces[self.BLACK] = self._piece_set(self.BLACK)
+        self.unplayedPieces[Player.WHITE] = self._piece_set(Player.WHITE)
+        self.unplayedPieces[Player.BLACK] = self._piece_set(Player.BLACK)
         self.turn = 1
 
     def action(self, action_type, action):
@@ -65,7 +55,7 @@ class Hive(object):
                 (current_piece_name, ref_piece_name, direction) = (action, None, None)
             else:
                 raise HiveException  # invalid format
-                
+
             player = self.get_active_player()
 
             if ref_piece_name is None and self.turn == 1:
@@ -114,8 +104,8 @@ class Hive(object):
 
     @staticmethod
     def _toggle_player(player):
-        return Hive.BLACK if player == Hive.WHITE else Hive.WHITE
-    
+        return Player.BLACK if player == Player.WHITE else Player.WHITE
+
     def action_piece_to(self, piece, target_cell):
         """
         Performs an action with the given piece to the given target cell.
@@ -208,7 +198,7 @@ class Hive(object):
         """
         white = False
         black = False
-        res = self.UNFINISHED
+        res = GameStatus.UNFINISHED
 
         # if white queen is surrounded => black wins
         queen = self.playedPieces.get('wQ1')
@@ -217,7 +207,7 @@ class Hive(object):
             len(self.occupied_surroundings(queen.position)) == 6
         ):
             black = True
-            res = self.BLACK_WIN
+            res = GameStatus.BLACK_WIN
 
         # if black queen is surrounded => white wins
         queen = self.playedPieces.get('bQ1')
@@ -226,11 +216,11 @@ class Hive(object):
             len(self.occupied_surroundings(queen.position)) == 6
         ):
             white = True
-            res = self.WHITE_WIN
+            res = GameStatus.WHITE_WIN
 
         # if both queens are surrounded
         if white and black:
-            res = self.DRAW
+            res = GameStatus.DRAW
 
         return res
 
@@ -241,7 +231,7 @@ class Hive(object):
         # Tournament rule: no queen in the first move
         if (self.turn == 1 or self.turn == 2) and isinstance(piece, BeePiece):
             return False
-        white_turn = self.activePlayer == self.WHITE
+        white_turn = self.activePlayer == Player.WHITE
         black_turn = not white_turn
 
         # Move actions are only allowed after the queen is on the board
@@ -268,17 +258,17 @@ class Hive(object):
         """
         Verifies if the action is valid on this turn.
         """
-        white_turn = self.activePlayer == self.WHITE
+        white_turn = self.activePlayer == Player.WHITE
         black_turn = not white_turn
-        if white_turn and piece.color != self.WHITE:
+        if white_turn and piece.color != Player.WHITE:
             return False
 
-        if black_turn and piece.color != self.BLACK:
+        if black_turn and piece.color != Player.BLACK:
             return False
 
         if not self._validate_queen_rules(piece, action):
             return False
-        
+
         return True
 
     def _validate_move_piece(self, moving_piece, target_cell):
@@ -400,7 +390,7 @@ class Hive(object):
     def set_turn(self, turn):
         assert turn >= 1
         self.turn = turn
-        self.activePlayer = Hive.WHITE if self.turn % 2 == 1 else Hive.BLACK
+        self.activePlayer = Player.WHITE if self.turn % 2 == 1 else Player.BLACK
 
     @staticmethod
     def _piece_set(color):
@@ -554,7 +544,7 @@ class Hive(object):
         """
         print("[DEBUG] dict_representation: len(adjacency_list) == {}".format(len(adjacency_list)))
         # get list of bug names sorted by name alphabetically
-        list_of_names = sorted(list(Hive._piece_set(Hive.WHITE).keys()) + list(Hive._piece_set(Hive.BLACK).keys()))
+        list_of_names = sorted(list(Hive._piece_set(Player.WHITE).keys()) + list(Hive._piece_set(Player.BLACK).keys()))
         print("[DEBUG] dict_representation: len(list_of_names) == {}".format(len(list_of_names)))
 
         adjacency_iter = iter(adjacency_list)
@@ -578,7 +568,7 @@ class Hive(object):
     def _toggle_color(piece_name):
         assert(len(piece_name) == 3)
         s = list(piece_name)
-        s[0] = Hive.BLACK if s[0] == Hive.WHITE else Hive.WHITE
+        s[0] = Player.BLACK if s[0] == Player.WHITE else Player.WHITE
         return "".join(s)
 
     def get_all_action_vector(self):
@@ -669,7 +659,7 @@ class Hive(object):
                 return pieces_list[action_number], (1, 0)
 
         if len(self.playedPieces) < 3:
-            raise  HiveException
+            raise HiveException
         adjacent_bug_bound = len(pieces_list) - 1
         one_bug_bound = adjacent_bug_bound * 6
         placement_bound = init_bound + one_bug_bound*len(pieces_list)
@@ -834,7 +824,7 @@ class Hive(object):
         assert turn > 0
 
         # turn should be an even number
-        if current_player == self.BLACK:
+        if current_player == Player.BLACK:
             turn += turn % 2
 
         return self.load_state((adjacency, turn))

@@ -10,6 +10,20 @@ class HiveException(Exception):
     """Base class for exceptions."""
     pass
 
+
+class Player(object):
+    WHITE = "w"
+    BLACK = "b"
+
+
+class GameStatus(object):
+    # End game status
+    UNFINISHED = 0
+    WHITE_WIN = 1
+    BLACK_WIN = 2
+    DRAW = 3
+
+
 class Direction(IntEnum):
     HX_O = 0  # origin/on-top
     HX_W = 1  # west
