@@ -1,8 +1,14 @@
 from enum import IntEnum
 
+
 class dotdict(dict):
     def __getattr__(self, name):
         return self[name]
+
+
+class HiveException(Exception):
+    """Base class for exceptions."""
+    pass
 
 class Direction(IntEnum):
     HX_O = 0  # origin/on-top

@@ -5,8 +5,9 @@ from hivegame.pieces.bee_piece import BeePiece
 from hivegame.pieces.beetle_piece import BeetlePiece
 from hivegame.pieces.grasshopper_piece import GrassHopperPiece
 from hivegame.pieces.spider_piece import SpiderPiece
-from hivegame.hive_utils import Direction
+from hivegame.hive_utils import Direction, HiveException
 
+from collections import OrderedDict
 import logging
 
 letter_to_piece = {
@@ -16,10 +17,6 @@ letter_to_piece = {
     "Q": BeePiece,
     "S": SpiderPiece
 }
-
-class HiveException(Exception):
-    """Base class for exceptions."""
-    pass
 
 
 class Hive(object):
@@ -410,7 +407,7 @@ class Hive(object):
         """
         Return a full set of hive pieces
         """
-        piece_set = {}
+        piece_set = OrderedDict()
         for i in range(3):
             ant = AntPiece(color, i+1)
             piece_set[str(ant)] = ant
@@ -656,6 +653,61 @@ class Hive(object):
         print("[DEBUG] len of result: %d, and expected len is: %d" % (len(result), expected_len))
         assert len(result) == expected_len
         return result
+
+    def action_from_vector(self, action_number):
+        assert action_number >= 0
+        pieces_list = list(self._piece_set(self.activePlayer).values())
+        piece_set_count = len(pieces_list)
+        init_bound = piece_set_count - 1
+        if action_number <= init_bound:
+            # That's an initial movement
+            if len(self.playedPieces) > 2:
+                raise HiveException
+            if not self.piecesInCell.get((0, 0)):
+                return pieces_list[action_number], (0, 0)
+            else:
+                return pieces_list[action_number], (1, 0)
+
+        if len(self.playedPieces) < 3:
+            raise  HiveException
+        adjacent_bug_bound = len(pieces_list) - 1
+        one_bug_bound = adjacent_bug_bound * 6
+        placement_bound = init_bound + one_bug_bound*len(pieces_list)
+        if action_number <= placement_bound:
+            # It is a bug placement
+            inner_action_number = action_number - init_bound
+            action_type = inner_action_number % one_bug_bound
+            piece_number = inner_action_number // one_bug_bound
+            adj_piece_number = action_type // adjacent_bug_bound
+            direction = action_type % 6
+            piece = self._piece_from_piece_set(piece_number)
+            adj_piece = self._piece_from_piece_set(adj_piece_number)
+            # We have to search for the pieces in the stored state, because that way
+            # it will also contain the position of the piece
+            stored_piece = self.unplayedPieces[self.activePlayer][str(piece)]
+            target_cell = self.board.get_dir_cell(self.playedPieces[str(adj_piece)], direction)
+            return stored_piece, target_cell
+
+        # This is a bug movement
+        inner_action_number = action_number - placement_bound
+        for piece in pieces_list:
+            if inner_action_number < 0:
+                raise HiveException
+            if inner_action_number - piece.move_vector_size > 0:
+                inner_action_number -= piece.move_vector_size
+                continue
+            stored_piece = self.playedPieces.get(str(piece))
+            if stored_piece is None:
+                # It should be placed if we want to move it
+                raise HiveException
+            return stored_piece, stored_piece.target_cell(inner_action_number)
+
+        # Index overflow
+        raise HiveException
+
+    def _piece_from_piece_set(self, index):
+        pieces = list(self._piece_set(self.activePlayer).values())
+        return pieces[index]
 
     def get_all_possible_actions(self):
         result = set()

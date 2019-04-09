@@ -2,6 +2,7 @@
 # Classes representing playing pieces
 
 import abc
+from hivegame.hive_utils import HiveException
 import functools
 
 class HivePiece(metaclass=abc.ABCMeta):
@@ -30,7 +31,7 @@ class HivePiece(metaclass=abc.ABCMeta):
         return "?"
     
     @abc.abstractmethod
-    def validate_move(self, hive, endcell):
+    def validate_move(self, hive, end_cell):
         return
 
     @abc.abstractmethod
@@ -41,7 +42,14 @@ class HivePiece(metaclass=abc.ABCMeta):
     def available_moves_vector(self, hive):
         return []
 
-    # TODO this can be static. Also deprecated annotation
-    @abc.abstractproperty
+    def target_cell(self, hive, number):
+        aval_moves = self.available_moves(hive)
+        if len(aval_moves) <= number or number > self.move_vector_size:
+            raise HiveException
+        return aval_moves[number]
+
+    # TODO this can be static.
+    @property
+    @abc.abstractmethod
     def move_vector_size(self):
         return None
