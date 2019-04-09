@@ -1,7 +1,0 @@
-  // Non-recursive keybinding overrides to use for insert mode. Allows mapping to vim commands or vscode actions. See README for more.
-  "vim.insertModeKeyBindingsNonRecursive": [
-    {
-        "before": ["j", "k"],
-        "after": ["<Esc>"]
-    }
-  ]
