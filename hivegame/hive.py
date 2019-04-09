@@ -430,22 +430,22 @@ class Hive(object):
         Check if removing a piece doesn't break the one hive rule.
         Returns False if the hive is broken.
         """
-        origional_pos = self.locate(str(piece))
+        original_pos = self.locate(str(piece))
         # if the piece is not in the board then moving it won't break the hive
-        if origional_pos is None:
+        if original_pos is None:
             return True
         # if there is another piece in the same cell then the one hive rule
         # won't be broken
-        pic = self.piecesInCell[origional_pos]
+        pic = self.piecesInCell[original_pos]
         if len(pic) > 1:
             return True
 
         # temporarily remove the piece
-        del self.piecesInCell[origional_pos]
+        del self.piecesInCell[original_pos]
 
         # Get all pieces that are in contact with the removed one and try to
         # reach all of them from one of them.
-        occupied = self.occupied_surroundings(origional_pos)
+        occupied = self.occupied_surroundings(original_pos)
         visited = set()
         to_explore = {occupied[0]}
         to_reach = set(occupied[1:])
@@ -462,7 +462,7 @@ class Hive(object):
                 break
 
         # restore the removed piece
-        self.piecesInCell[origional_pos] = pic
+        self.piecesInCell[original_pos] = pic
         return res
 
 # Adjacency matrix of pieces
