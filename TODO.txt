@@ -1,21 +1,13 @@
 TODO
 ====
 
-- Add logging functionality
+- Create test for environment.
 
-- refactor: move environment logic from hive to environment
+- Create tests for one-hot encoded action vector, adjacency matrix,
+  test mapping of action_number to action
 
-- Tests for Queen in the first 4 moves rule
-
-- Tests No Queen in the first move rule
-
-- change the logic for player numbering in main.py to match that of hive.py
-  e.g. white is 0 and black is 1
-
-- Create a plugin system to support new pieces and rules
+- Refactor Hive.py, separate logic to different classes.
 
 ### AI
 
-- rewrite Arena usage in Coach.py
-
-- connect Coach to NeuralNet.py and Game.py
+- finish train_test.py
