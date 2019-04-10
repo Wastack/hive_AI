@@ -1,17 +1,17 @@
 #! /usr/bin/env python
 
 import sys
-from hivegame.hive import Hive
 from hivegame.environment import Environment
 from hivegame.AI.random_player import RandomPlayer
 from hivegame.AI.human_player import HumanPlayer
+from hivegame.hive_utils import GameStatus
 
 import logging
 
 
 class Arena(object):
 
-    def __init__(self, player1, player2, environment = None):
+    def __init__(self, player1, player2, environment=None):
         super(Arena, self).__init__()
         if environment is not None:
             self.env = environment
@@ -21,7 +21,7 @@ class Arena(object):
         self._player2 = player2
 
     def playGame(self):
-        while self.env.check_victory() == Hive.UNFINISHED:
+        while self.env.check_victory() == GameStatus.UNFINISHED:
             current_player = self._player1 if self.env.current_player() == "w" else self._player2
             response = current_player.step(self.env)
             if response == "pass":
@@ -45,11 +45,11 @@ class Arena(object):
         draws = 0
         for _ in range(num):
             gameResult = self.playGame()
-            if gameResult == Hive.WHITE_WIN:
+            if gameResult == GameStatus.WHITE_WIN:
                 whiteWon += 1
-            elif gameResult == Hive.BLACK_WIN:
+            elif gameResult == GameStatus.BLACK_WIN:
                 blackWon += 1
-            elif gameResult == Hive.DRAW:
+            elif gameResult == GameStatus.DRAW:
                 draws += 1
             else:
                 raise ValueError  # Invalid response of environment
@@ -68,6 +68,7 @@ class Arena(object):
 
 
 def main():
+    # TODO parse options for players
     logging.basicConfig(level=logging.INFO)
     # game = Arena(HumanAI(sys.stdin), RandomAI())
     game = Arena(RandomPlayer(), RandomPlayer())
