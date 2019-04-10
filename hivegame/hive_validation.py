@@ -64,7 +64,7 @@ def validate_move_piece(hive, moving_piece, target_cell):
 
     # check if moving this piece won't break the hive
     if not validate_one_hive(hive, moving_piece):
-        print("break _one_hive rule")
+        print("break one_hive rule")
         return False
 
     return moving_piece.validate_move(hive, target_cell)
