@@ -293,6 +293,13 @@ class Hive(object):
         self.activePlayer = Player.WHITE if self.turn % 2 == 1 else Player.BLACK
 
     def action_from_vector(self, action_number):
+        """
+        Maps an action number to an actual action. The fixed size action space is explained
+        in detail at :func:`.hive_representation.get_all_action_vector``
+        :param action_number:  index of the action from the fixed size action space.
+        :return: A tuple of (piece, end_cell), where piece is the piece on which the action
+        is executed. end_cell is the target location of the action.
+        """
         assert action_number >= 0
         pieces_list = list(piece_fact.piece_set(self.activePlayer).values())
         piece_set_count = len(pieces_list)

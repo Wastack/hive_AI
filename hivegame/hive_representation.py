@@ -120,6 +120,10 @@ def dict_representation(adjacency_list):
 
 
 def string_representation(adjacency_list_repr):
+    """
+    :param adjacency_list_repr:
+    :return:  Hashable string representation of the current state
+    """
     # We need to use comma as separator, because turn number can consist of more digits.
     return ",".join(str(x) for x in adjacency_list_repr)
 
@@ -133,8 +137,22 @@ def _toggle_color(piece_name):
 
 def get_all_action_vector(hive):
     """
+    The format of the fix-size action space is the following:
+    vector = [init_place | place | move ]
+
+    The vector consists of (0|1) values:
+
+    - length of **init_place** is equal to the number of pieces used by
+      one player excluding the bee piece. The order of the actions in *init_place*
+      depends from the piece factory. These action are only available in the first
+      turn of each player.
+    - **place** contains all the possible movements after each player made a
+      move at least once. It consists of movements next to each piece which could
+      possibly be already placed on board. For each of those bugs, there is a field
+      for each direction. A bug can be placed to any of the 6 sides of another bug.
+
     :return: A one-hot encoded representation of possible actions.
-    The size of the vector returned is fixed.
+             The size of the vector returned is fixed.
     """
     result = []
     direction_count = 6
@@ -206,6 +224,15 @@ def get_all_action_vector(hive):
 
 
 def get_all_possible_actions(hive):
+    """
+    Query for all the possible movements in a given state. The list of actions
+    is unordered, i.e the order is not specified.
+
+    :param hive: state of the game
+    :return: A list of action = (piece, end_cell) tuples, where piece
+             is the bug on which the action would be performed. end_cell is
+             the target location of the action.
+    """
     result = set()
 
     # choose the current players played pieces
