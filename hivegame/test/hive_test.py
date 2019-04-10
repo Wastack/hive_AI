@@ -6,6 +6,7 @@ from hivegame.pieces.ant_piece import AntPiece
 from hivegame.pieces.beetle_piece import BeetlePiece
 from hivegame.pieces.spider_piece import SpiderPiece
 from hivegame.hive_utils import Direction, GameStatus
+from hivegame.hive_validation import *
 
 
 class TestHive(TestCase):
@@ -47,16 +48,16 @@ class TestHive(TestCase):
         self.hive.place_piece_without_action(BeetlePiece('b', 1), 'bS1', Direction.HX_NE)
 
     def test_one_hive(self):
-        self.assertFalse(self.hive._one_hive(self.hive.playedPieces['wS1']))
-        self.assertTrue(self.hive._one_hive(self.hive.playedPieces['wQ1']))
+        self.assertFalse(validate_one_hive(self.hive, self.hive.playedPieces['wS1']))
+        self.assertTrue(validate_one_hive(self.hive, self.hive.playedPieces['wQ1']))
         print("[DEBUG] Action vector: ")
         print(self.hive.get_all_action_vector())
 
     def test_one_hive_with_load_state(self):
         self.hive.load_state((self.hive.get_adjacency_state(), self.hive.turn))
         print(Hive.string_representation(self.hive.canonical_adjacency_state()))
-        self.assertFalse(self.hive._one_hive(self.hive.playedPieces['wS1']))
-        self.assertTrue(self.hive._one_hive(self.hive.playedPieces['wQ1']))
+        self.assertFalse(validate_one_hive(self.hive, self.hive.playedPieces['wS1']))
+        self.assertTrue(validate_one_hive(self.hive, self.hive.playedPieces['wQ1']))
 
     def test_bee_moves(self):
         bee_pos = self.hive.locate('wQ1')  # (-1, 1)
@@ -229,19 +230,19 @@ class TestHive(TestCase):
         # place over another piece
         cell = self.hive.poc2cell('wS1', Direction.HX_SW)
         self.assertFalse(
-            self.hive._validate_place_piece(white_ant_1, cell)
+            validate_place_piece(self.hive, white_ant_1, cell)
         )
 
         # valid placement
         cell = self.hive.poc2cell('bG1', Direction.HX_E)
         self.assertTrue(
-            self.hive._validate_place_piece(black_beetle_2, cell)
+            validate_place_piece(self.hive, black_beetle_2, cell)
         )
 
         # wrong color
         cell = self.hive.poc2cell('wQ1', Direction.HX_E)
         self.assertFalse(
-            self.hive._validate_place_piece(white_ant_1, cell)
+            validate_place_piece(self.hive, white_ant_1, cell)
         )
 
     def test_move_piece(self):
