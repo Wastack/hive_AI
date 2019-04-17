@@ -104,6 +104,9 @@ class Hive(object):
             res = pp.position
         return res
 
+    def played_piece_count(self):
+        return len(self.playedPieces)
+
     @staticmethod
     def _toggle_player(player):
         return Player.BLACK if player == Player.WHITE else Player.WHITE
@@ -280,11 +283,13 @@ class Hive(object):
             target = surroundings[i]
             if not self.is_cell_free(target):
                 available_moves.append(0)
+                continue
             if (self.is_cell_free(surroundings[(i+1) % 6])
                     != self.is_cell_free(surroundings[i-1])):
                 available_moves.append(1)
             else:
                 available_moves.append(0)
+        assert len(available_moves) == 6
         return available_moves
 
     def set_turn(self, turn):
@@ -367,7 +372,7 @@ class Hive(object):
         if len(to_be_placed) <= 0:
             return True  # initial state
 
-        # put down the first bug which is already played
+        # put down the first bug which should be placed
         self._place_without_validation(self._name_to_piece(to_be_placed.pop()), (0, 0))
 
         can_have_new_neighbor = self.playedPieces.keys()
@@ -377,6 +382,8 @@ class Hive(object):
                 if piece_name not in can_have_new_neighbor:
                     continue
                 for to_place_name in to_be_placed:
+                    if to_place_name == "wA2":
+                        print("foo")
                     if row[to_place_name] > 0:
                         pos = self.poc2cell(piece_name, row[to_place_name])
                         can_have_next.append(to_place_name)
@@ -410,7 +417,6 @@ class Hive(object):
         # It is needed in order to guess turn number
         adjacency = represent.dict_representation(canonical_list_repr)
         played_count = len(Hive._get_piece_names_on_board(adjacency))
-        print("[DEBUG]: load_state_with_player: played count: %d" % played_count)
 
         # turn number is at least that much
         turn = played_count + 1

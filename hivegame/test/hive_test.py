@@ -52,12 +52,13 @@ class TestHive(TestCase):
     def test_one_hive(self):
         self.assertFalse(valid.validate_one_hive(self.hive, self.hive.playedPieces['wS1']))
         self.assertTrue(valid.validate_one_hive(self.hive, self.hive.playedPieces['wQ1']))
-        print("[DEBUG] Action vector: ")
-        print(represent.get_all_action_vector(self.hive))
+        #print("[DEBUG] Action vector: ")
+        #print(represent.get_all_action_vector(self.hive))
 
     def test_one_hive_with_load_state(self):
         self.hive.load_state((represent.get_adjacency_state(self.hive), self.hive.turn))
-        print(represent.string_representation(represent.canonical_adjacency_state(self.hive)))
+        print("[DEBUG] adjacency state:")
+        print(represent.list_representation(represent.get_adjacency_state(self.hive)))
         self.assertFalse(valid.validate_one_hive(self.hive, self.hive.playedPieces['wS1']))
         self.assertTrue(valid.validate_one_hive(self.hive, self.hive.playedPieces['wQ1']))
 

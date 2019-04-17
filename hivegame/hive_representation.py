@@ -100,11 +100,9 @@ def dict_representation(adjacency_list):
     :param adjacency_list: List representation of the state
     :return: Dictionary representation of the state
     """
-    print("[DEBUG] dict_representation: len(adjacency_list) == {}".format(len(adjacency_list)))
     # get list of bug names sorted by name alphabetically
     list_of_names = sorted(list(piece_fact.piece_set(Player.WHITE).keys()) + list(
         piece_fact.piece_set(Player.BLACK).keys()))
-    print("[DEBUG] dict_representation: len(list_of_names) == {}".format(len(list_of_names)))
 
     adjacency_iter = iter(adjacency_list)
     # Create a dictionary
@@ -114,7 +112,7 @@ def dict_representation(adjacency_list):
         result[bug_name] = column
         for inner_name in list_of_names:
             if inner_name == bug_name:
-                break  # adjacency with itself is not stored
+                continue  # adjacency with itself is not stored
             column[inner_name] = next(adjacency_iter)
     return result
 
@@ -158,7 +156,6 @@ def get_all_action_vector(hive):
     direction_count = 6
     # Pieces not played yet:
     piece_set = piece_fact.piece_set(hive.activePlayer)
-    print("[DEBUG] piece set length: %d" % len(piece_set))
     possible_neighbor_count = len(piece_set) - 1  # it can't be adjacent to itself
 
     my_pieces = [piece for piece in hive.playedPieces.values() if piece.color == hive.activePlayer]
@@ -170,6 +167,8 @@ def get_all_action_vector(hive):
         result += [1] * (len(piece_set) - 1)
     else:
         result += [0] * (len(piece_set) - 1)
+
+    assert len(result) == len(piece_set) - 1
 
     # Placing pieces
     for piece_name in piece_set.keys():
@@ -195,7 +194,8 @@ def get_all_action_vector(hive):
                         result.append(0)
                     else:
                         result.append(1)
-    print("[DEBUG] result length of placing only: %d" % (len(result)))
+    assert len(result) == len(piece_set) - 1 + len(piece_set)*(possible_neighbor_count * direction_count)
+
     # moving pieces
     for piece_name, piece_without_pos in piece_set.items():
         piece = hive.playedPieces.get(piece_name, None)
@@ -214,11 +214,10 @@ def get_all_action_vector(hive):
             continue
 
         result += piece.available_moves_vector(hive)
+        print("possible move of {} is {}".format(piece, piece.available_moves_vector(hive)))
 
-    print("[DEBUG]: Resulting move vector is: {}".format(result))
     expected_len = len(piece_set) - 1 + (possible_neighbor_count * direction_count) * len(piece_set) +\
         1*6 + 3*6 + 3*AntPiece.MAX_STEP_COUNT + 2*SpiderPiece.MAX_STEP_COUNT + 2*6
-    print("[DEBUG] len of result: %d, and expected len is: %d" % (len(result), expected_len))
     assert len(result) == expected_len
     return result
 
