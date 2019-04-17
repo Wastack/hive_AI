@@ -8,6 +8,8 @@ from hivegame.hive_utils import Direction, GameStatus
 from hivegame.AI.utils.Game import Game
 import random
 
+import hivegame.hive_representation as represent
+
 
 class Environment(Game):
     """
@@ -124,7 +126,7 @@ class Environment(Game):
         return self.hive.turn
     
     def get_all_possible_actions(self):
-        return self.hive.get_all_possible_actions()
+        return represent.get_all_possible_actions(self.hive)
     
     def action_piece_to(self, piece, to_cell):
         try:
@@ -136,25 +138,24 @@ class Environment(Game):
     def randomActionInState(self, state):
         hive = Hive()
         hive.load_state(state)
-        return random.choice(tuple(hive.get_all_possible_actions()))
+        return random.choice(tuple(represent.get_all_possible_actions(hive)))
 
 # Methods for Game.py interface
     def stringRepresentation(self, board):
-        return self.hive.string_representation(board)
+        return represent.string_representation(board)
 
-    def getActionSize(self, board, player):
+    def getActionSize(self):
         """
-        :param state: A tuple of an adjacency matrix representing the board and the number of turns.
         :return: Number of possible actions in the given state
         """
         hive = Hive()
-        hive.load_state_with_player(board, player)
-        return len(hive.get_all_possible_actions())
+        hive.setup()
+        return len(represent.get_all_action_vector(hive))
 
     def getCanonicalForm(self, board, player):
         hive = Hive()
         hive.load_state_with_player(board, player)
-        return Hive.list_representation(hive.canonical_adjacency_state())
+        return represent.two_dim_representation(represent.canonical_adjacency_state(hive))
 
     def getGameEnded(self, board, player):
         hive = Hive()
@@ -170,36 +171,45 @@ class Environment(Game):
             raise ValueError('unexpected player')
 
     def getValidMoves(self, board, player):
-        # TODO create load_state with player
         hive = Hive()
         hive.load_state_with_player(board, player)
-        return hive.get_all_possible_actions()
+        return represent.get_all_action_vector(hive)
 
     def getNextState(self, board, player, action):
+        print("[DEBUG] action in getNextState: {}".format(action))
         hive = Hive()
         hive.load_state_with_player(board, player)
-        (piece, to_cell) = action
+        (piece, to_cell) = hive.action_from_vector(action)
+        #TODO handle pass
+        print("[DEBUG] getNextState: resulting action is: ({}, {})".format(piece, to_cell))
         hive.action_piece_to(piece, to_cell)
+        print("resulting state is: {}".format(represent.two_dim_representation(represent.canonical_adjacency_state(hive))))
+        return represent.two_dim_representation(represent.canonical_adjacency_state(hive)), player*(-1)
 
     def getInitBoard(self):
         hive = Hive()
-        return Hive.list_representation(hive.get_adjacency_state())
+        return represent.two_dim_representation(represent.get_adjacency_state(hive))
 
-    def getSymmetries(self, board_list_repr, pi):
+    def getSymmetries(self, board, pi):
         symmetries = []
         # Rotate the board 5 times
         for i in range(5):
-            symmetries.append(self._rotate_adjacency(board_list_repr))
+            symmetries.append(self._rotate_adjacency(board))
         return map(lambda sim: (sim, pi), symmetries)
 
     @staticmethod
     def _rotate_adjacency(adjacency_list):
         result = []
-        for dir in adjacency_list:
-            if 0 < dir <= 5:
-                result.append(dir + 1)
-            elif dir == 6:
+        for direction in adjacency_list:
+            if 0 < direction <= 5:
+                result.append(direction + 1)
+            elif direction == 6:
                 result.append(1)  # overflow of directions
             else:
-                result.append(dir)
+                result.append(direction)
         return result
+
+    def getBoardSize(self):
+        hive = Hive()
+        hive.setup()
+        return represent.two_dim_representation(represent.canonical_adjacency_state(hive)).shape

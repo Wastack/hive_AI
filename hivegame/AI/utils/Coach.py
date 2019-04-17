@@ -68,7 +68,7 @@ class Coach():
         """
         Performs numIters iterations with numEps episodes of self-play in each
         iteration. After every iteration, it retrains neural network with
-        examples in trainExamples (which has a maximium length of maxlenofQueue).
+        examples in trainExamples (which has a maximum length of maxlenofQueue).
         It then pits the new neural network against the old one and accepts it
         only if it wins >= updateThreshold fraction of games.
         """

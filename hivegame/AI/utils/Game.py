@@ -13,6 +13,7 @@ class Game(metaclass=abc.ABCMeta):
     def __init__(self):
         pass
 
+    @abc.abstractmethod
     def getInitBoard(self):
         """
         Returns:
@@ -21,6 +22,7 @@ class Game(metaclass=abc.ABCMeta):
         """
         pass
 
+    @abc.abstractmethod
     def getBoardSize(self):
         """
         Returns:
@@ -28,13 +30,15 @@ class Game(metaclass=abc.ABCMeta):
         """
         pass
 
-    def getActionSize(self, board, player):
+    @abc.abstractmethod
+    def getActionSize(self):
         """
         Returns:
             actionSize: number of all possible actions
         """
         pass
 
+    @abc.abstractmethod
     def getNextState(self, board, player, action):
         """
         Input:
@@ -48,6 +52,7 @@ class Game(metaclass=abc.ABCMeta):
         """
         pass
 
+    @abc.abstractmethod
     def getValidMoves(self, board, player):
         """
         Input:
@@ -61,6 +66,7 @@ class Game(metaclass=abc.ABCMeta):
         """
         pass
 
+    @abc.abstractmethod
     def getGameEnded(self, board, player):
         """
         Input:
@@ -74,6 +80,7 @@ class Game(metaclass=abc.ABCMeta):
         """
         pass
 
+    @abc.abstractmethod
     def getCanonicalForm(self, board, player):
         """
         Input:
@@ -90,6 +97,7 @@ class Game(metaclass=abc.ABCMeta):
         """
         pass
 
+    @abc.abstractmethod
     def getSymmetries(self, board, pi):
         """
         Input:
@@ -103,6 +111,7 @@ class Game(metaclass=abc.ABCMeta):
         """
         pass
 
+    @abc.abstractmethod
     def stringRepresentation(self, board):
         """
         Input:

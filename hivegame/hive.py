@@ -246,7 +246,10 @@ class Hive(object):
         Translates a relative position (piece, point of contact) into
         a board cell (x, y).
         """
+        assert point_of_contract < 9
         ref_cell = self.locate(ref_piece)
+        if point_of_contract > 6:
+            return ref_cell  # above or below
         return self.board.get_dir_cell(ref_cell, point_of_contract)
 
     def bee_moves(self, cell):
@@ -381,10 +384,9 @@ class Hive(object):
             for piece_name, row in adjacency_matrix.items():
                 if piece_name not in can_have_new_neighbor:
                     continue
+                assert any( i !=  0 or i != 9 for i in row)
                 for to_place_name in to_be_placed:
-                    if to_place_name == "wA2":
-                        print("foo")
-                    if row[to_place_name] > 0:
+                    if 9 > row[to_place_name] > 0:
                         pos = self.poc2cell(piece_name, row[to_place_name])
                         can_have_next.append(to_place_name)
                         to_be_placed.remove(to_place_name)
@@ -412,10 +414,10 @@ class Hive(object):
         assert (len(letters) == 3)  # color, type, number
         return letter_to_piece[letters[1]](letters[0], letters[2])
 
-    def load_state_with_player(self, canonical_list_repr, current_player):
+    def load_state_with_player(self, two_dim_repr, current_player):
         # count number of pieces already on board
         # It is needed in order to guess turn number
-        adjacency = represent.dict_representation(canonical_list_repr)
+        adjacency = represent.dict_representation(two_dim_repr)
         played_count = len(Hive._get_piece_names_on_board(adjacency))
 
         # turn number is at least that much

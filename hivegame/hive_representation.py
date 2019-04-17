@@ -8,13 +8,16 @@ from hivegame.pieces.bee_piece import BeePiece
 from hivegame.pieces.ant_piece import AntPiece
 from hivegame.pieces.spider_piece import SpiderPiece
 
+import numpy as np
+
 # Adjacency matrix of pieces
 # - rows in order: (22 pieces at the moment, i may change when adding extensions)
 #   ['wA1', 'wA2', 'wA3', 'wB1', 'wB2', 'wG1', 'wG2', 'wG3', 'wQ1', 'wS1', 'wS2',
 #    'bA1', 'bA2', 'bA3', 'bB1', 'bB2', 'bG1', 'bG2', 'bG3', 'bQ1', 'bS1', 'bS2']
 # - cells:
-#   + 0: they are not adjacent
+#   + 0: it is not set
 #   + 7: is lower, 8: is upper
+#   + 9: the piece is set, but no neighbours that way
 #
 #    2/ \3
 #   1|   |4
@@ -34,7 +37,7 @@ def get_adjacency_state(hive):
     pieces = piece_fact.piece_set("w")
     pieces.update(piece_fact.piece_set("b"))
 
-    # Initially nobody has a neighbor
+    # Initially nobody is placed
     result = {}
     for row in pieces:
         result[row] = {}
@@ -48,6 +51,10 @@ def get_adjacency_state(hive):
         # the piece is not set yet
         if not cell:
             continue
+
+        # It is placed, so let's put it to 9
+        for k in relations.keys():
+            relations[k] = 9
 
         # check if there are more pieces at the same cell (beetles)
         pieces_in_cell = hive.piecesInCell[cell]
@@ -64,6 +71,7 @@ def get_adjacency_state(hive):
             # get piece on the top of the neighbor cell
             neighbor_piece = hive.piecesInCell[neighbor_cell][-1]
             relations[str(neighbor_piece)] = hive.board.get_line_dir(cell, neighbor_cell)
+
     return result
 
 
@@ -94,8 +102,16 @@ def list_representation(adjacency):
             directions.append(sorted_dir)
     return directions
 
+def two_dim_representation(adjacency):
+    directions = []  # current turn number is the first data
+    for sorted_row in [v for (k, v) in sorted(adjacency.items(), key=lambda row: row[0])]:
+        row = []
+        for sorted_dir in [v for (_k, v) in sorted(sorted_row.items(), key=lambda col: col[0])]:
+            row.append(sorted_dir)
+        directions.append(row)
+    return np.array(directions)
 
-def dict_representation(adjacency_list):
+def dict_representation(two_dim_list):
     """
     :param adjacency_list: List representation of the state
     :return: Dictionary representation of the state
@@ -104,26 +120,26 @@ def dict_representation(adjacency_list):
     list_of_names = sorted(list(piece_fact.piece_set(Player.WHITE).keys()) + list(
         piece_fact.piece_set(Player.BLACK).keys()))
 
-    adjacency_iter = iter(adjacency_list)
     # Create a dictionary
     result = {}
-    for bug_name in list_of_names:
+    for bug_name, relations in zip(list_of_names,two_dim_list):
+        adj_row_iter = iter(relations)
         column = {}
         result[bug_name] = column
         for inner_name in list_of_names:
             if inner_name == bug_name:
                 continue  # adjacency with itself is not stored
-            column[inner_name] = next(adjacency_iter)
+            column[inner_name] = next(adj_row_iter)
     return result
 
 
-def string_representation(adjacency_list_repr):
+def string_representation(twodim_repr):
     """
     :param adjacency_list_repr:
     :return:  Hashable string representation of the current state
     """
     # We need to use comma as separator, because turn number can consist of more digits.
-    return ",".join(str(x) for x in adjacency_list_repr)
+    return ",".join(str(x) for x in (y for y in twodim_repr))
 
 
 def _toggle_color(piece_name):

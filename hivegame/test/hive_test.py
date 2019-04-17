@@ -58,7 +58,7 @@ class TestHive(TestCase):
     def test_one_hive_with_load_state(self):
         self.hive.load_state((represent.get_adjacency_state(self.hive), self.hive.turn))
         print("[DEBUG] adjacency state:")
-        print(represent.list_representation(represent.get_adjacency_state(self.hive)))
+        print(represent.two_dim_representation(represent.get_adjacency_state(self.hive)).tolist())
         self.assertFalse(valid.validate_one_hive(self.hive, self.hive.playedPieces['wS1']))
         self.assertTrue(valid.validate_one_hive(self.hive, self.hive.playedPieces['wQ1']))
 

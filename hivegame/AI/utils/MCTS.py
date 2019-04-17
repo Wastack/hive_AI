@@ -32,7 +32,6 @@ class MCTS():
             self.search(canonicalBoard)
 
         s = self.game.stringRepresentation(canonicalBoard)
-        # TODO FIXME is it a problem, that action size is depending on the state?
         counts = [self.visit_number_s_a[(s, a)] if (s, a) in self.visit_number_s_a else 0 for a in range(self.game.getActionSize(canonicalBoard))]
 
         if temp==0:
@@ -77,8 +76,8 @@ class MCTS():
             # leaf node
             self.policy_s[s], value = self.predictor.predict(canonicalBoard)
             valids = self.game.getValidMoves(canonicalBoard, 1)
-            print("[DEBUG]: MCTS.search: self.Ps[s] = {}, v = {}, valids = {}".format(self.policy_s[s], value, valids))
             self.policy_s[s] = self.policy_s[s] * valids      # masking invalid moves
+            print("[DEBUG] MCTS: valid moves: {}".format(self.policy_s[s]))
             sum_current_policy = np.sum(self.policy_s[s])
             if sum_current_policy > 0:
                 self.policy_s[s] /= sum_current_policy    # re-normalize

@@ -1,7 +1,7 @@
 import logging
 import sys
 
-from hivegame.AI.utils.NeuralNetMock import NeuralNetMock
+from hivegame.AI.utils.keras.NNet import NNetWrapper
 from hivegame.AI.utils.Coach import Coach
 from hivegame.environment import Environment
 from hive_utils import *
@@ -27,7 +27,7 @@ args = dotdict({
 def main():
     logging.basicConfig(level=logging.INFO)
     env = Environment()
-    nnet = NeuralNetMock(env)
+    nnet = NNetWrapper(env)
     c = Coach(env, nnet, args)
     c.learn()
 
