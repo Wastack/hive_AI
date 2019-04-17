@@ -7,6 +7,7 @@ from hivegame.pieces.spider_piece import SpiderPiece
 from hivegame.pieces.bee_piece import BeePiece
 
 from hivegame.hive_utils import Player, HiveException, GameStatus
+from hivegame.view import HiveView
 
 import hivegame.hive_validation as valid
 import hivegame.hive_representation as represent
@@ -321,7 +322,7 @@ class Hive(object):
             else:
                 return pieces_list[action_number], (1, 0)
 
-        if len(self.playedPieces) < 3:
+        if len(self.playedPieces) < 2:
             raise HiveException
         adjacent_bug_bound = len(pieces_list) - 1
         one_bug_bound = adjacent_bug_bound * 6
@@ -337,8 +338,13 @@ class Hive(object):
             adj_piece = self._piece_from_piece_set(adj_piece_number)
             # We have to search for the pieces in the stored state, because that way
             # it will also contain the position of the piece
+            adj_piece_stored = self.playedPieces.get(str(adj_piece))
+            if adj_piece_stored is None:
+                print("[WARN]: {} is not yet placed.".format(adj_piece))
+                print(HiveView(self))
+                raise HiveException  # trying to place piece next to an unplayed piece
             stored_piece = self.unplayedPieces[self.activePlayer][str(piece)]
-            target_cell = self.board.get_dir_cell(self.playedPieces[str(adj_piece)], direction)
+            target_cell = self.board.get_dir_cell(adj_piece_stored, direction)
             return stored_piece, target_cell
 
         # This is a bug movement

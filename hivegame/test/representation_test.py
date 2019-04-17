@@ -84,11 +84,19 @@ class TestRepresentation(TestCase):
 
     def test_action_vector(self):
         self.hive.load_state_with_player(self._list_repr, Player.WHITE)
-        print(represent.get_all_action_vector(self.hive))
 
         with open('repr_data.json') as f:
             d = json.load(f)
             assert represent.get_all_action_vector(self.hive) == d["test_action_vector"]
+
+    def test_actions_from_vector(self):
+        self.hive.load_state_with_player(self._list_repr, Player.WHITE)
+        all_actions = represent.get_all_action_vector(self.hive)
+        print("[DEBUG] action vector: {}".format(all_actions))
+        indices = [i for i, v in enumerate(all_actions) if v > 0]
+        for action_number in indices:
+            self.hive.action_from_vector(action_number)
+
 
 if __name__ == '__main__':
     import unittest

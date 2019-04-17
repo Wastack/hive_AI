@@ -183,7 +183,6 @@ class Environment(Game):
         #TODO handle pass
         print("[DEBUG] getNextState: resulting action is: ({}, {})".format(piece, to_cell))
         hive.action_piece_to(piece, to_cell)
-        print("resulting state is: {}".format(represent.two_dim_representation(represent.canonical_adjacency_state(hive))))
         return represent.two_dim_representation(represent.canonical_adjacency_state(hive)), player*(-1)
 
     def getInitBoard(self):
@@ -198,15 +197,16 @@ class Environment(Game):
         return map(lambda sim: (sim, pi), symmetries)
 
     @staticmethod
-    def _rotate_adjacency(adjacency_list):
+    def _rotate_adjacency(two_dim_adjacency):
         result = []
-        for direction in adjacency_list:
-            if 0 < direction <= 5:
-                result.append(direction + 1)
-            elif direction == 6:
-                result.append(1)  # overflow of directions
-            else:
-                result.append(direction)
+        for row in two_dim_adjacency:
+            for direction in row:
+                if 0 < direction <= 5:
+                    result.append(direction + 1)
+                elif direction == 6:
+                    result.append(1)  # overflow of directions
+                else:
+                    result.append(direction)
         return result
 
     def getBoardSize(self):

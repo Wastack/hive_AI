@@ -32,7 +32,7 @@ class MCTS():
             self.search(canonicalBoard)
 
         s = self.game.stringRepresentation(canonicalBoard)
-        counts = [self.visit_number_s_a[(s, a)] if (s, a) in self.visit_number_s_a else 0 for a in range(self.game.getActionSize(canonicalBoard))]
+        counts = [self.visit_number_s_a[(s, a)] if (s, a) in self.visit_number_s_a else 0 for a in range(self.game.getActionSize())]
 
         if temp==0:
             bestA = np.argmax(counts)
@@ -77,7 +77,6 @@ class MCTS():
             self.policy_s[s], value = self.predictor.predict(canonicalBoard)
             valids = self.game.getValidMoves(canonicalBoard, 1)
             self.policy_s[s] = self.policy_s[s] * valids      # masking invalid moves
-            print("[DEBUG] MCTS: valid moves: {}".format(self.policy_s[s]))
             sum_current_policy = np.sum(self.policy_s[s])
             if sum_current_policy > 0:
                 self.policy_s[s] /= sum_current_policy    # re-normalize
