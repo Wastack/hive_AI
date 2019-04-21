@@ -93,13 +93,15 @@ class TestRepresentation(TestCase):
         self.hive.load_state_with_player(self._list_repr, Player.WHITE)
         all_actions = represent.get_all_action_vector(self.hive)
         indices = [i for i, v in enumerate(all_actions) if v > 0]
-        print(indices)
         for action_number in indices:
             self.hive.action_from_vector(action_number)
 
         # test other player's turn
         self.hive.set_turn(self.hive.turn + 1)
-
+        all_actions = represent.get_all_action_vector(self.hive)
+        indices = [i for i, v in enumerate(all_actions) if v > 0]
+        for action_number in indices:
+            self.hive.action_from_vector(action_number)
 
 
 

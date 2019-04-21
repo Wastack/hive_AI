@@ -33,7 +33,7 @@ class SpiderPiece(HivePiece):
         # restore spider to it's original position
         hive.piecesInCell[self.position].append(self)
 
-        return thirdStep
+        return sorted(thirdStep)
 
     def available_moves_vector(self, hive):
         """

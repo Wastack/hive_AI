@@ -352,13 +352,14 @@ class Hive(object):
         for piece in pieces_list:
             if inner_action_number < 0:
                 raise HiveException
-            if inner_action_number - piece.move_vector_size > 0:
+            if inner_action_number - piece.move_vector_size >= 0:
                 inner_action_number -= piece.move_vector_size
                 continue
             stored_piece = self.playedPieces.get(str(piece))
             if stored_piece is None:
                 # It should be placed if we want to move it
                 raise HiveException
+            print("[DEBUG] inner_action_number: {}".format(inner_action_number))
             return stored_piece, stored_piece.index_to_target_cell(self, inner_action_number)
 
         # Index overflow

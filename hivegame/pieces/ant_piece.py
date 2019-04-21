@@ -52,7 +52,7 @@ class AntPiece(HivePiece):
             toExplore = found
 
         hive.piecesInCell[self.position].append(self)
-        return visited
+        return sorted(visited)
 
     def available_moves_vector(self, hive):
         """

@@ -45,7 +45,6 @@ class HivePiece(metaclass=abc.ABCMeta):
     def index_to_target_cell(self, hive, number):
         aval_moves = self.available_moves(hive)
         if len(aval_moves) < number or number >= self.move_vector_size:
-            print("[DEBUG] piece: {}, number: {}".format(self, number))
             raise HiveException
         return aval_moves[number]
 
