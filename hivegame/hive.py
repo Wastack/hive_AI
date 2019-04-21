@@ -359,7 +359,6 @@ class Hive(object):
             if stored_piece is None:
                 # It should be placed if we want to move it
                 raise HiveException
-            print("[DEBUG] inner_action_number: {}".format(inner_action_number))
             return stored_piece, stored_piece.index_to_target_cell(self, inner_action_number)
 
         # Index overflow
