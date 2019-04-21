@@ -8,7 +8,9 @@ class dotdict(dict):
 
 class HiveException(Exception):
     """Base class for exceptions."""
-    pass
+    def __init__(self, message, errors):
+        super().__init__(message)
+        self.errors = errors
 
 
 class Player(object):

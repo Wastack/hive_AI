@@ -45,7 +45,7 @@ class HivePiece(metaclass=abc.ABCMeta):
     def index_to_target_cell(self, hive, number):
         aval_moves = self.available_moves(hive)
         if len(aval_moves) < number or number >= self.move_vector_size:
-            raise HiveException
+            raise HiveException("moving piece with action number is out of bounds", 10001)
         return aval_moves[number]
 
     # TODO this can be static.

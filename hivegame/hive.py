@@ -57,7 +57,7 @@ class Hive(object):
             elif isinstance(action, str):
                 (current_piece_name, ref_piece_name, direction) = (action, None, None)
             else:
-                raise HiveException  # invalid format
+                raise HiveException("invalid action format", 10004)  # invalid format
 
             player = self.get_active_player()
 
@@ -68,7 +68,7 @@ class Hive(object):
 
             piece = self.unplayedPieces[player].get(current_piece_name, self.playedPieces.get(current_piece_name, None))
             if piece is None:
-                raise HiveException
+                raise HiveException("Invalid piece name", 10005)
             self.action_piece_to(piece, target_cell)
 
         elif action_type == 'non_play' and action == 'pass':
@@ -133,10 +133,10 @@ class Hive(object):
         """
         # is the move valid
         if not valid.validate_turn(self, piece, 'move'):
-            raise HiveException("Invalid Piece Placement")
+            raise HiveException("Invalid Piece Placement", 10002)
 
         if not valid.validate_move_piece(self, piece, target_cell):
-            raise HiveException("Invalid Piece Movement")
+            raise HiveException("Invalid Piece Movement", 10003)
 
         pp = self.playedPieces[str(piece)]
         starting_cell = pp.position
@@ -169,10 +169,10 @@ class Hive(object):
         """
         # is the placement valid
         if not valid.validate_turn(self, piece, 'place'):
-            raise HiveException("Invalid Piece Placement")
+            raise HiveException("Invalid Piece Placement", 10002)
 
         if not valid.validate_place_piece(self, piece, to_cell):
-            raise HiveException("Invalid Piece Placement")
+            raise HiveException("Invalid Piece Placement", 10003)
 
         return self._place_without_validation(piece, to_cell)
 
@@ -316,14 +316,14 @@ class Hive(object):
         if action_number < init_bound:
             # That's an initial movement
             if len(self.playedPieces) > 2:
-                raise HiveException
+                raise HiveException("Invalid action number, it should not be an initial movement", 10006)
             if not self.piecesInCell.get((0, 0)):
                 return pieces_list[action_number], (0, 0)
             else:
                 return pieces_list[action_number], (1, 0)
 
         if len(self.playedPieces) < 2:
-            raise HiveException
+            raise HiveException("Invalid action number, it ought to be an initial movement", 10007)
         adjacent_bug_bound = len(pieces_list) - 1
         one_bug_bound = adjacent_bug_bound * 6
         placement_bound = init_bound + one_bug_bound * len(pieces_list)
@@ -340,9 +340,7 @@ class Hive(object):
             # it will also contain the position of the piece
             adj_piece_stored = self.playedPieces.get(str(adj_piece))
             if adj_piece_stored is None:
-                print("[WARN]: {} is not yet placed.".format(adj_piece))
-                print(HiveView(self))
-                raise HiveException  # trying to place piece next to an unplayed piece
+                raise HiveException("Invalid action number, trying to place piece next to an unplayed piece", 10008)
             stored_piece = self.unplayedPieces[self.activePlayer][str(piece)]
             target_cell = self.board.get_dir_cell(adj_piece_stored.position, direction)
             return stored_piece, target_cell
@@ -350,19 +348,18 @@ class Hive(object):
         # This is a bug movement
         inner_action_number = action_number - placement_bound
         for piece in pieces_list:
-            if inner_action_number < 0:
-                raise HiveException
+            assert inner_action_number >= 0
             if inner_action_number - piece.move_vector_size >= 0:
                 inner_action_number -= piece.move_vector_size
                 continue
             stored_piece = self.playedPieces.get(str(piece))
             if stored_piece is None:
                 # It should be placed if we want to move it
-                raise HiveException
+                raise HiveException("Invalid action number, trying to move a piece which is not yet placed", 10009)
             return stored_piece, stored_piece.index_to_target_cell(self, inner_action_number)
 
         # Index overflow
-        raise HiveException
+        raise HiveException("Invalid action number, out of bounds", 10010)
 
     def _piece_from_piece_set(self, index, excep=None):
         """
