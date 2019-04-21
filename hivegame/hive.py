@@ -390,22 +390,21 @@ class Hive(object):
         # put down the first bug which should be placed
         self._place_without_validation(self._name_to_piece(to_be_placed.pop()), (0, 0))
 
-        can_have_new_neighbor = self.playedPieces.keys()
-        can_have_next = []
-        while len(to_be_placed) > 0:
-            for piece_name, row in adjacency_matrix.items():
-                if piece_name not in can_have_new_neighbor:
-                    continue
-                assert any( i !=  0 or i != 9 for i in row)
-                for to_place_name in to_be_placed:
-                    if 9 > row[to_place_name] > 0:
-                        pos = self.poc2cell(piece_name, row[to_place_name])
-                        can_have_next.append(to_place_name)
-                        to_be_placed.remove(to_place_name)
-                        my_new_piece = self._name_to_piece(to_place_name)
-                        my_new_piece.position = pos
-                        self._place_without_validation(my_new_piece, pos)
-            can_have_new_neighbor = can_have_next
+        # BFS on adjacency matrix
+        nodes_to_visit = list(self.playedPieces.keys())
+        while nodes_to_visit != []:
+            name = nodes_to_visit.pop()
+            # list need to be reversed, since we want to remove from it
+            for to_place_name in reversed(to_be_placed):
+                if 9 > adjacency_matrix[to_place_name][name] > 0:
+                    pos = self.poc2cell(name, adjacency_matrix[name][to_place_name])
+                    my_new_piece = self._name_to_piece(to_place_name)
+                    nodes_to_visit.append(to_place_name)
+                    to_be_placed.remove(to_place_name)
+                    my_new_piece.position = pos
+                    self._place_without_validation(my_new_piece, pos)
+
+        assert to_be_placed == []  # found place for everyone
 
         # set current player
         self.set_turn(turn)
