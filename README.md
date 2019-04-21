@@ -80,19 +80,39 @@ can be easily parsed by a machine.
 Development:
 ===========
 
+In order to run all the tests, you can use nose [https://nose.readthedocs.io/en/latest/testing.html]
+
 Running the tests:
 
 ```
-PYTHONPATH=. python hivegame/test/hive_test.py
+nosetests hivegame/test/
 ```
 
+Running one particular test:
+
 ```
-PYTHONPATH=. python hivegame/test/board_test.py
+PYTHONPATH=. python hivegame/test/<test_name>.py
 ```
 
 Running the game:
 ================
 
+You can run arena.py for some game:
+
 ```
-PYTHONPATH=. python bin/main.py
+PYTHONPATH=. python hivegame/arena.py
+```
+
+Currently, you can change player types only in code.
+AI's can be chosen in the main function of arena.py.
+In a later version options will be provided in order to choose opponent.
+
+Development of the AI
+=====================
+
+AI is based on AlphaGo Zero [https://deepmind.com/blog/alphago-zero-learning-scratch/] and is under
+development. You can test the training process of the current implementation by running:
+
+```
+PYTHONPATH=. python hivegame/train_test.py
 ```
