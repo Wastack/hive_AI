@@ -116,3 +116,8 @@ development. You can test the training process of the current implementation by 
 ```
 PYTHONPATH=. python hivegame/train_test.py
 ```
+
+Dependencies
+============
+
+The game is developed and tested with the package versions listed in [dependencies.yml](dependencies.yml)
