@@ -95,7 +95,10 @@ class TestRepresentation(TestCase):
         print("[DEBUG] action vector: {}".format(all_actions))
         indices = [i for i, v in enumerate(all_actions) if v > 0]
         for action_number in indices:
+            print("[DEBUG] action number is: {}".format(action_number))
             self.hive.action_from_vector(action_number)
+        self.hive.set_turn(self.hive.turn + 1)
+        # TODO test other player
 
 
 if __name__ == '__main__':

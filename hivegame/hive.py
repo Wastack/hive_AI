@@ -313,7 +313,7 @@ class Hive(object):
         pieces_list = list(piece_fact.piece_set(self.activePlayer).values())
         piece_set_count = len(pieces_list)
         init_bound = piece_set_count - 1
-        if action_number <= init_bound:
+        if action_number < init_bound:
             # That's an initial movement
             if len(self.playedPieces) > 2:
                 raise HiveException
@@ -327,15 +327,15 @@ class Hive(object):
         adjacent_bug_bound = len(pieces_list) - 1
         one_bug_bound = adjacent_bug_bound * 6
         placement_bound = init_bound + one_bug_bound * len(pieces_list)
-        if action_number <= placement_bound:
+        if action_number < placement_bound:
             # It is a bug placement
             inner_action_number = action_number - init_bound
             action_type = inner_action_number % one_bug_bound
             piece_number = inner_action_number // one_bug_bound
             adj_piece_number = action_type // adjacent_bug_bound
-            direction = action_type % 6
+            direction = (action_type % 6) + 1  # starting from west, clockwise
             piece = self._piece_from_piece_set(piece_number)
-            adj_piece = self._piece_from_piece_set(adj_piece_number)
+            adj_piece = self._piece_from_piece_set(adj_piece_number, piece)
             # We have to search for the pieces in the stored state, because that way
             # it will also contain the position of the piece
             adj_piece_stored = self.playedPieces.get(str(adj_piece))
@@ -344,7 +344,7 @@ class Hive(object):
                 print(HiveView(self))
                 raise HiveException  # trying to place piece next to an unplayed piece
             stored_piece = self.unplayedPieces[self.activePlayer][str(piece)]
-            target_cell = self.board.get_dir_cell(adj_piece_stored, direction)
+            target_cell = self.board.get_dir_cell(adj_piece_stored.position, direction)
             return stored_piece, target_cell
 
         # This is a bug movement
@@ -364,8 +364,17 @@ class Hive(object):
         # Index overflow
         raise HiveException
 
-    def _piece_from_piece_set(self, index):
+    def _piece_from_piece_set(self, index, excep=None):
+        """
+        :param index: Index of bug from the piece set given by factory
+        :param excep: Exception bug. It is omitted from the list.
+        :return:
+        """
         pieces = list(piece_fact.piece_set(self.activePlayer).values())
+        for p in pieces:
+            if str(excep) == str(p):
+                pieces.remove(p)
+                break
         return pieces[index]
 
     def load_state(self, state):

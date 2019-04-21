@@ -192,7 +192,7 @@ def get_all_action_vector(hive):
             result += [0] * (possible_neighbor_count * direction_count)
         else:
             for adj_piece_name in piece_set.keys():
-                # It cannot move next to itself
+                # It cannot be put next to itself
                 if adj_piece_name == piece_name:
                     continue
                 adj_piece = hive.playedPieces.get(adj_piece_name, None)
