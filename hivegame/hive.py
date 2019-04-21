@@ -332,7 +332,7 @@ class Hive(object):
             inner_action_number = action_number - init_bound
             action_type = inner_action_number % one_bug_bound
             piece_number = inner_action_number // one_bug_bound
-            adj_piece_number = action_type // adjacent_bug_bound
+            adj_piece_number = action_type // 6
             direction = (action_type % 6) + 1  # starting from west, clockwise
             piece = self._piece_from_piece_set(piece_number)
             adj_piece = self._piece_from_piece_set(adj_piece_number, piece)
@@ -359,7 +359,7 @@ class Hive(object):
             if stored_piece is None:
                 # It should be placed if we want to move it
                 raise HiveException
-            return stored_piece, stored_piece.target_cell(inner_action_number)
+            return stored_piece, stored_piece.index_to_target_cell(self, inner_action_number)
 
         # Index overflow
         raise HiveException

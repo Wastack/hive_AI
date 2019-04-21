@@ -52,4 +52,9 @@ class GrassHopperPiece(HivePiece):
             
     def __repr__(self):
         return "%s%s%s" % (self.color, "G", self.number)
+
+    def index_to_target_cell(self, hive, number):
+        aval_moves = self.available_moves(hive)
+        num_in_list = sum(self.available_moves_vector(hive)[:number])
+        return aval_moves[num_in_list]
     

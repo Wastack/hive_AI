@@ -230,7 +230,6 @@ def get_all_action_vector(hive):
             continue
 
         result += piece.available_moves_vector(hive)
-        print("possible move of {} is {}".format(piece, piece.available_moves_vector(hive)))
 
     expected_len = len(piece_set) - 1 + (possible_neighbor_count * direction_count) * len(piece_set) +\
         1*6 + 3*6 + 3*AntPiece.MAX_STEP_COUNT + 2*SpiderPiece.MAX_STEP_COUNT + 2*6
