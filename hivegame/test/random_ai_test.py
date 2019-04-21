@@ -2,7 +2,7 @@ import time
 
 from hivegame.AI.random_player import RandomPlayer
 
-from arena import Arena
+from hivegame.arena import Arena
 
 from unittest import TestCase
 

@@ -4,6 +4,7 @@ from unittest import TestCase
 from hivegame.hive_utils import Player, Direction
 
 import numpy as np
+import os
 
 BUG_C = 22  # number of bugs without extension
 
@@ -26,8 +27,9 @@ class TestRepresentation(TestCase):
         #  / \ / \ / \ / \ / \ /
         # |   |   |   |bA1|   |
         #  \ / \ / \ / \ / \ /
-
-        with open('repr_data.json') as f:
+        __location__ = os.path.realpath(
+            os.path.join(os.getcwd(), os.path.dirname(__file__)))
+        with open(os.path.join(__location__, 'repr_data.json')) as f:
             d = json.load(f)
             return np.array(d["repr_list"])
 
@@ -84,8 +86,9 @@ class TestRepresentation(TestCase):
 
     def test_action_vector(self):
         self.hive.load_state_with_player(self._list_repr, Player.WHITE)
-
-        with open('repr_data.json') as f:
+        __location__ = os.path.realpath(
+            os.path.join(os.getcwd(), os.path.dirname(__file__)))
+        with open(os.path.join(__location__, 'repr_data.json')) as f:
             d = json.load(f)
             assert represent.get_all_action_vector(self.hive) == d["test_action_vector"]
 
