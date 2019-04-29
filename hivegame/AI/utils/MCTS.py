@@ -1,5 +1,7 @@
 import math
 import numpy as np
+from hivegame.view import HiveView
+from hivegame.hive_utils import HiveException
 EPS = 1e-8
 
 class MCTS():
@@ -28,6 +30,7 @@ class MCTS():
             probs: a policy vector where the probability of the ith action is
                    proportional to Nsa[(s,a)]**(1./temp)
         """
+        print("[DEBUG] getActionProb CALLED")
         for i in range(self.args.numMCTSSims):
             self.search(canonicalBoard)
 
@@ -111,6 +114,7 @@ class MCTS():
 
         a = best_act
         next_s, next_player = self.game.getNextState(canonicalBoard, 1, a)
+
         next_s = self.game.getCanonicalForm(next_s, next_player)
 
         value = self.search(next_s)

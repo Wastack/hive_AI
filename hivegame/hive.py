@@ -315,7 +315,7 @@ class Hive(object):
         init_bound = piece_set_count - 1
         if action_number < init_bound:
             # That's an initial movement
-            if len(self.playedPieces) > 2:
+            if len(self.playedPieces) >= 2:
                 raise HiveException("Invalid action number, it should not be an initial movement", 10006)
             if not self.piecesInCell.get((0, 0)):
                 return pieces_list[action_number], (0, 0)
@@ -374,42 +374,6 @@ class Hive(object):
                 break
         return pieces[index]
 
-    def load_state(self, state):
-        """
-        :param state: A tuple consists of an adjacency matrix of the pieces, and a turn number
-        :return: True if it succeeded. Raises HiveException else.
-        """
-        (adjacency_matrix, turn) = state
-        self.__init__()
-        self.setup()
-        to_be_placed = Hive._get_piece_names_on_board(adjacency_matrix)
-
-        if len(to_be_placed) <= 0:
-            return True  # initial state
-
-        # put down the first bug which should be placed
-        self._place_without_validation(self._name_to_piece(to_be_placed.pop()), (0, 0))
-
-        # BFS on adjacency matrix
-        nodes_to_visit = list(self.playedPieces.keys())
-        while nodes_to_visit != []:
-            name = nodes_to_visit.pop()
-            # list need to be reversed, since we want to remove from it
-            for to_place_name in reversed(to_be_placed):
-                if 9 > adjacency_matrix[to_place_name][name] > 0:
-                    pos = self.poc2cell(name, adjacency_matrix[name][to_place_name])
-                    my_new_piece = self._name_to_piece(to_place_name)
-                    nodes_to_visit.append(to_place_name)
-                    to_be_placed.remove(to_place_name)
-                    my_new_piece.position = pos
-                    self._place_without_validation(my_new_piece, pos)
-
-        assert to_be_placed == []  # found place for everyone
-
-        # set current player
-        self.set_turn(turn)
-        return True
-
     @staticmethod
     def _get_piece_names_on_board(adjacency):
         result = []
@@ -426,17 +390,47 @@ class Hive(object):
         return letter_to_piece[letters[1]](letters[0], letters[2])
 
     def load_state_with_player(self, two_dim_repr, current_player):
+        assert current_player == Player.WHITE or current_player == Player.BLACK
+        print("[DEBUG] load state with player: {}".format(current_player))
         # count number of pieces already on board
         # It is needed in order to guess turn number
         adjacency = represent.dict_representation(two_dim_repr)
-        played_count = len(Hive._get_piece_names_on_board(adjacency))
+        self.__init__()
+        self.setup()
+        to_be_placed = Hive._get_piece_names_on_board(adjacency)
 
-        # turn number is at least that much
-        turn = played_count + 1
-        assert turn > 0
+        if len(to_be_placed) <= 0:
+            return True  # initial state
 
-        # turn should be an even number
-        if current_player == Player.BLACK:
-            turn += turn % 2
+        # put down the first bug which should be placed
+        self._place_without_validation(self._name_to_piece(to_be_placed.pop()), (0, 0))
 
-        return self.load_state((adjacency, turn))
+        # BFS on adjacency matrix
+        nodes_to_visit = list(self.playedPieces.keys())
+        while nodes_to_visit != []:
+            name = nodes_to_visit.pop()
+            # list need to be reversed, since we want to remove from it
+            for to_place_name in reversed(to_be_placed):
+                if 9 > adjacency[to_place_name][name] > 0:
+                    pos = self.poc2cell(name, adjacency[name][to_place_name])
+                    my_new_piece = self._name_to_piece(to_place_name)
+                    nodes_to_visit.append(to_place_name)
+                    to_be_placed.remove(to_place_name)
+                    my_new_piece.position = pos
+                    self._place_without_validation(my_new_piece, pos)
+
+        assert to_be_placed == []  # found place for everyone
+
+        self.activePlayer = current_player
+        # Setting current player and guessing turn count
+        # set current player
+        if self.playedPieces.get("wQ1") is not None \
+                and self.playedPieces.get("bQ1") is not None:
+            self.turn = 9  # not relevant
+        elif self.playedPieces.get("wQ1") is None and self.playedPieces.get("bQ1") is None:
+            self.turn = len(self.playedPieces) + 1  # bee queen forbidden in turn 1, 2. Moving forbidden
+        else:
+            # imprecise, but who cares? There is no way to determine it exactly
+            self.turn = 9
+
+        return True

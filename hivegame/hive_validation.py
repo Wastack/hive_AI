@@ -18,17 +18,12 @@ def validate_queen_rules(hive, piece, action):
         if white_turn and ('wQ1' not in hive.playedPieces):
             return False
 
-    # White Queen must be placed by turn 7 (4th white action)
-    if hive.turn == 7:
-        if 'wQ1' not in hive.playedPieces:
-            if str(piece) != 'wQ1' or action != 'place':
+    # White Queen must be placed by turn 7 (4th white action), black queen in turn 8
+    if len([my_piece for my_piece in hive.playedPieces.values() if my_piece.kind == hive.activePlayer]) == 3:
+        if hive.activePlayer + 'Q1' not in hive.playedPieces:
+            if str(piece) != hive.activePlayer + 'Q1' or action != 'place':
                 return False
 
-    # Black Queen must be placed by turn 8 (4th black action)
-    if hive.turn == 8:
-        if 'bQ1' not in hive.playedPieces:
-            if str(piece) != 'bQ1' or action != 'place':
-                return False
     return True
 
 

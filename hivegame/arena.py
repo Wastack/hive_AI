@@ -7,7 +7,7 @@ from hivegame.AI.human_player import HumanPlayer
 from hivegame.hive_utils import GameStatus
 
 import logging
-
+import copy
 
 class Arena(object):
 
@@ -21,22 +21,24 @@ class Arena(object):
         self._player2 = player2
 
     def playGame(self):
+        self.env.reset_game()  # TODO what?
+        env = self.env
         while self.env.check_victory() == GameStatus.UNFINISHED:
-            current_player = self._player1 if self.env.current_player() == "w" else self._player2
-            response = current_player.step(self.env)
+            current_player = self._player1 if env.current_player() == "w" else self._player2
+            response = current_player.step(env)
             if response == "pass":
                 self.env.exec_cmd("pass")
                 continue
             if isinstance(current_player, HumanPlayer):
                 if not response:
                     break
-                feedback = self.env.exec_cmd(response)
+                feedback = env.exec_cmd(response)
             else:
                 (piece, coord) = response
-                feedback = self.env.action_piece_to(piece, coord)
+                feedback = env.action_piece_to(piece, coord)
             current_player.feedback(feedback)
 
-        return self.env.check_victory()
+        return env.check_victory()
 
 
     def _playNumberOfGames(self, num):
