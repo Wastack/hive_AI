@@ -29,6 +29,7 @@ class Environment(Game):
         self.input = sys.stdin
         self.logger = None
         self.reset_game()
+        self.debug_hive = Hive()
 
     def ascii_board(self):
         return str(self.view)
@@ -177,20 +178,25 @@ class Environment(Game):
 
     def getNextState(self, board, player, action_number):
         assert action_number >= 0
-        print("[DEBUG] action in getNextState: {}".format(action_number))
         hive = Hive()
         hive.load_state_with_player(board, Environment._player_to_inner_player(player))
-        print("[DEBUG] board in getNextState:\n{}".format(HiveView(hive)))
-        (piece, to_cell) = hive.action_from_vector(action_number)
+        try:
+            (piece, to_cell) = hive.action_from_vector(action_number)
+        except HiveException as error:
+            print("HiveException was caught: {}".format(error))
+            print("action number: {}".format(action_number))
+            print(HiveView(hive))
+            raise
         #TODO handle pass
-        print("[DEBUG] getNextState: resulting action is: ({}, {})".format(piece, to_cell))
         try:
             hive.action_piece_to(piece, to_cell)
         except HiveException as error:
             print("HiveException was caught: {}".format(error))
+            print("action number: {}, resulting action: ({}, {})".format(action_number, piece, to_cell))
             print(HiveView(hive))
             raise
-        return represent.two_dim_representation(represent.canonical_adjacency_state(hive)), player*(-1)
+        self.debug_hive = hive
+        return represent.two_dim_representation(represent.get_adjacency_state(hive)), player*(-1)
 
     def getInitBoard(self):
         hive = Hive()

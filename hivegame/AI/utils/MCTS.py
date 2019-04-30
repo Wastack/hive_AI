@@ -94,6 +94,7 @@ class MCTS():
 
             self.valid_moves_s[s] = valids
             self.visit_number_s[s] = 0
+            print(HiveView(self.game.debug_hive))
             return -value
 
         valids = self.valid_moves_s[s]

@@ -12,6 +12,7 @@ from hivegame.view import HiveView
 import hivegame.hive_validation as valid
 import hivegame.hive_representation as represent
 import hivegame.pieces.piece_factory as piece_fact
+import sys
 
 letter_to_piece = {
     "A": AntPiece,
@@ -316,6 +317,7 @@ class Hive(object):
         if action_number < init_bound:
             # That's an initial movement
             if len(self.playedPieces) >= 2:
+                print("[ERROR]: action vector was: {}".format(represent.get_all_action_vector(self)), file=sys.stderr)
                 raise HiveException("Invalid action number, it should not be an initial movement", 10006)
             if not self.piecesInCell.get((0, 0)):
                 return pieces_list[action_number], (0, 0)
@@ -391,7 +393,6 @@ class Hive(object):
 
     def load_state_with_player(self, two_dim_repr, current_player):
         assert current_player == Player.WHITE or current_player == Player.BLACK
-        print("[DEBUG] load state with player: {}".format(current_player))
         # count number of pieces already on board
         # It is needed in order to guess turn number
         adjacency = represent.dict_representation(two_dim_repr)
@@ -434,3 +435,6 @@ class Hive(object):
             self.turn = 9
 
         return True
+
+    def __str__(self):
+        return HiveView(self).__str__()

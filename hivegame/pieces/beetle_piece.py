@@ -31,6 +31,7 @@ class BeetlePiece(HivePiece):
 
         res = []
         # are we on top of the hive?
+        # TODO in a rare case not correct but who cares?
         if len(hive.piecesInCell[self.position]) > 0:
             res = [1] * 6
         else:
@@ -62,4 +63,12 @@ class BeetlePiece(HivePiece):
     def index_to_target_cell(self, hive, number):
         aval_moves = self.available_moves(hive)
         num_in_list = sum(self.available_moves_vector(hive)[:number])
+        if len(aval_moves) <= num_in_list:
+            print("[ERROR]")
+            print(hive)
+            print("current piece: {}, which is on position: {}".format(self, self.position))
+            print("move number: {}".format(number))
+            print("aval moves: {}".format(aval_moves))
+            print("aval move vector: {}".format(self.available_moves_vector(hive)))
+            assert False
         return aval_moves[num_in_list]

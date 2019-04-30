@@ -74,8 +74,6 @@ def get_adjacency_state(hive):
 
     return result
 
-from hivegame.view import HiveView
-
 def canonical_adjacency_state(hive):
     """
     Representation of state with adjacency matrix. From the players point of view. Instead of having a white and
@@ -83,8 +81,6 @@ def canonical_adjacency_state(hive):
 
     Practically it means that we have to switch colors of each piece.
     """
-    print("[DEBUG] before")
-    print(HiveView(hive))
     # sorted by their names. That means black piece are at front.
     matrix = get_adjacency_state(hive)
     inverse_matrix = {}
@@ -93,12 +89,6 @@ def canonical_adjacency_state(hive):
         for (col_name, cell) in row.items():
             inverse_row[_toggle_color(col_name)] = cell
         inverse_matrix[_toggle_color(row_name)] = inverse_row
-
-    new_hive = hive.__class__()
-    new_hive.setup()
-    new_hive.load_state_with_player(two_dim_representation(inverse_matrix), hive.activePlayer)
-    print("[DEBUG] after")
-    print(HiveView(new_hive))
 
     return inverse_matrix
 
@@ -188,19 +178,19 @@ def get_all_action_vector(hive):
     # direction.
     # Also, we do not need action for placing the queen, because that is forbidden in the first turn.
     if my_pieces == []:
-        print("Initial state, played pieces: {}".format(hive.playedPieces))
         result += [1] * (len(piece_set) - 1)
     else:
         result += [0] * (len(piece_set) - 1)
 
     assert len(result) == len(piece_set) - 1
 
+
     # Placing pieces
     for piece_name in piece_set.keys():
-        if piece_name in hive.playedPieces.keys():
+        if piece_name in hive.playedPieces.keys() or (len(my_pieces) == 3 and hive.activePlayer + "Q1" not
+                                                      in hive.playedPieces and piece_name != hive.activePlayer + "Q1"):
             result += [0] * (possible_neighbor_count * direction_count)
         else:
-            # TODO restrict queen only when it has to be placed
             for adj_piece_name in piece_set.keys():
                 # It cannot be put next to itself
                 if adj_piece_name == piece_name:
@@ -287,7 +277,7 @@ def get_all_possible_actions(hive):
             result.update([(piece, end_cell) for end_cell in end_cells if end_cell != piece.position])
 
     logging.info("Hive: Unplayed pieces: {}".format(hive.unplayedPieces[hive.activePlayer]))
-    if hive.turn >= 7 and hive.activePlayer + 'Q1' not in hive.playedPieces:
+    if len(my_pieces) == 3 and hive.activePlayer + 'Q1' not in hive.playedPieces:
         pieces_to_put_down.append(hive.unplayedPieces[hive.activePlayer][hive.activePlayer + 'Q1'])
     else:
         pieces_to_put_down += hive.unplayedPieces[hive.activePlayer].values()

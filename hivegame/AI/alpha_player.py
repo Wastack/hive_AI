@@ -10,6 +10,7 @@ class AlphaPlayer(Player):
         self.mcts = MCTS(environment, predictor, args)
 
     def step(self, environment):
+        print("[DEBUG] step called")
         board = environment.getCanonicalForm()
         return np.argmax(self.mcts.getActionProb(board, temp=0))
 
