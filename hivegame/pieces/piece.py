@@ -24,6 +24,7 @@ class HivePiece(metaclass=abc.ABCMeta):
         """
         if hive.piecesInCell[self.position][-1] == self:
             return False
+        print("[DEBUG] Pieces on the same position: {}".format(hive.piecesInCell[self.position]))
         return True
 
     @abc.abstractproperty
@@ -53,3 +54,9 @@ class HivePiece(metaclass=abc.ABCMeta):
     @abc.abstractmethod
     def move_vector_size(self):
         return None
+
+    def __eq__(self, obj):
+        return isinstance(obj, HivePiece) and str(obj) == str(self)
+
+    def __hash__(self):
+        return hash(self.color) ^ hash(self.kind) ^ hash(self.number)

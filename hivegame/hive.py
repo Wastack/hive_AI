@@ -119,6 +119,7 @@ class Hive(object):
         If the place is already on board it means a movement. Otherwise it
         means a piece placement.
         """
+
         if piece.position is None or piece.position[0] is None:
             self._place_piece_to(piece, target_cell)
         else:
@@ -134,10 +135,10 @@ class Hive(object):
         """
         # is the move valid
         if not valid.validate_turn(self, piece, 'move'):
-            raise HiveException("Invalid Piece Placement", 10002)
+            raise HiveException("Invalid Piece Movement", 10002)
 
         if not valid.validate_move_piece(self, piece, target_cell):
-            raise HiveException("Invalid Piece Movement", 10003)
+            raise HiveException("Invalid Piece Movement", 10002)
 
         pp = self.playedPieces[str(piece)]
         starting_cell = pp.position
@@ -170,7 +171,7 @@ class Hive(object):
         """
         # is the placement valid
         if not valid.validate_turn(self, piece, 'place'):
-            raise HiveException("Invalid Piece Placement", 10002)
+            raise HiveException("Invalid Piece Placement", 10003)
 
         if not valid.validate_place_piece(self, piece, to_cell):
             raise HiveException("Invalid Piece Placement", 10003)

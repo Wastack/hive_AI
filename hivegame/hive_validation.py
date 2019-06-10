@@ -7,21 +7,22 @@ def validate_queen_rules(hive, piece, action):
     """
     # Tournament rule: no queen in the first move
     if (hive.turn == 1 or hive.turn == 2) and isinstance(piece, BeePiece):
+        print("Queen should not be placed in the first turn")
         return False
     white_turn = hive.activePlayer == Player.WHITE
     black_turn = not white_turn
 
     # Move actions are only allowed after the queen is on the board
     if action == 'move':
-        if black_turn and ('bQ1' not in hive.playedPieces):
-            return False
-        if white_turn and ('wQ1' not in hive.playedPieces):
+        if (black_turn and ('bQ1' not in hive.playedPieces)) or (white_turn and ('wQ1' not in hive.playedPieces)):
+            print("moves actions permitted until queen is on board")
             return False
 
     # White Queen must be placed by turn 7 (4th white action), black queen in turn 8
     if len([my_piece for my_piece in hive.playedPieces.values() if my_piece.kind == hive.activePlayer]) == 3:
         if hive.activePlayer + 'Q1' not in hive.playedPieces:
             if str(piece) != hive.activePlayer + 'Q1' or action != 'place':
+                print("Queen should be placed now")
                 return False
 
     return True
@@ -34,12 +35,15 @@ def validate_turn(hive, piece, action):
     white_turn = hive.activePlayer == Player.WHITE
     black_turn = not white_turn
     if white_turn and piece.color != Player.WHITE:
+        print("Attempt to move or place a piece with wrong color")
         return False
 
     if black_turn and piece.color != Player.BLACK:
+        print("Attempt to move or place a piece with wrong color")
         return False
 
     if not validate_queen_rules(hive, piece, action):
+        print("Queen rules violated")
         return False
 
     return True
@@ -62,7 +66,10 @@ def validate_move_piece(hive, moving_piece, target_cell):
         print("break one_hive rule")
         return False
 
-    return moving_piece.validate_move(hive, target_cell)
+    if not moving_piece.validate_move(hive, target_cell):
+        print("piece is unable to move there")
+        return False
+    return True
 
 
 def validate_place_piece(hive, piece, target_cell):
