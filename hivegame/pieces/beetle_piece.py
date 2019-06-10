@@ -36,10 +36,12 @@ class BeetlePiece(HivePiece):
             res = [1] * 6
         else:
             #  Clockwise, starting from West
+            # TODO add hop on top moves
             res = hive.bee_moves_vector(self.position)
             #  Clockwise, starting from West
             surroundings = hive.board.get_surrounding(self.position)
-            res = [ok if not hive.is_cell_free(sur) else 1 for (ok, sur) in zip(res, surroundings)]
+            assert len(res) == len(surroundings)
+            res = [ok if hive.is_cell_free(sur) else 1 for (ok, sur) in zip(res, surroundings)]
 
         # restore beetle to it's original position
         hive.piecesInCell[self.position].append(self)
@@ -63,12 +65,5 @@ class BeetlePiece(HivePiece):
     def index_to_target_cell(self, hive, number):
         aval_moves = self.available_moves(hive)
         num_in_list = sum(self.available_moves_vector(hive)[:number])
-        if len(aval_moves) <= num_in_list:
-            print("[ERROR]")
-            print(hive)
-            print("current piece: {}, which is on position: {}".format(self, self.position))
-            print("move number: {}".format(number))
-            print("aval moves: {}".format(aval_moves))
-            print("aval move vector: {}".format(self.available_moves_vector(hive)))
-            assert False
+        assert len(aval_moves)  > num_in_list
         return aval_moves[num_in_list]

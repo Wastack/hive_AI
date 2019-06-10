@@ -281,6 +281,7 @@ class Hive(object):
         return available_moves
 
     def bee_moves_vector(self, cell):
+        # TODO ensure one hive rule
         available_moves = []
         # Clockwise, starting from west
         surroundings = self.board.get_surrounding(cell)

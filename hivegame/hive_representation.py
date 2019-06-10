@@ -248,6 +248,7 @@ def get_all_possible_actions(hive):
              the target location of the action.
     """
     result = set()
+    print("[DEBUG] get_all_possible_actions ENTER")
 
     # choose the current players played pieces
     my_pieces = [piece for piece in hive.playedPieces.values() if piece.color == hive.activePlayer]
@@ -279,7 +280,9 @@ def get_all_possible_actions(hive):
     logging.info("Hive: Unplayed pieces: {}".format(hive.unplayedPieces[hive.activePlayer]))
     if len(my_pieces) == 3 and hive.activePlayer + 'Q1' not in hive.playedPieces:
         pieces_to_put_down.append(hive.unplayedPieces[hive.activePlayer][hive.activePlayer + 'Q1'])
+        print("[DEBUG] only queen rule")
     else:
+        print("[DEBUG] number of my pieces: {}".format(len(my_pieces)))
         pieces_to_put_down += hive.unplayedPieces[hive.activePlayer].values()
 
     # get all boundary free cells
