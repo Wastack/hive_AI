@@ -1,4 +1,4 @@
-from hive_representation import get_all_possible_actions
+from hive_representation import *
 from hive import Hive
 from hive_utils import HiveException
 
@@ -10,11 +10,10 @@ def perft(hive, depth) -> int:
         return 1
     nodes = 0
 
-    move_list = get_all_possible_actions(hive)
+    move_list = get_all_possible_actions_nonidentical(hive)
     for move in move_list:
         # TODO implement undo move instead of deep copy
         new_hive = deepcopy(hive)
-        print(new_hive)
         try:
             new_hive.action_piece_to(deepcopy(move[0]), move[1])
         except Exception as e:
@@ -29,7 +28,7 @@ def perft(hive, depth) -> int:
 def main():
     hive = Hive()
     hive.setup()
-    DEPTH = 6
+    DEPTH = 5
     number_of_nodes = perft(hive, DEPTH)
     print("Number of nodes on level {} is: {}".format(DEPTH, number_of_nodes))
 

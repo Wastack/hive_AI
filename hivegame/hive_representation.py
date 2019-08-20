@@ -236,6 +236,11 @@ def get_all_action_vector(hive):
     assert len(result) == expected_len
     return result
 
+def get_all_possible_actions_nonidentical(hive):
+    if len(hive.playedPieces) == 1:
+        pieces = [p for p in hive.unplayedPieces[hive.activePlayer].values() if p.kind != "Q"]
+        return [(p, (1,0)) for p in pieces]
+    return get_all_possible_actions(hive)
 
 def get_all_possible_actions(hive):
     """
