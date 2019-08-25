@@ -3,11 +3,9 @@ from hivegame.pieces.piece import HivePiece
 class BeePiece(HivePiece):
     def validate_move(self, hive, endcell):
         if self.check_blocked(hive):
-            print("[DEBUG] bee is blocked")
             return False
         possible_end_cells = hive.bee_moves(self.position)
         if not endcell in possible_end_cells:
-            print("[DEBUG] bee cannot move there. Possible moves are: {}".format(possible_end_cells))
             return False
         return True
 

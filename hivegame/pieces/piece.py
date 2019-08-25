@@ -24,7 +24,6 @@ class HivePiece(metaclass=abc.ABCMeta):
         """
         if hive.piecesInCell[self.position][-1] == self:
             return False
-        print("[DEBUG] Pieces on the same position: {}".format(hive.piecesInCell[self.position]))
         return True
 
     @abc.abstractproperty

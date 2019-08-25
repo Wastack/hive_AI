@@ -52,13 +52,9 @@ class TestHive(TestCase):
     def test_one_hive(self):
         self.assertFalse(valid.validate_one_hive(self.hive, self.hive.playedPieces['wS1']))
         self.assertTrue(valid.validate_one_hive(self.hive, self.hive.playedPieces['wQ1']))
-        #print("[DEBUG] Action vector: ")
-        #print(represent.get_all_action_vector(self.hive))
 
     def test_one_hive_with_load_state(self):
         self.hive.load_state_with_player(represent.two_dim_representation(represent.get_adjacency_state(self.hive)), self.hive.activePlayer)
-        print("[DEBUG] adjacency state:")
-        print(represent.two_dim_representation(represent.get_adjacency_state(self.hive)).tolist())
         self.assertFalse(valid.validate_one_hive(self.hive, self.hive.playedPieces['wS1']))
         self.assertTrue(valid.validate_one_hive(self.hive, self.hive.playedPieces['wQ1']))
 
@@ -135,13 +131,20 @@ class TestHive(TestCase):
         self.hive.set_turn(12)  # BLACK
         beetle = self.hive.playedPieces['bB1']
         self.hive.move_piece_without_action(beetle, 'bS1', Direction.HX_O)
-        end_cell = self.hive.poc2cell('bS1', Direction.HX_W)
+        end_cell = self.hive.poc2cell('bS1', Direction.HX_E)
         self.assertTrue(
             self.hive.playedPieces['bB1'].validate_move(self.hive, end_cell)
         )
 
+        self.hive.move_piece_without_action(beetle,'bS1', Direction.HX_E)
+        # Piece under beetle should be blocked
+        end_cell = self.hive.poc2cell('bA1', Direction.HX_SW)
+        self.assertFalse(
+            self.hive.playedPieces['bG1'].validate_move(self.hive, end_cell)
+        )
+
         # moving from top to ground
-        end_cell = self.hive.poc2cell('bS1', Direction.HX_W)
+        end_cell = self.hive.poc2cell('bG1', Direction.HX_E)
         self.assertTrue(
             self.hive.playedPieces['bB1'].validate_move(self.hive, end_cell)
         )
