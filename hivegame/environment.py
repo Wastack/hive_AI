@@ -6,8 +6,8 @@ from hivegame.hive import Hive, HiveException
 from hivegame.view import HiveView
 from hivegame.hive_utils import Direction, GameStatus, Player
 from hivegame.AI.utils.Game import Game
-import random
 
+import logging
 import hivegame.hive_representation as represent
 
 
@@ -82,7 +82,7 @@ class Environment(Game):
             ref_piece = None
         else:
             if len(cmd) != 8:
-                raise Exception("Failed to parse command.")
+                raise HiveException("Failed to parse command.", 9999)
             moving_piece = cmd[:3]
             point_of_contact = cmd[3:5]
             ref_piece = cmd[5:]
@@ -183,17 +183,17 @@ class Environment(Game):
         try:
             (piece, to_cell) = hive.action_from_vector(action_number)
         except HiveException as error:
-            print("HiveException was caught: {}".format(error))
-            print("action number: {}".format(action_number))
-            print(HiveView(hive))
+            logging.error("HiveException was caught: {}".format(error))
+            logging.error("action number: {}".format(action_number))
+            logging.error("\n{}".format(HiveView(hive)))
             raise
-        #TODO handle pass
+        # TODO handle pass
         try:
             hive.action_piece_to(piece, to_cell)
         except HiveException as error:
-            print("HiveException was caught: {}".format(error))
-            print("action number: {}, resulting action: ({}, {})".format(action_number, piece, to_cell))
-            print(HiveView(hive))
+            logging.error("HiveException was caught: {}".format(error))
+            logging.error("action number: {}, resulting action: ({}, {})".format(action_number, piece, to_cell))
+            logging.error("\n{}".format(HiveView(hive)))
             raise
         self.debug_hive = hive
         return represent.two_dim_representation(represent.get_adjacency_state(hive)), player*(-1)

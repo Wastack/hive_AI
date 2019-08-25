@@ -7,7 +7,7 @@ from hivegame.AI.human_player import HumanPlayer
 from hivegame.hive_utils import GameStatus
 
 import logging
-import copy
+
 
 class Arena(object):
 
@@ -40,7 +40,6 @@ class Arena(object):
 
         return env.check_victory()
 
-
     def _playNumberOfGames(self, num):
         whiteWon = 0
         blackWon = 0
@@ -58,7 +57,7 @@ class Arena(object):
         return whiteWon, blackWon, draws
 
     def playGames(self, num):
-        logging.INFO("playGames CALLED")
+        logging.INFO("called")
         # White starts
         (white_won, black_won, draw) = self._playNumberOfGames(num//2)
         self.player1, self.player2 = self.player2, self.player1
@@ -71,13 +70,16 @@ class Arena(object):
 
 def main():
     # TODO parse options for players
-    logging.basicConfig(level=logging.INFO)
+    FORMAT = "[%(filename)s:%(lineno)s - %(funcName)20s() ] %(message)s"
+    logging.basicConfig(level=logging.INFO, format=FORMAT)
     # game = Arena(HumanAI(sys.stdin), RandomAI())
-    game = Arena(RandomPlayer(), RandomPlayer())
+    player1 = HumanPlayer(sys.stdin)
+    player2 = RandomPlayer()
+    logging.info("Start game with the following AIs: {}, {}".format(player1, player2))
+    game = Arena(player1, player2)
     game.env.reset_game()
     game.playGame()
-    print("\nThanks for playing Hive. Have a nice day!")
-
+    logging.info("Thanks for playing Hive. Have a nice day!")
 
 if __name__ == '__main__':
     sys.exit(main())

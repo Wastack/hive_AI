@@ -12,8 +12,8 @@ class RandomPlayer(Player):
     def step(self, environment):
         if not self.use_repr:
             actions = environment.get_all_possible_actions()
-            logging.info("RandomAI: Length of action space: {}".format(len(actions)))
             if not actions:
+                logging.info("random player just passed")
                 return "pass"
             return random.choice(tuple(actions))
 

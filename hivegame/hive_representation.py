@@ -74,6 +74,7 @@ def get_adjacency_state(hive):
 
     return result
 
+
 def canonical_adjacency_state(hive):
     """
     Representation of state with adjacency matrix. From the players point of view. Instead of having a white and
@@ -100,6 +101,7 @@ def list_representation(adjacency):
             directions.append(sorted_dir)
     return directions
 
+
 def two_dim_representation(adjacency):
     directions = []  # current turn number is the first data
     for sorted_row in [v for (k, v) in sorted(adjacency.items(), key=lambda row: row[0])]:
@@ -108,6 +110,7 @@ def two_dim_representation(adjacency):
             row.append(sorted_dir)
         directions.append(row)
     return np.array(directions)
+
 
 def dict_representation(two_dim_list):
     """
@@ -177,13 +180,12 @@ def get_all_action_vector(hive):
     # bug to 6 different places, those states are identical, so the AI can be restricted to only one
     # direction.
     # Also, we do not need action for placing the queen, because that is forbidden in the first turn.
-    if my_pieces == []:
+    if not my_pieces:
         result += [1] * (len(piece_set) - 1)
     else:
         result += [0] * (len(piece_set) - 1)
 
     assert len(result) == len(piece_set) - 1
-
 
     # Placing pieces
     for piece_name in piece_set.keys():
@@ -236,11 +238,13 @@ def get_all_action_vector(hive):
     assert len(result) == expected_len
     return result
 
+
 def get_all_possible_actions_nonidentical(hive):
     if len(hive.playedPieces) == 1:
         pieces = [p for p in hive.unplayedPieces[hive.activePlayer].values() if p.kind != "Q"]
-        return [(p, (1,0)) for p in pieces]
+        return [(p, (1, 0)) for p in pieces]
     return get_all_possible_actions(hive)
+
 
 def get_all_possible_actions(hive):
     """
@@ -281,7 +285,6 @@ def get_all_possible_actions(hive):
             end_cells = piece.available_moves(hive)
             result.update([(piece, end_cell) for end_cell in end_cells if end_cell != piece.position])
 
-    logging.info("Hive: Unplayed pieces: {}".format(hive.unplayedPieces[hive.activePlayer]))
     if len(my_pieces) == 3 and hive.activePlayer + 'Q1' not in hive.playedPieces:
         pieces_to_put_down.append(hive.unplayedPieces[hive.activePlayer][hive.activePlayer + 'Q1'])
     else:

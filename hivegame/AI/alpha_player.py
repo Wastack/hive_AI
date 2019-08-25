@@ -2,6 +2,7 @@ from hivegame.AI.player import Player
 from hivegame.AI.utils.MCTS import MCTS
 
 import numpy as np
+import logging
 
 
 class AlphaPlayer(Player):
@@ -10,7 +11,7 @@ class AlphaPlayer(Player):
         self.mcts = MCTS(environment, predictor, args)
 
     def step(self, environment):
-        print("[DEBUG] step called")
+        logging.debug("called")
         board = environment.getCanonicalForm()
         return np.argmax(self.mcts.getActionProb(board, temp=0))
 

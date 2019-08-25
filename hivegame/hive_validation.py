@@ -1,5 +1,6 @@
 from hivegame.hive_utils import Player
 from hivegame.pieces.bee_piece import BeePiece
+import logging
 
 def validate_queen_rules(hive, piece, action):
     """
@@ -7,7 +8,7 @@ def validate_queen_rules(hive, piece, action):
     """
     # Tournament rule: no queen in the first move
     if (hive.turn == 1 or hive.turn == 2) and isinstance(piece, BeePiece):
-        print("Queen should not be placed in the first turn")
+        logging.info("validate_queen_rules: queen should not be placed in the first turn")
         return False
     white_turn = hive.activePlayer == Player.WHITE
     black_turn = not white_turn
@@ -15,14 +16,14 @@ def validate_queen_rules(hive, piece, action):
     # Move actions are only allowed after the queen is on the board
     if action == 'move':
         if (black_turn and ('bQ1' not in hive.playedPieces)) or (white_turn and ('wQ1' not in hive.playedPieces)):
-            print("moves actions permitted until queen is on board")
+            logging.info("validate_queen_rules: moves actions permitted until queen is on board")
             return False
 
     # White Queen must be placed by turn 7 (4th white action), black queen in turn 8
     if len([my_piece for my_piece in hive.playedPieces.values() if my_piece.kind == hive.activePlayer]) == 3:
         if hive.activePlayer + 'Q1' not in hive.playedPieces:
             if str(piece) != hive.activePlayer + 'Q1' or action != 'place':
-                print("Queen should be placed now")
+                logging.info("validate_queen_rules: Queen should be placed now")
                 return False
 
     return True
@@ -35,15 +36,15 @@ def validate_turn(hive, piece, action):
     white_turn = hive.activePlayer == Player.WHITE
     black_turn = not white_turn
     if white_turn and piece.color != Player.WHITE:
-        print("Attempt to move or place a piece with wrong color")
+        logging.info("validate_turn: Attempt to move or place a piece with wrong color")
         return False
 
     if black_turn and piece.color != Player.BLACK:
-        print("Attempt to move or place a piece with wrong color")
+        logging.info("validate_turn: Attempt to move or place a piece with wrong color")
         return False
 
     if not validate_queen_rules(hive, piece, action):
-        print("Queen rules violated")
+        logging.info("validate_turn: Queen rules violated")
         return False
 
     return True
@@ -53,21 +54,21 @@ def validate_move_piece(hive, moving_piece, target_cell):
     # check if the piece has been placed
     pp = hive.playedPieces.get(str(moving_piece))
     if pp is None:
-        print("piece was not played yet")
+        logging.info("validate_move_piece: piece was not played yet")
         return False
 
     # check if the move it's to a different target_cell
     if moving_piece in hive.piecesInCell.get(target_cell, []):
-        print("moving to the same place")
+        logging.info("validate_move_piece: moving to the same place")
         return False
 
     # check if moving this piece won't break the hive
     if not validate_one_hive(hive, moving_piece):
-        print("break one_hive rule")
+        logging.info("validate_move_piece: break one_hive rule")
         return False
 
     if not moving_piece.validate_move(hive, target_cell):
-        print("piece is unable to move there")
+        logging.info("validate_move_piece: piece is unable to move there")
         return False
     return True
 
@@ -81,10 +82,11 @@ def validate_place_piece(hive, piece, target_cell):
 
     # target_cell must be free
     if not hive.is_cell_free(target_cell):
+        logging.info("validate_place_piece: cell not free")
         return False
 
-    # the piece was already played
     if str(piece) in hive.playedPieces:
+        logging.info("validate_place_piece: piece has been already placed")
         return False
 
     # if it's the first turn we don't need to validate
@@ -104,6 +106,7 @@ def validate_place_piece(hive, piece, target_cell):
     res = True
     for piece in visible_pieces:
         if hive.playedPieces[str(piece)].color != played_color:
+            logging.info("validate_place_piece: Invalid placement")
             res = False
             break
 
