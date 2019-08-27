@@ -25,6 +25,6 @@ class RandomPlayer(Player):
         action = random.choice(indices)
         return environment.hive.action_from_vector(action)
 
-    def feedback(self, success):
+    def feedback(self, success) -> None:
         if not success:
             logging.warning("RandomAI: Invalid action from " + str(self))

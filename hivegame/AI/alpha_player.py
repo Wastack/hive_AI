@@ -15,5 +15,5 @@ class AlphaPlayer(Player):
         board = environment.getCanonicalForm()
         return np.argmax(self.mcts.getActionProb(board, temp=0))
 
-    def feedback(self, succeeded):
+    def feedback(self, succeeded) -> None:
         pass

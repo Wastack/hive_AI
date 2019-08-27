@@ -29,7 +29,7 @@ class HumanPlayer(Player):
             except (ValueError, HiveException):
                 print("Invalid command")
 
-    def feedback(self, succeeded):
+    def feedback(self, succeeded) -> None:
         if succeeded:
             print()
             print("=" * 79)
