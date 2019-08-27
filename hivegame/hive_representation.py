@@ -1,4 +1,3 @@
-import logging
 from hivegame.hive_utils import Direction, Player
 
 import hivegame.hive_validation as valid

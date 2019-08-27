@@ -3,7 +3,7 @@ import sys
 
 from hivegame.AI.utils.keras.NNet import NNetWrapper
 from hivegame.AI.utils.Coach import Coach
-from hivegame.environment import Environment
+from AI.environment import Environment
 from hive_utils import *
 
 

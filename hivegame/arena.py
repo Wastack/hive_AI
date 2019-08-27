@@ -1,7 +1,7 @@
 #! /usr/bin/env python
 
 import sys
-from hivegame.environment import Environment
+from AI.environment import Environment
 from hivegame.AI.random_player import RandomPlayer
 from hivegame.AI.human_player import HumanPlayer
 from hivegame.hive_utils import GameStatus
@@ -27,16 +27,17 @@ class Arena(object):
             current_player = self._player1 if env.current_player() == "w" else self._player2
             response = current_player.step(env)
             if response == "pass":
-                self.env.exec_cmd("pass")
+                self.env.pass_turn(self.env.hive)
                 continue
-            if isinstance(current_player, HumanPlayer):
-                if not response:
-                    break
-                feedback = env.exec_cmd(response)
+            if not response:
+                break  # e.g. keyboard interrupt
             else:
-                (piece, coord) = response
-                feedback = env.action_piece_to(piece, coord)
-            current_player.feedback(feedback)
+                try:
+                    (piece, coord) = response
+                    feedback = env.action_piece_to(piece, coord)
+                    current_player.feedback(feedback)
+                except ValueError:
+                    logging.error("ValueError when unpacking and executing response")
 
         return env.check_victory()
 

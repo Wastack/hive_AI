@@ -51,6 +51,8 @@ class Hive(object):
     def action(self, action_type, action):
         """Perform the player action.
         return True or ExceptionType
+        :param action_type play or non_play. non_play means pass
+        :param action
         """
         if action_type == 'play':
             if isinstance(action, tuple):
@@ -75,8 +77,19 @@ class Hive(object):
         elif action_type == 'non_play' and action == 'pass':
             self.turn += 1
             self.activePlayer = self._toggle_player(self.activePlayer)  # switch active player
-
         return True
+
+    def get_piece_by_name(self, piece_name):
+        """
+        :param piece_name: 3 digit name of piece. E.g. wQ1
+        :return: The piece object
+        """
+        # Look at the un-played pieces. If not found, look at the played pieces.
+        return self.unplayedPieces[self.get_active_player()].get(piece_name, self.playedPieces.get(piece_name, None))
+
+    def pass_turn(self):
+        self.turn += 1
+        self.activePlayer = self._toggle_player(self.activePlayer)  # switch active player
 
     def get_unplayed_pieces(self, player):
         return self.unplayedPieces[player]

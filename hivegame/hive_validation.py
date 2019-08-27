@@ -2,6 +2,7 @@ from hivegame.hive_utils import Player
 from hivegame.pieces.bee_piece import BeePiece
 import logging
 
+
 def validate_queen_rules(hive, piece, action):
     """
     Validate rules related to the queen.
