@@ -3,7 +3,7 @@ import logging
 
 from hivegame.AI.player import Player
 import hivegame.hive_representation as represent
-from hivegame.view import HiveView
+from utils.ascii_view import HiveView
 
 class RandomPlayer(Player):
     def __init__(self, use_repr=None):

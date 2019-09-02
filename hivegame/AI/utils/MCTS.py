@@ -1,7 +1,7 @@
 import math
 import numpy as np
-from hivegame.view import HiveView
-from hivegame.hive_utils import HiveException
+from utils.ascii_view import HiveView
+
 EPS = 1e-8
 
 class MCTS():

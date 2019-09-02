@@ -3,8 +3,8 @@
 import sys
 
 from hivegame.hive import Hive, HiveException
-from hivegame.view import HiveView
-from hivegame.hive_utils import Direction, GameStatus, Player
+from utils.ascii_view import HiveView
+from hivegame.hive_utils import GameStatus, Player
 from hivegame.AI.utils.Game import Game
 
 import logging

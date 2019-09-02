@@ -7,7 +7,7 @@ from hivegame.pieces.spider_piece import SpiderPiece
 from hivegame.pieces.bee_piece import BeePiece
 
 from hivegame.hive_utils import Player, HiveException, GameStatus
-from hivegame.view import HiveView
+from utils.ascii_view import HiveView
 
 import hivegame.hive_validation as valid
 import hivegame.hive_representation as represent
