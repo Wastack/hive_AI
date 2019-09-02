@@ -12,8 +12,10 @@ import operator
 import math
 import random
 
+
 class InvalidHex(ValueError):
     pass
+
 
 class Hex(namedtuple("Hex", "x y")):
     "A single hexagon in a hexagonal grid."""
@@ -129,6 +131,7 @@ Hex.rotations = (
         operator.methodcaller("rotate_right")
         )
 
+
 class _FovTree:
     _corners = ((0, -2), (1, -1), (1, 1), (0, 2))
     _neighbours = (Hex(1, -1), Hex(2, 0), Hex(1, 1))
@@ -177,6 +180,7 @@ class _FovTree:
 
 _fovtree = _FovTree(Hex(2, 0), 0, -1.0, 1.0)
 
+
 class Rectangle(namedtuple("Rectangle", "x y width height")):
     """Represents a rectangle.
     x, y   -- position of lower-left corner
@@ -185,11 +189,14 @@ class Rectangle(namedtuple("Rectangle", "x y width height")):
     """
     pass
 
+
 def _tiled_range(lo, hi, tile_size):
     return range(lo // tile_size, (hi + tile_size - 1) // tile_size) 
 
+
 def _make_range(x, width, bloat, grid_size):
     return _tiled_range(x + grid_size - 1 - bloat, x + width + bloat, grid_size)
+
 
 class HexGrid(namedtuple("HexGrid", "width height")):
     """Represents the dimensions of a hex grid as painted on the screen.
@@ -258,6 +265,7 @@ class HexGrid(namedtuple("HexGrid", "width height")):
         x_range = _make_range(rx, r_width, width, width)
         y_range = _make_range(ry, r_height, 2*height, 3*height)
         return (Hex(x, y) for y in y_range for x in x_range if (x + y) % 2 == 0)
+
 
 class HexPathFinder:
     """A* path-finding on the hex grid.

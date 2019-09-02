@@ -33,8 +33,8 @@ def get_adjacency_state(hive):
 
     The first X rows represents the white pieces. The next X rows contain the black player's pieces.
     """
-    pieces = piece_fact.piece_set("w")
-    pieces.update(piece_fact.piece_set("b"))
+    pieces = piece_fact.piece_dict("w")
+    pieces.update(piece_fact.piece_dict("b"))
 
     # Initially nobody is placed
     result = {}
@@ -117,8 +117,8 @@ def dict_representation(two_dim_list):
     :return: Dictionary representation of the state
     """
     # get list of bug names sorted by name alphabetically
-    list_of_names = sorted(list(piece_fact.piece_set(Player.WHITE).keys()) + list(
-        piece_fact.piece_set(Player.BLACK).keys()))
+    list_of_names = sorted(list(piece_fact.piece_dict(Player.WHITE).keys()) + list(
+        piece_fact.piece_dict(Player.BLACK).keys()))
 
     # Create a dictionary
     result = {}
@@ -171,7 +171,7 @@ def get_all_action_vector(hive):
     result = []
     direction_count = 6
     # Pieces not played yet:
-    piece_set = piece_fact.piece_set(hive.activePlayer)
+    piece_set = piece_fact.piece_dict(hive.activePlayer)
     possible_neighbor_count = len(piece_set) - 1  # it can't be adjacent to itself
 
     my_pieces = [piece for piece in hive.playedPieces.values() if piece.color == hive.activePlayer]

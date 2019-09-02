@@ -3,9 +3,26 @@ import sys
 from PyQt5 import QtCore, QtGui, QtWidgets
 from hivegame.utils import hexutil
 from hivegame.utils.game_state import GameState
+from hivegame.pieces import piece_factory
+
 
 class GameWidget(QtWidgets.QWidget):
     """The Qt Widget which shows the game."""
+
+    _kind_to_text = {
+        "A": "Ant",
+        "B": "Beetle",
+        "G": "Grasshopper",
+        "S": "Spider",
+        "Q": "Queen"
+    }
+    _text_to_piece = {
+        "Ant": "A",
+        "Beetle": "B",
+        "Grasshopper": "G",
+        "Spider": "S",
+        "Queen": "Q"
+    }
 
     hexagon_under_cursor = None
     selected_hexagon = None
@@ -14,7 +31,7 @@ class GameWidget(QtWidgets.QWidget):
         super().__init__(*args, **kws)
         self.setMouseTracking(True) # we want to receive mouseMoveEvents
 
-        self.level = GameState(500)
+        self.level = GameState()
         self.hexgrid = hexutil.HexGrid(24)
 
         # initialize GUI objects needed for painting
@@ -26,9 +43,6 @@ class GameWidget(QtWidgets.QWidget):
         self.unseen_brush = QtGui.QBrush(QtGui.QColor(0, 0, 0, 127))
 
         # set center position
-        size = self.size()
-        xc = size.width()//2
-        yc = size.height()//2
         self.center = QtCore.QPoint(0, 0)
 
         # Related to mouse events
@@ -57,11 +71,20 @@ class GameWidget(QtWidgets.QWidget):
 
             # Show dropdown menu
             menu = QtWidgets.QMenu()
-            foo_action = menu.addAction("Add hexagon")
+            # TODO color
+            color = "w"
+            available_kinds = self.level.available_kinds_to_place(color)
+            for kind in available_kinds:
+                action_to_add = menu.addAction(self._kind_to_text.get(kind))
+
+            # select executed item
             action = menu.exec_(self.mapToGlobal(event.pos()))
-            if action == foo_action:
-                self.level.tiles[hexagon] = "*"
-                self.repaint()
+            if not action:
+                return  # user clicked elsewhere, or no more pieces available
+            # TODO clean up text to kind
+            self.level.move_or_append_to(piece_factory.create_piece(color, self._text_to_piece[action.text()],
+                                                                    available_kinds[action.text()[0]]), hexagon)
+            self.repaint()
             return
         elif event.button() == QtCore.Qt.LeftButton:
             self.is_mouse_pressed = True
@@ -124,7 +147,7 @@ class GameWidget(QtWidgets.QWidget):
                 selectable = False
                 polygon = QtGui.QPolygon([QtCore.QPoint(*corner) - self.center for corner in hexgrid.corners(hexagon)])
                 # if it is a placed hexagon
-                if self.level.get_tile(hexagon) != ' ':
+                if self.level.get_tile(hexagon):
                     selectable = True
                     if hexagon == self.selected_hexagon:
                         painter.setBrush(QtGui.QColor("yellow"))
@@ -137,7 +160,7 @@ class GameWidget(QtWidgets.QWidget):
                     relative_rect = hexutil.Rectangle(x=rect.x - self.center.x(), y=rect.y - self.center.y(),
                                                       width=rect.width, height=rect.height)
                     relative_rect = QtCore.QRectF(*relative_rect) # convert to Qt RectF and add relative position
-                    painter.drawText(relative_rect, QtCore.Qt.AlignCenter, self.level.get_tile(hexagon))
+                    painter.drawText(relative_rect, QtCore.Qt.AlignCenter, self.level.get_tile(hexagon)[-1].kind)
                 # if it is a border hexagon
                 elif self.level.is_border(hexagon):
                     selectable = True

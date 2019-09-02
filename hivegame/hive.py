@@ -44,8 +44,8 @@ class Hive(object):
         """
         self.__init__()
         # Add pieces to the players hands
-        self.unplayedPieces[Player.WHITE] = piece_fact.piece_set(Player.WHITE)
-        self.unplayedPieces[Player.BLACK] = piece_fact.piece_set(Player.BLACK)
+        self.unplayedPieces[Player.WHITE] = piece_fact.piece_dict(Player.WHITE)
+        self.unplayedPieces[Player.BLACK] = piece_fact.piece_dict(Player.BLACK)
         self.turn = 1
 
     def action(self, action_type, action):
@@ -326,7 +326,7 @@ class Hive(object):
         is executed. end_cell is the target location of the action.
         """
         assert action_number >= 0
-        pieces_list = list(piece_fact.piece_set(self.activePlayer).values())
+        pieces_list = list(piece_fact.piece_dict(self.activePlayer).values())
         piece_set_count = len(pieces_list)
         init_bound = piece_set_count - 1
         if action_number < init_bound:
@@ -384,7 +384,7 @@ class Hive(object):
         :param excep: Exception bug. It is omitted from the list.
         :return:
         """
-        pieces = list(piece_fact.piece_set(self.activePlayer).values())
+        pieces = list(piece_fact.piece_dict(self.activePlayer).values())
         for p in pieces:
             if str(excep) == str(p):
                 pieces.remove(p)
