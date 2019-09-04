@@ -349,4 +349,4 @@ class Hive(object):
         return hive
 
     def __str__(self):
-        return HiveView(self).__str__()
+        return HiveView(self.level).__str__()

@@ -142,8 +142,7 @@ def validate_one_hive(hive: 'Hive', piece: 'HivePiece'):
     # Get all pieces that are in contact with the removed one and try to
     # reach all of them from one of them.
     occupied = hive.level.occupied_surroundings(piece.position)
-    if not occupied:
-        print("[DEBUG]: tiles: {}".format(hive.level.tiles))
+    assert occupied
     visited = set()
     to_explore = {occupied[0]}
     to_reach = set(occupied[1:])
@@ -158,6 +157,7 @@ def validate_one_hive(hive: 'Hive', piece: 'HivePiece'):
             visited.add(cell)
         to_explore = set(found) - visited
         if to_reach.issubset(visited):
+            print("True is the verdict")
             res = True
             break
 

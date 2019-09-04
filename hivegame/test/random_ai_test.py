@@ -1,4 +1,8 @@
+import sys
 import time
+
+from PyQt5 import QtWidgets
+
 from hivegame.AI.random_player import RandomPlayer
 from hivegame.arena import Arena
 from unittest import TestCase
@@ -19,6 +23,7 @@ class TestRandomAi(TestCase):
 
     def test_representation_step(self):
         self.game = Arena(RandomPlayer(use_repr=True), RandomPlayer(use_repr=True))
+        print(self.game.env.hive)
         timeout = time.time() + 10  # 10 sec
         while time.time() < timeout:
             self.game.playGame()

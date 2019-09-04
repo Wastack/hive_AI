@@ -27,6 +27,10 @@ class GameWidget(QtWidgets.QWidget):
     hexagon_under_cursor = None
     selected_hexagon = None
 
+    def set_state(self, level: GameState) -> None:
+        self.level = level
+        self.repaint()
+
     def __init__(self, *args, **kws):
         super().__init__(*args, **kws)
         self.setMouseTracking(True) # we want to receive mouseMoveEvents
