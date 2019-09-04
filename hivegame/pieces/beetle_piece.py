@@ -1,52 +1,43 @@
 from hivegame.pieces.piece import HivePiece
 
+from typing import TYPE_CHECKING
+from utils import hexutil
+if TYPE_CHECKING:
+    from hivegame.hive import Hive
+
+
 class BeetlePiece(HivePiece):
-    def validate_move(self, hive, endcell):
+    def validate_move(self, hive: 'Hive', endcell: hexutil.Hex):
         return endcell in self.available_moves(hive)
 
-    def available_moves(self, hive):
+    def available_moves(self, hive: 'Hive'):
         if self.check_blocked(hive):
             return []
-        # temporarily remove beetle
-        hive.piecesInCell[self.position].remove(self)
 
         res = []
         # are we on top of the hive?
-        if len(hive.piecesInCell[self.position]) > 0:
-            res = hive.board.get_surrounding(self.position)
+        # TODO this practically does the trick, but not precise
+        if len(hive.level.get_tile_content(self.position)) > 1:
+            res = self.position.neighbours()
         else:
             res = (hive.bee_moves(self.position) +
-                hive.occupied_surroundings(self.position)
+                hive.level.occupied_surroundings(self.position)
             )
 
-        # restore beetle to it's original position
-        hive.piecesInCell[self.position].append(self)
-
         return res
 
-    def available_moves_vector(self, hive):
+    def available_moves_vector(self, hive: 'Hive'):
         if self.check_blocked(hive):
             return [0] * 6
-        hive.piecesInCell[self.position].remove(self)
 
-        res = []
-        # are we on top of the hive?
-        # TODO in a rare case not correct but who cares?
-        if len(hive.piecesInCell[self.position]) > 0:
-            res = [1] * 6
-        else:
-            #  Clockwise, starting from West
-            # TODO add hop on top moves
-            res = hive.bee_moves_vector(self.position)
-            #  Clockwise, starting from West
-            surroundings = hive.board.get_surrounding(self.position)
-            assert len(res) == len(surroundings)
-            res = [ok if hive.is_cell_free(sur) else 1 for (ok, sur) in zip(res, surroundings)]
-
-        # restore beetle to it's original position
-        hive.piecesInCell[self.position].append(self)
-        assert len(res) == 6
-        return res
+        result = []
+        aval_moves = self.available_moves(hive)
+        for nb in self.position.neighbours():
+            if nb in aval_moves:
+                result.append(1)
+            else:
+                result.append(0)
+        return result
     
     @property
     def kind(self):
@@ -62,7 +53,7 @@ class BeetlePiece(HivePiece):
     def __repr__(self):
         return "%s%s%s" % (self.color, "B", self.number)
 
-    def index_to_target_cell(self, hive, number):
+    def index_to_target_cell(self, hive: 'Hive', number: int):
         aval_moves = self.available_moves(hive)
         num_in_list = sum(self.available_moves_vector(hive)[:number])
         assert len(aval_moves)  > num_in_list

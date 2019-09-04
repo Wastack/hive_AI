@@ -9,6 +9,9 @@ import functools
 
 from utils import hexutil
 
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from hivegame.hive import Hive
 
 class HivePiece(metaclass=abc.ABCMeta):
     """Representation of Playing Piece"""
@@ -23,11 +26,11 @@ class HivePiece(metaclass=abc.ABCMeta):
     def __repr__(self):
         return "%s%s%s" % (self.color, "?", self.number)
     
-    def check_blocked(self, hive):
+    def check_blocked(self, hive: 'Hive'):
         """
         Check if the piece is blocked by a beetle. Returns True if blocked
         """
-        if hive.piecesInCell[self.position][-1] == self:
+        if hive.level.get_tile_content(self.position)[-1] == self:
             return False
         return True
 
@@ -36,28 +39,27 @@ class HivePiece(metaclass=abc.ABCMeta):
         return "?"
     
     @abc.abstractmethod
-    def validate_move(self, hive, end_cell):
+    def validate_move(self, hive: 'Hive', end_cell: hexutil.Hex):
         return
 
     @abc.abstractmethod
-    def available_moves(self, hive):
+    def available_moves(self, hive: 'Hive'):
         return []
 
     @abc.abstractmethod
-    def available_moves_vector(self, hive):
+    def available_moves_vector(self, hive: 'Hive'):
         return []
 
-    def index_to_target_cell(self, hive, number):
+    def index_to_target_cell(self, hive: 'Hive', number: int):
         aval_moves = self.available_moves(hive)
         if len(aval_moves) < number or number >= self.move_vector_size:
             raise HiveException("moving piece with action number is out of bounds", 10001)
         return aval_moves[number]
 
-    # TODO this can be static.
     @property
     @abc.abstractmethod
-    def move_vector_size(self):
-        return None
+    def move_vector_size(self) -> int:
+        return 0
 
     def __eq__(self, obj):
         return isinstance(obj, HivePiece) and str(obj) == str(self)

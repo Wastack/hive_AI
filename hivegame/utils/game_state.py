@@ -123,6 +123,8 @@ class GameState(object):
         return result_dict
 
     def occupied_surroundings(self, hexagon: hexutil.Hex):
+        if not self.tiles:
+            return []
         return [nb for nb in hexagon.neighbours() if nb in self.tiles.keys()]
 
     _dir_to_hex = {

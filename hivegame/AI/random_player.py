@@ -17,7 +17,7 @@ class RandomPlayer(Player):
                 return "pass"
             return random.choice(tuple(actions))
 
-        print(HiveView(environment.hive))
+        #print(HiveView(environment.hive))
         action_vector = represent.get_all_action_vector(environment.hive)
         if not any(action_vector):
             return "pass"

@@ -1,12 +1,18 @@
+from __future__ import annotations
 from hivegame.pieces.piece import HivePiece
+
+from typing import TYPE_CHECKING
+from utils import hexutil
+if TYPE_CHECKING:
+    from hivegame.hive import Hive
+
 
 class AntPiece(HivePiece):
     MAX_STEP_COUNT = 50
-    def validate_move(self, hive, end_cell):
+
+    def validate_move(self, hive: 'Hive', end_cell: hexutil.Hex):
         if self.check_blocked(hive):
             return False
-         # temporarily remove ant
-        hive.piecesInCell[self.position].remove(self)
 
         toExplore = {self.position}
         visited = {self.position}
@@ -25,19 +31,15 @@ class AntPiece(HivePiece):
             visited.update(found)
             toExplore = found
 
-        # restore ant to it's original position
-        hive.piecesInCell[self.position].append(self)
-
         return res
     
-    def available_moves(self, hive):
+    def available_moves(self, hive: 'Hive'):
         """
         :return: available moves. The order of the list depends on the distance of the target cell.
         Cells in a shorter distance come first.
         """
         if self.check_blocked(hive):
             return []
-        hive.piecesInCell[self.position].remove(self)
 
         toExplore = {self.position}
         visited = {self.position}
@@ -51,10 +53,9 @@ class AntPiece(HivePiece):
             visited.update(found)
             toExplore = found
 
-        hive.piecesInCell[self.position].append(self)
         return sorted(visited)
 
-    def available_moves_vector(self, hive):
+    def available_moves_vector(self, hive: 'Hive'):
         """
         It assumes that the ant can step onto a maximum of pre-specified number of cells
         """

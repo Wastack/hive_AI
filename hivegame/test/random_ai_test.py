@@ -3,6 +3,8 @@ from hivegame.AI.random_player import RandomPlayer
 from hivegame.arena import Arena
 from unittest import TestCase
 
+import logging
+
 
 class TestRandomAi(TestCase):
     """Verify the HexBoard logic"""
@@ -23,5 +25,7 @@ class TestRandomAi(TestCase):
 
 
 if __name__ == '__main__':
+    FORMAT = "[%(filename)s:%(lineno)s - %(funcName)20s() ] %(message)s"
+    logging.basicConfig(level=logging.DEBUG, format=FORMAT)
     import unittest
     unittest.main()

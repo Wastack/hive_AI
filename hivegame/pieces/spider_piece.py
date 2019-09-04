@@ -1,15 +1,18 @@
 from hivegame.pieces.piece import HivePiece
 
+from typing import TYPE_CHECKING
+from utils import hexutil
+if TYPE_CHECKING:
+    from hivegame.hive import Hive
+
 class SpiderPiece(HivePiece):
     MAX_STEP_COUNT = 15
-    def validate_move(self, hive, endcell):
+    def validate_move(self, hive: 'Hive', endcell: hexutil.Hex):
         return endcell in self.available_moves(hive)
     
-    def available_moves(self, hive):
+    def available_moves(self, hive: 'Hive'):
         if self.check_blocked(hive):
             return []
-        # temporarily remove spider
-        hive.piecesInCell[self.position].remove(self)
 
         visited = set()
         firstStep = set()
@@ -30,12 +33,9 @@ class SpiderPiece(HivePiece):
             thirdStep.update(set(hive.bee_moves(c)))
         thirdStep.difference_update(visited)
 
-        # restore spider to it's original position
-        hive.piecesInCell[self.position].append(self)
-
         return sorted(thirdStep)
 
-    def available_moves_vector(self, hive):
+    def available_moves_vector(self, hive: 'Hive'):
         """
         It assumes that the ant can step onto a maximum of pre-specified number of cells
         """

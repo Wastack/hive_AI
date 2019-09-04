@@ -135,9 +135,15 @@ def validate_one_hive(hive: 'Hive', piece: 'HivePiece'):
     if len(piece_list) > 1:
         return True
 
+    if not hive.level.tiles:
+        print("[DEBUG] why is that called then?")
+        return True
+
     # Get all pieces that are in contact with the removed one and try to
     # reach all of them from one of them.
     occupied = hive.level.occupied_surroundings(piece.position)
+    if not occupied:
+        print("[DEBUG]: tiles: {}".format(hive.level.tiles))
     visited = set()
     to_explore = {occupied[0]}
     to_reach = set(occupied[1:])
@@ -147,7 +153,8 @@ def validate_one_hive(hive: 'Hive', piece: 'HivePiece'):
         found = []
         for cell in to_explore:
             found += hive.level.occupied_surroundings(cell)
-            found.remove(piece)  # as if the current piece would be removed
+            if piece in found:
+                found.remove(piece)  # as if the current piece would be removed
             visited.add(cell)
         to_explore = set(found) - visited
         if to_reach.issubset(visited):

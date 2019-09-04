@@ -1,7 +1,12 @@
 from hivegame.pieces.piece import HivePiece
 
+from typing import TYPE_CHECKING
+from utils import hexutil
+if TYPE_CHECKING:
+    from hivegame.hive import Hive
+
 class BeePiece(HivePiece):
-    def validate_move(self, hive, endcell):
+    def validate_move(self, hive: 'Hive', endcell: hexutil.Hex):
         if self.check_blocked(hive):
             return False
         possible_end_cells = hive.bee_moves(self.position)
@@ -9,15 +14,22 @@ class BeePiece(HivePiece):
             return False
         return True
 
-    def available_moves(self, hive):
+    def available_moves(self, hive: 'Hive'):
         if self.check_blocked(hive):
             return []
         return hive.bee_moves(self.position)
 
-    def available_moves_vector(self, hive):
+    def available_moves_vector(self, hive: 'Hive'):
         if self.check_blocked(hive):
             return [0] * 6
-        return hive.bee_moves_vector(self.position)
+        result = []
+        aval_moves = self.available_moves(hive)
+        for nb in self.position.neighbours():
+            if nb in aval_moves:
+                result.append(1)
+            else:
+                result.append(0)
+        return result
 
     @property
     def kind(self):
@@ -33,7 +45,7 @@ class BeePiece(HivePiece):
     def __repr__(self):
         return "%s%s%s" % (self.color, "Q", self.number)
 
-    def index_to_target_cell(self, hive, number):
+    def index_to_target_cell(self, hive: 'Hive', number: int):
         aval_moves = self.available_moves(hive)
         num_in_list = sum(self.available_moves_vector(hive)[:number])
         return aval_moves[num_in_list]
