@@ -147,7 +147,7 @@ class GameWidget(QtWidgets.QWidget):
                 selectable = False
                 polygon = QtGui.QPolygon([QtCore.QPoint(*corner) - self.center for corner in hexgrid.corners(hexagon)])
                 # if it is a placed hexagon
-                if self.level.get_tile(hexagon):
+                if self.level.get_tile_content(hexagon):
                     selectable = True
                     if hexagon == self.selected_hexagon:
                         painter.setBrush(QtGui.QColor("yellow"))
@@ -160,7 +160,7 @@ class GameWidget(QtWidgets.QWidget):
                     relative_rect = hexutil.Rectangle(x=rect.x - self.center.x(), y=rect.y - self.center.y(),
                                                       width=rect.width, height=rect.height)
                     relative_rect = QtCore.QRectF(*relative_rect) # convert to Qt RectF and add relative position
-                    painter.drawText(relative_rect, QtCore.Qt.AlignCenter, self.level.get_tile(hexagon)[-1].kind)
+                    painter.drawText(relative_rect, QtCore.Qt.AlignCenter, self.level.get_tile_content(hexagon)[-1].kind)
                 # if it is a border hexagon
                 elif self.level.is_border(hexagon):
                     selectable = True

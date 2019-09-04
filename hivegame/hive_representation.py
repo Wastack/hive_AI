@@ -1,13 +1,18 @@
-from hivegame.hive_utils import Direction, Player
-
+from hivegame.hive_utils import Direction, Player, get_queen_name
 import hivegame.hive_validation as valid
 import hivegame.pieces.piece_factory as piece_fact
-
-from hivegame.pieces.bee_piece import BeePiece
 from hivegame.pieces.ant_piece import AntPiece
 from hivegame.pieces.spider_piece import SpiderPiece
 
+from hivegame.utils.game_state import GameState
+
+from typing import Dict, List, Set, Tuple
 import numpy as np
+
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from hivegame.hive import Hive
+
 
 # Adjacency matrix of pieces
 # - rows in order: (22 pieces at the moment, i may change when adding extensions)
@@ -24,20 +29,22 @@ import numpy as np
 #
 #   + eg. in row of bA2 and column of bG1 there is a 3.
 #     That means bG1 is north-east from bA2.
+from pieces.piece import HivePiece
+from utils import hexutil
 
 
-def get_adjacency_state(hive):
+def get_adjacency_state(hive: 'Hive') -> Dict[str, Dict[str, int]]:
     """
     Returns a two dimensional dictionary, where both keys are the string representation of the pieces.
     One cell represents the adjacency of the two pieces. 0 means they are not adjacent.
 
     The first X rows represents the white pieces. The next X rows contain the black player's pieces.
     """
-    pieces = piece_fact.piece_dict("w")
-    pieces.update(piece_fact.piece_dict("b"))
+    pieces = piece_fact.sorted_piece_dict(Player.WHITE)
+    pieces.update(piece_fact.sorted_piece_dict(Player.BLACK))
 
     # Initially nobody is placed
-    result = {}
+    result: Dict[str, Dict[str, int]] = {}
     for row in pieces:
         result[row] = {}
         for col in pieces:
@@ -56,25 +63,30 @@ def get_adjacency_state(hive):
             relations[k] = 9
 
         # check if there are more pieces at the same cell (beetles)
-        pieces_in_cell = hive.piecesInCell[cell]
+        pieces_in_cell = hive.level.get_tile_content(cell)
         if len(pieces_in_cell) > 1:
+            # get index in list
             position = pieces_in_cell.index(piece)
+            # set relations to the lower pieces
             for lower_piece in pieces_in_cell[:position]:
                 relations[lower_piece] = Direction.HX_LOW
+            # set relations to the higher pieces (if any)
             if position + 1 < len(pieces_in_cell):
                 for upper_piece in pieces_in_cell[position + 1:]:
                     relations[upper_piece] = Direction.HX_UP
 
-        surrounding_cells = hive.occupied_surroundings(cell)
+        surrounding_cells = hive.level.occupied_surroundings(cell)
         for neighbor_cell in surrounding_cells:
-            # get piece on the top of the neighbor cell
-            neighbor_piece = hive.piecesInCell[neighbor_cell][-1]
-            relations[str(neighbor_piece)] = hive.board.get_line_dir(cell, neighbor_cell)
+            # set relation to the neighbour(s - if beetle)
+            for p in hive.level.get_tile_content(neighbor_cell):
+                direction = GameState.get_direction_to(cell, neighbor_cell)
+                assert direction
+                relations[str(p)] = direction
 
     return result
 
 
-def canonical_adjacency_state(hive):
+def canonical_adjacency_state(hive: 'Hive') -> Dict[str, Dict[str, int]]:
     """
     Representation of state with adjacency matrix. From the players point of view. Instead of having a white and
     a black player, there are my pieces and the opponent's pieces.
@@ -93,7 +105,7 @@ def canonical_adjacency_state(hive):
     return inverse_matrix
 
 
-def list_representation(adjacency):
+def list_representation(adjacency: Dict[str, Dict[str, int]]) -> List[int]:
     directions = []  # current turn number is the first data
     for sorted_row in [v for (k, v) in sorted(adjacency.items(), key=lambda row: row[0])]:
         for sorted_dir in [v for (_k, v) in sorted(sorted_row.items(), key=lambda col: col[0])]:
@@ -101,7 +113,7 @@ def list_representation(adjacency):
     return directions
 
 
-def two_dim_representation(adjacency):
+def two_dim_representation(adjacency) -> np.ndarray:
     directions = []  # current turn number is the first data
     for sorted_row in [v for (k, v) in sorted(adjacency.items(), key=lambda row: row[0])]:
         row = []
@@ -111,18 +123,18 @@ def two_dim_representation(adjacency):
     return np.array(directions)
 
 
-def dict_representation(two_dim_list):
+def dict_representation(two_dim_list: np.ndarray) -> Dict[str, Dict[str, int]]:
     """
     :param adjacency_list: List representation of the state
     :return: Dictionary representation of the state
     """
     # get list of bug names sorted by name alphabetically
-    list_of_names = sorted(list(piece_fact.piece_dict(Player.WHITE).keys()) + list(
-        piece_fact.piece_dict(Player.BLACK).keys()))
+    list_of_names = sorted(list(piece_fact.sorted_piece_dict(Player.WHITE).keys()) + list(
+        piece_fact.sorted_piece_dict(Player.BLACK).keys()))
 
     # Create a dictionary
     result = {}
-    for bug_name, relations in zip(list_of_names,two_dim_list):
+    for bug_name, relations in zip(list_of_names, two_dim_list):
         adj_row_iter = iter(relations)
         column = {}
         result[bug_name] = column
@@ -133,23 +145,23 @@ def dict_representation(two_dim_list):
     return result
 
 
-def string_representation(twodim_repr):
+def string_representation(two_dim_repr: np.ndarray):
     """
-    :param adjacency_list_repr:
+    :param two_dim_repr: representation of hive
     :return:  Hashable string representation of the current state
     """
     # We need to use comma as separator, because turn number can consist of more digits.
-    return ",".join(str(x) for x in (y for y in twodim_repr))
+    return ",".join(str(x) for x in (y for y in two_dim_repr))
 
 
 def _toggle_color(piece_name):
-    assert(len(piece_name) == 3)
+    assert (len(piece_name) == 3)
     s = list(piece_name)
     s[0] = Player.BLACK if s[0] == Player.WHITE else Player.WHITE
     return "".join(s)
 
 
-def get_all_action_vector(hive):
+def get_all_action_vector(hive: 'Hive') -> List[int]:
     """
     The format of the fix-size action space is the following:
     vector = [init_place | place | move ]
@@ -170,113 +182,118 @@ def get_all_action_vector(hive):
     """
     result = []
     direction_count = 6
-    # Pieces not played yet:
-    piece_set = piece_fact.piece_dict(hive.activePlayer)
-    possible_neighbor_count = len(piece_set) - 1  # it can't be adjacent to itself
 
-    my_pieces = [piece for piece in hive.playedPieces.values() if piece.color == hive.activePlayer]
+    # Pieces not yet played:
+    piece_list = piece_fact.sorted_piece_list(hive.current_player)
+    piece_count = len(piece_list)
+    possible_neighbor_count = piece_count - 1  # it can't be adjacent to itself
+    my_pieces = hive.level.get_played_pieces(hive.current_player)
+
     # The first row is about placing the first piece. However, the player in the second turn can place his
     # bug to 6 different places, those states are identical, so the AI can be restricted to only one
     # direction.
     # Also, we do not need action for placing the queen, because that is forbidden in the first turn.
     if not my_pieces:
-        result += [1] * (len(piece_set) - 1)
+        result += [1] * (len(piece_list) - 1)
     else:
-        result += [0] * (len(piece_set) - 1)
-
-    assert len(result) == len(piece_set) - 1
+        result += [0] * (len(piece_list) - 1)
 
     # Placing pieces
-    for piece_name in piece_set.keys():
-        if piece_name in hive.playedPieces.keys() or (len(my_pieces) == 3 and hive.activePlayer + "Q1" not
-                                                      in hive.playedPieces and piece_name != hive.activePlayer + "Q1"):
+    for p in piece_list:
+        # Cannot place piece if:
+        #   - it is already placed or
+        #   - If the queen is not yet played in the fourth turn
+        if p in my_pieces or (len(my_pieces) == 3 and
+                              not hive.get_piece_by_name(get_queen_name(hive.current_player)).position and
+                              p.kind != "Q"):
             result += [0] * (possible_neighbor_count * direction_count)
         else:
-            for adj_piece_name in piece_set.keys():
+            for adj_piece in piece_list:
                 # It cannot be put next to itself
-                if adj_piece_name == piece_name:
+                if adj_piece == p:
                     continue
-                adj_piece = hive.playedPieces.get(adj_piece_name, None)
+                # find position on board
+                adj_piece = hive.level.find_piece_played(adj_piece)
                 if adj_piece is None:
                     # neighbor candidate not placed yet
                     result += [0] * direction_count
                     continue
                 # get all boundary free cells
-                surroundings = hive.board.get_surrounding(adj_piece.position)
+                surroundings = adj_piece.position.neighbours()
                 for sur in surroundings:
-                    if not hive.is_cell_free(sur):
-                        result.append(0)
-                    elif not all(hive.is_cell_free(s) or hive.piecesInCell.get(s)[-1].color ==
-                                 hive.activePlayer for s in hive.board.get_surrounding(sur)):
+                    if hive.level.get_tile_content(sur):
+                        result.append(0)  # it is already occupied
+                    # cannot place if it is adjacent with the opponent
+                    elif   any(hive.level.get_tile_content(nb_of_nb)[-1].color !=
+                                 hive.level.current_player for nb_of_nb in hive.level.occupied_surroundings(sur)):
                         result.append(0)
                     else:
-                        result.append(1)
-    assert len(result) == len(piece_set) - 1 + len(piece_set)*(possible_neighbor_count * direction_count)
+                        result.append(1)  # it can be placed
+    assert len(result) == piece_count - 1 + piece_count * (possible_neighbor_count * direction_count)
 
     # moving pieces
-    for piece_name, piece_without_pos in piece_set.items():
-        piece = hive.playedPieces.get(piece_name, None)
-        if piece is None:
-            result += [0] * piece_without_pos.move_vector_size
+    for p in piece_list:
+        # find piece on board
+        p = hive.level.find_piece_played(p)
+
+        # It cannot move if:
+        #  - not yet placed
+        #  - queen not yet placed
+        #  - If picking up the piece would break the one-hive rule
+        if not p or not hive.get_piece_by_name(get_queen_name(hive.current_player)).position or\
+                not valid.validate_one_hive(hive, p):
+            result += [0] * p.move_vector_size
             continue
 
-        # It cannot move unless queen is already placed
-        if hive.activePlayer + 'Q1' not in hive.playedPieces:
-            result += [0] * piece.move_vector_size
-            continue
+        result += p.available_moves_vector(hive)
 
-        # It cannot move if that breaks the one_hive rule
-        if not valid.validate_one_hive(hive, piece):
-            result += [0] * piece.move_vector_size
-            continue
-
-        result += piece.available_moves_vector(hive)
-
-    expected_len = len(piece_set) - 1 + (possible_neighbor_count * direction_count) * len(piece_set) +\
-        1*6 + 3*6 + 3*AntPiece.MAX_STEP_COUNT + 2*SpiderPiece.MAX_STEP_COUNT + 2*6
+    expected_len = len(piece_list) - 1 + (possible_neighbor_count * direction_count) * len(piece_list) + \
+                   1 * 6 + 3 * 6 + 3 * AntPiece.MAX_STEP_COUNT + 2 * SpiderPiece.MAX_STEP_COUNT + 2 * 6
     assert len(result) == expected_len
     return result
 
 
-def get_all_possible_actions_nonidentical(hive):
-    if len(hive.playedPieces) == 1:
-        pieces = [p for p in hive.unplayedPieces[hive.activePlayer].values() if p.kind != "Q"]
-        return [(p, (1, 0)) for p in pieces]
+def get_all_possible_actions_nonidentical(hive: 'Hive') -> (HivePiece, hexutil.Hex):
+    """
+    :param hive: The representation of the game.
+    :return: All possible actions except the second turn. In the second player's first turn all the directions are
+             identical from the AI's point of view
+    """
+    if len(hive.level.get_played_pieces()) == 1:
+        pieces = [p for p in hive.level.get_unplayed_pieces(hive.current_player) if p.kind != "Q"]
+        return [(p, hexutil.origin.neighbours()[0]) for p in pieces]
     return get_all_possible_actions(hive)
 
 
-def get_all_possible_actions(hive):
+def get_all_possible_actions(hive: 'Hive') -> Set[Tuple[HivePiece, hexutil.Hex]]:
     """
     Query for all the possible movements in a given state. The list of actions
     is unordered, i.e the order is not specified.
 
-    :param hive: state of the game
-    :return: A list of action = (piece, end_cell) tuples, where piece
+    :param hive: State of the game.
+    :return: A set of action = (piece, end_cell) tuples, where piece
              is the bug on which the action would be performed. end_cell is
              the target location of the action.
     """
     result = set()
 
     # choose the current players played pieces
-    my_pieces = [piece for piece in hive.playedPieces.values() if piece.color == hive.activePlayer]
+    my_pieces = hive.level.get_played_pieces(hive.current_player)
 
     if not my_pieces:
         # no piece of that player has been played yet
-        if not hive.piecesInCell.get((0, 0)):
-            return [(piece, (0, 0)) for piece in hive.unplayedPieces[hive.activePlayer].values() if
-                    not isinstance(piece, BeePiece)]
+        if not hive.level.get_tile_content(hexutil.origin):
+            return {(p, hexutil.origin) for p in hive.level.get_unplayed_pieces(hive.current_player)
+                    if not p.kind == 'Q'}
         else:
-            for sur in hive.board.get_surrounding((0, 0)):
-                result.update([(piece, sur) for piece in hive.unplayedPieces[hive.activePlayer].values() if
-                               not isinstance(piece, BeePiece)])
+            for sur in hexutil.origin.neighbours():
+                result.update({(p, sur) for p in hive.level.get_unplayed_pieces(hive.current_player)
+                               if not p.kind == 'Q'})
             return result
 
-    # pieces which can be put down from hand
-    pieces_to_put_down = []
-    # cells where the player can put an unplayed piece to
-    available_cells = set()
-
-    if hive.activePlayer + 'Q1' in hive.playedPieces:
+    # Collect action from moving pieces
+    # It can only happen if queen is set
+    if hive.get_piece_by_name(get_queen_name(hive.current_player)).position:
         # Actions of pieces already on board
         for piece in my_pieces:
             if not valid.validate_one_hive(hive, piece):
@@ -284,25 +301,30 @@ def get_all_possible_actions(hive):
             end_cells = piece.available_moves(hive)
             result.update([(piece, end_cell) for end_cell in end_cells if end_cell != piece.position])
 
-    if len(my_pieces) == 3 and hive.activePlayer + 'Q1' not in hive.playedPieces:
-        pieces_to_put_down.append(hive.unplayedPieces[hive.activePlayer][hive.activePlayer + 'Q1'])
+    # pieces which can be put down from hand
+    pieces_to_put_down = set()
+    # cells where the player can put an unplayed piece to
+    available_cells = set()
+
+    queen_piece = hive.get_piece_by_name(get_queen_name(hive.current_player))
+    if len(my_pieces) == 3 and not queen_piece.position:
+        pieces_to_put_down.add(queen_piece)
     else:
-        pieces_to_put_down += hive.unplayedPieces[hive.activePlayer].values()
+        pieces_to_put_down.update(hive.level.get_unplayed_pieces(hive.current_player))
 
     # get all boundary free cells
-    for piece in my_pieces:
-        surroundings = hive.board.get_surrounding(piece.position)
-        available_cells.update([sur for sur in surroundings if hive.is_cell_free(sur)])
+    for p in my_pieces:
+        nbs = p.position.neighbours()
+        available_cells.update({sur for sur in nbs if not hive.level.get_tile_content(sur)})
     # Keep only those which have no opposite side neighbors
     cells_to_remove = set()
     for cell in available_cells:
-        surroundings = hive.board.get_surrounding(cell)
-        if not all(hive.is_cell_free(sur) or hive.piecesInCell.get(sur)[-1].color == hive.activePlayer
-                   for sur in surroundings):
+        nbs = hive.level.occupied_surroundings(cell)
+        if any(hive.level.get_tile_content(sur)[-1].color != hive.current_player for sur in nbs):
             cells_to_remove.add(cell)
     available_cells.difference_update(cells_to_remove)
 
-    # You can place all of your pieces there
+    # You can place all of your remaining pieces there
     for piece in pieces_to_put_down:
         result.update([(piece, end_cell) for end_cell in available_cells])
     return result

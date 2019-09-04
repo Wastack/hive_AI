@@ -36,3 +36,6 @@ class Direction(IntEnum):
     HX_LOW = 7  # lower
     HX_UP = 8  # upper
 
+
+def get_queen_name(player: Player) -> str:
+    return 'bQ1' if player == Player.BLACK else 'wQ1'

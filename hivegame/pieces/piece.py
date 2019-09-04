@@ -2,8 +2,13 @@
 # Classes representing playing pieces
 
 import abc
+from typing import Optional
+
 from hivegame.hive_utils import HiveException
 import functools
+
+from utils import hexutil
+
 
 class HivePiece(metaclass=abc.ABCMeta):
     """Representation of Playing Piece"""
@@ -12,7 +17,7 @@ class HivePiece(metaclass=abc.ABCMeta):
         self.color = color      # can be 'b' or 'w'
         self.number = number    # can be [1, 2, 3]
 
-        self.position = (None, None)
+        self.position: Optional[hexutil.Hex] = None
 
 
     def __repr__(self):

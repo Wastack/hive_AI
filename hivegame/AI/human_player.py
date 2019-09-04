@@ -1,5 +1,6 @@
 from hivegame.AI.player import Player
 from hivegame.hive_utils import Direction, HiveException
+from utils import hexutil
 
 
 class HumanPlayer(Player):
@@ -7,11 +8,9 @@ class HumanPlayer(Player):
         self._input = input_stream
 
     def step(self, environment):
-        print("Turn: %s" % environment.get_turn_count())
-        active_player = environment.current_player()
-        print(environment.hive)
+        active_player = environment.current_player
         print("pieces available: %s" % sorted(
-            environment.unplayed_pieces(active_player).keys()
+            environment.unplayed_pieces(active_player), key= lambda x: (x.kind, x.number)
         ))
         print("player %s play: " % active_player)
 
@@ -42,10 +41,8 @@ class HumanPlayer(Player):
         if cmd == 'pass':
             return 'pass'
         if len(cmd) == 3:
-            if hive.turn > 1:
-                return HiveException("Invalid command", 9999)
             moving_piece = cmd
-            target_cell = (0, 0)
+            target_cell = hexutil.origin
         else:
             if len(cmd) != 8:
                 return ValueError("Failed to parse command")

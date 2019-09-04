@@ -15,15 +15,24 @@ class GameState(object):
         self.tiles = {}
         self.current_player = Player.WHITE
 
-    def move_or_append_to(self, piece, hexagon) -> None:
-        # TODO IMPL movement part
+    def move_or_append_to(self, piece: HivePiece, hexagon: hexutil.Hex) -> None:
+        if piece.position:
+            old_cell = self.tiles.get(piece.position)
+            assert old_cell  # dangling position
+            old_cell.remove(piece)
+            if not old_cell: # no more bugs there
+                # remove from dictionary
+                del self.tiles[piece.position]
         cell = self.tiles.get(hexagon)
         if not cell:
             self.tiles[hexagon] = [piece]
         else:
             cell.append(piece)
 
-    def get_tile(self, hexagon):
+        # Update position of piece
+        piece.position = hexagon
+
+    def get_tile_content(self, hexagon):
         return self.tiles.get(hexagon)
 
     def is_border(self, hexagon):
@@ -44,8 +53,9 @@ class GameState(object):
         neighbours = neighbours.difference(self.tiles.keys())
         return neighbours
 
-    def get_direction_to(self, hex_to):
-        hex_diff = hex_to - self
+    @staticmethod
+    def get_direction_to(hex_from: hexutil.Hex, hex_to:hexutil.Hex) -> Optional[Direction]:
+        hex_diff = hex_to - hex_from
         # Check if horizontal
         if hex_diff.y == 0:
             if hex_diff.x > 0:
@@ -53,10 +63,11 @@ class GameState(object):
             elif hex_diff.x < 0:
                 return Direction.HX_W
             else:
-                return None
+                # same tile
+                return Direction.HX_O
         elif abs(hex_diff.x) != abs(hex_diff.y):
             # Not in line
-            return ' '
+            return None
         elif hex_diff.x > 0:
             if hex_diff.y > 0:
                 return Direction.HX_NE
@@ -75,10 +86,6 @@ class GameState(object):
         :return: A set of HivePiece items on board.
         """
         if player_color:
-            if self.tiles:
-                print(list(self.tiles.values())[0])
-                print(list(self.tiles.values())[0][0])
-            print([piece for piece in (tile for tile in self.tiles.values())])
             return set([piece for tile in self.tiles.values() for piece in tile if piece.color == player_color])
         else:
             return set([piece for tile in self.tiles.values() for piece in tile])
@@ -96,6 +103,14 @@ class GameState(object):
             all_pieces.update(piece_factory.piece_set(Player.BLACK))
         return all_pieces.difference(self.get_played_pieces(player_color))
 
+    def get_all_pieces(self, player_color: Optional[Player] = None) -> Set[HivePiece]:
+        """
+        Returns all pieces in a set. Those pieces which are already played should contain their position
+        :param player_color: Color of the bugs you are interested in. None means both.
+        :return: Set of all pieces.
+        """
+        return self.get_played_pieces(player_color).union(self.get_unplayed_pieces(player_color))
+
     def available_kinds_to_place(self, player_color: Player) -> Dict[str,int]:
         unplayed = self.get_unplayed_pieces(player_color)
         logging.debug([piece.kind for piece in unplayed])
@@ -106,3 +121,36 @@ class GameState(object):
             else:
                 result_dict[piece.kind] = 1
         return result_dict
+
+    def occupied_surroundings(self, hexagon: hexutil.Hex):
+        return [nb for nb in hexagon.neighbours() if nb in self.tiles.keys()]
+
+    _dir_to_hex = {
+        Direction.HX_W : hexutil.Hex(2, 0),
+        Direction.HX_E : hexutil.Hex(-2, 0),
+        Direction.HX_NE : hexutil.Hex(1, 1),
+        Direction.HX_SE : hexutil.Hex(1, -1),
+        Direction.HX_NW : hexutil.Hex(-1, 1),
+        Direction.HX_SW : hexutil.Hex(-1, -1),
+        Direction.HX_LOW : hexutil.Hex(0, 0), # under me TODO
+        Direction.HX_UP : hexutil.Hex(0, 0) # over me
+    }
+
+    def goto_direction(self, ref_hexagon: hexutil.Hex, poc: Direction) -> hexutil.Hex:
+        if not self._dir_to_hex.get(poc):
+            raise ValueError("Invalid direction")
+        return ref_hexagon + self._dir_to_hex[poc]
+
+    @staticmethod
+    def get_mutual_neighbors(hex1: hexutil.Hex, hex2: hexutil.Hex) -> Set[hexutil.Hex]:
+        return set(hex1.neighbours()).intersection(hex2.neighbours())
+
+    def is_cell_free(self, hexagon:hexutil.Hex) -> bool:
+        return hexagon in self.tiles.keys()
+
+    def find_piece_played(self, piece_to_find: HivePiece) -> Optional[HivePiece]:
+        pieces = self.get_played_pieces()
+        for p in pieces:
+            if p == piece_to_find:
+                return p
+        return None

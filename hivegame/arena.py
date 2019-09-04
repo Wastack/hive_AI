@@ -24,7 +24,7 @@ class Arena(object):
         self.env.reset_game()  # TODO what?
         env = self.env
         while self.env.check_victory() == GameStatus.UNFINISHED:
-            current_player = self._player1 if env.current_player() == "w" else self._player2
+            current_player = self._player1 if env.current_player == "w" else self._player2
             response = current_player.step(env)
             if response == "pass":
                 self.env.pass_turn(self.env.hive)
@@ -34,6 +34,7 @@ class Arena(object):
             else:
                 try:
                     (piece, coord) = response
+                    logging.debug("piece: {}, coord: {}".format(piece, coord))
                     feedback = env.action_piece_to(piece, coord)
                     current_player.feedback(feedback)
                 except ValueError:
@@ -72,7 +73,7 @@ class Arena(object):
 def main():
     # TODO parse options for players
     FORMAT = "[%(filename)s:%(lineno)s - %(funcName)20s() ] %(message)s"
-    logging.basicConfig(level=logging.INFO, format=FORMAT)
+    logging.basicConfig(level=logging.DEBUG, format=FORMAT)
     # game = Arena(HumanAI(sys.stdin), RandomAI())
     player1 = HumanPlayer(sys.stdin)
     player2 = RandomPlayer()

@@ -1,49 +1,61 @@
-from hivegame.hive_utils import Player
+from __future__ import annotations
+from hivegame.hive_utils import get_queen_name
 from hivegame.pieces.bee_piece import BeePiece
 import logging
 
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from hivegame.hive import Hive
+    from hivegame.pieces.piece import HivePiece
 
-def validate_queen_rules(hive, piece, action):
+from utils import hexutil
+
+
+def validate_queen_rules(hive: 'Hive', piece: 'HivePiece', action: str) -> bool:
     """
     Validate rules related to the queen.
+    :param hive: game state
+    :param piece: Piece to move or place down
+    :param action: move or place
+    :return: Returns if the action is valid or not.
     """
     # Tournament rule: no queen in the first move
-    if (hive.turn == 1 or hive.turn == 2) and isinstance(piece, BeePiece):
-        logging.info("validate_queen_rules: queen should not be placed in the first turn")
+    if len(hive.level.get_played_pieces()) < 3 and isinstance(piece, BeePiece):
+        logging.info("Queen should not be placed in the first turn")
         return False
-    white_turn = hive.activePlayer == Player.WHITE
-    black_turn = not white_turn
+
+    queen = hive.get_piece_by_name(get_queen_name(hive.current_player))
 
     # Move actions are only allowed after the queen is on the board
     if action == 'move':
-        if (black_turn and ('bQ1' not in hive.playedPieces)) or (white_turn and ('wQ1' not in hive.playedPieces)):
-            logging.info("validate_queen_rules: moves actions permitted until queen is on board")
+        if not queen.position:
+            logging.info("Moves actions permitted until queen is on board")
             return False
 
     # White Queen must be placed by turn 7 (4th white action), black queen in turn 8
-    if len([my_piece for my_piece in hive.playedPieces.values() if my_piece.kind == hive.activePlayer]) == 3:
-        if hive.activePlayer + 'Q1' not in hive.playedPieces:
-            if str(piece) != hive.activePlayer + 'Q1' or action != 'place':
-                logging.info("validate_queen_rules: Queen should be placed now")
-                return False
+    if hive.level.get_played_pieces(hive.current_player) == 3 and not queen.position:
+        if piece.kind != 'Q' or action != 'place':
+            logging.info("Queen should be placed now")
+            return False
 
     return True
 
 
-def validate_turn(hive, piece, action):
+def validate_turn(hive: 'Hive', piece: 'HivePiece', action: str) -> bool:
     """
     Verifies if the action is valid on this turn.
+    :param hive: State of game
+    :param piece: Piece on which the action is performed
+    :param action: move or place
+    :return: Whether the action is valid or not
     """
-    white_turn = hive.activePlayer == Player.WHITE
-    black_turn = not white_turn
-    if white_turn and piece.color != Player.WHITE:
+
+    # Validate piece color
+    if piece.color != hive.current_player:
         logging.info("validate_turn: Attempt to move or place a piece with wrong color")
         return False
 
-    if black_turn and piece.color != Player.BLACK:
-        logging.info("validate_turn: Attempt to move or place a piece with wrong color")
-        return False
-
+    # Validate queen rules
     if not validate_queen_rules(hive, piece, action):
         logging.info("validate_turn: Queen rules violated")
         return False
@@ -51,15 +63,15 @@ def validate_turn(hive, piece, action):
     return True
 
 
-def validate_move_piece(hive, moving_piece, target_cell):
+def validate_move_piece(hive: 'Hive', moving_piece: 'HivePiece', target_cell: hexutil.Hex) -> bool:
     # check if the piece has been placed
-    pp = hive.playedPieces.get(str(moving_piece))
-    if pp is None:
+    moving_piece = hive.level.find_piece_played(moving_piece)
+    if moving_piece is None:
         logging.info("validate_move_piece: piece was not played yet")
         return False
 
-    # check if the move it's to a different target_cell
-    if moving_piece in hive.piecesInCell.get(target_cell, []):
+    # Do not move to the very same cell
+    if moving_piece.position == target_cell:
         logging.info("validate_move_piece: moving to the same place")
         return False
 
@@ -74,67 +86,58 @@ def validate_move_piece(hive, moving_piece, target_cell):
     return True
 
 
-def validate_place_piece(hive, piece, target_cell):
+def validate_place_piece(hive: 'Hive', piece: 'HivePiece', target_cell: hexutil.Hex) -> bool:
     """
     Verifies if a piece can be played from hand into a given target_cell.
     The piece must be placed touching at least one piece of the same color
     and can only be touching pieces of the same color.
+    :param hive: game state
+    :param piece: piece which is being placed to board
+    :param target_cell: hexagon where the piece is being placed to.
+    :return: whether it's valid or not
     """
 
     # target_cell must be free
-    if not hive.is_cell_free(target_cell):
+    if hive.level.get_tile_content(target_cell):
         logging.info("validate_place_piece: cell not free")
         return False
 
-    if str(piece) in hive.playedPieces:
+    if hive.level.find_piece_played(piece):
         logging.info("validate_place_piece: piece has been already placed")
         return False
 
-    # if it's the first turn we don't need to validate
-    if hive.turn == 1:
+    # The below rules apply only after the second turn. E.g. neighbor color matching is not enforced
+    if len(hive.level.get_played_pieces()) < 3:
         return True
 
-    # if it's the second turn we put it without validating touching colors
-    if hive.turn == 2:
-        return True
+    nbs = hive.level.occupied_surroundings(target_cell)
+    if any(piece.color !=  hive.level.get_tile_content(nb)[-1].color for nb in nbs):
+        logging.info("validate_place_piece: Invalid placement")
+        return False
 
-    played_color = piece.color
-
-    occupied_cells = hive.occupied_surroundings(target_cell)
-    visible_pieces = [
-        hive.piecesInCell[oCell][-1] for oCell in occupied_cells
-    ]
-    res = True
-    for piece in visible_pieces:
-        if hive.playedPieces[str(piece)].color != played_color:
-            logging.info("validate_place_piece: Invalid placement")
-            res = False
-            break
-
-    return res
+    return True
 
 
-def validate_one_hive(hive, piece):
+def validate_one_hive(hive: 'Hive', piece: 'HivePiece'):
     """
     Check if removing a piece doesn't break the one hive rule.
-    Returns False if the hive is broken.
+    :param hive: game state
+    :param piece: piece to perform action on.
+    :return: False if the hive is broken.
     """
-    original_pos = hive.locate(str(piece))
-    # if the piece is not in the board then moving it won't break the hive
-    if original_pos is None:
-        return True
-    # if there is another piece in the same cell then the one hive rule
-    # won't be broken
-    pic = hive.piecesInCell[original_pos]
-    if len(pic) > 1:
+    # if the piece is not in the board then placing it won't break the hive
+    if piece.position is None:
         return True
 
-    # temporarily remove the piece
-    del hive.piecesInCell[original_pos]
+    # if there is another piece in the same cell then the one hive rule
+    # won't be broken
+    piece_list = hive.level.get_tile_content(piece.position)
+    if len(piece_list) > 1:
+        return True
 
     # Get all pieces that are in contact with the removed one and try to
     # reach all of them from one of them.
-    occupied = hive.occupied_surroundings(original_pos)
+    occupied = hive.level.occupied_surroundings(piece.position)
     visited = set()
     to_explore = {occupied[0]}
     to_reach = set(occupied[1:])
@@ -143,13 +146,12 @@ def validate_one_hive(hive, piece):
     while len(to_explore) > 0:
         found = []
         for cell in to_explore:
-            found += hive.occupied_surroundings(cell)
+            found += hive.level.occupied_surroundings(cell)
+            found.remove(piece)  # as if the current piece would be removed
             visited.add(cell)
         to_explore = set(found) - visited
         if to_reach.issubset(visited):
             res = True
             break
 
-    # restore the removed piece
-    hive.piecesInCell[original_pos] = pic
     return res

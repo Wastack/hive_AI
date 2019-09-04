@@ -6,6 +6,7 @@ class HiveView(object):
         self.game = game
 
     def __repr__(self):
+        return
         """text representation of the board + pieces."""
         first_col, first_row, last_col, last_row = self.game.get_board_boundaries()
         res = "\n"
@@ -41,6 +42,7 @@ class HiveView(object):
         return res
     
     def print_pieces_with_coords(self):
+        return
         """Print coordinates of pieces for debug purposes"""
         first_col, first_row, last_col, last_row = self.game.get_board_boundaries()
         for i in range(first_row, last_row + 1):

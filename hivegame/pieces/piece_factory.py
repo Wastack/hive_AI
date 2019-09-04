@@ -6,17 +6,17 @@ from .beetle_piece import BeetlePiece
 
 from collections import OrderedDict
 from hivegame.hive_utils import Player
-from typing import Set
+from typing import Set, List
 from hivegame.pieces.piece import HivePiece
 
 
-def piece_dict(color: Player) -> OrderedDict:
+def sorted_piece_dict(color: Player) -> OrderedDict:
     """
     Return a full set of hive pieces.
     The order of the pieces determines the structure of the action space's
     canonical representation.
     """
-    piece_set = OrderedDict()
+    piece_set = {}
     for i in range(3):
         ant = AntPiece(color, i + 1)
         piece_set[str(ant)] = ant
@@ -29,7 +29,12 @@ def piece_dict(color: Player) -> OrderedDict:
         piece_set[str(beetle)] = beetle
     queen = BeePiece(color, 1)
     piece_set[str(queen)] = queen
-    return piece_set
+    return OrderedDict(sorted(piece_set.items(), key= lambda x: x[1]))
+
+def sorted_piece_list(color: Player) -> List[HivePiece]:
+    pieces = list(piece_set(color))
+    pieces = sorted(pieces, key= lambda x: (x.color, x.kind, x.number))
+    return pieces
 
 
 def piece_set(color: Player) -> Set[HivePiece]:
@@ -59,3 +64,9 @@ _kind_to_instance = {
 
 def create_piece(color: Player, kind: str, number: int) -> HivePiece:
     return _kind_to_instance[kind](color, number)
+
+
+def name_to_piece(name: str) -> HivePiece:
+    letters = list(name)
+    assert (len(letters) == 3)  # color, type, number
+    return create_piece(*letters)

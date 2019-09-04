@@ -31,7 +31,7 @@ class Environment(Game):
         self.debug_hive = Hive()
 
     def reset_game(self):
-        self.hive.setup()
+        self.hive.reset()
 
     @staticmethod
     def pass_turn(hive):
@@ -46,15 +46,13 @@ class Environment(Game):
         :return: status of the game
         """
         return self.hive.check_victory()
-    
+
+    @property
     def current_player(self):
-        return self.hive.activePlayer
+        return self.hive.current_player
     
     def unplayed_pieces(self, player):
-        return self.hive.get_unplayed_pieces(player)
-    
-    def get_turn_count(self):
-        return self.hive.turn
+        return self.hive.level.get_unplayed_pieces(player)
     
     def get_all_possible_actions(self):
         return represent.get_all_possible_actions(self.hive)
@@ -80,17 +78,14 @@ class Environment(Game):
         :return: Number of possible actions in the given state
         """
         hive = Hive()
-        hive.setup()
         return len(represent.get_all_action_vector(hive))
 
     def getCanonicalForm(self, board, player_num):
-        hive = Hive()
-        hive.load_state_with_player(board, self._player_to_inner_player(player_num))
+        hive = Hive.load_state_with_player(board, self._player_to_inner_player(player_num))
         return represent.two_dim_representation(represent.canonical_adjacency_state(hive))
 
     def getGameEnded(self, board, player_num):
-        hive = Hive()
-        hive.load_state_with_player(board, self._player_to_inner_player(player_num))
+        hive = Hive.load_state_with_player(board, self._player_to_inner_player(player_num))
         status = hive.check_victory()
         if status == GameStatus.UNFINISHED:
             return 0
@@ -99,23 +94,21 @@ class Environment(Game):
         elif player_num == -1:  # Hive.WHITE
             return 1 if status == GameStatus.WHITE_WIN else -1
         else:
-            raise ValueError('unexpected player')
+            raise ValueError('Unexpected game status')
 
     def getValidMoves(self, board, player_num):
-        hive = Hive()
-        hive.load_state_with_player(board, self._player_to_inner_player(player_num))
+        hive = Hive.load_state_with_player(board, self._player_to_inner_player(player_num))
         return represent.get_all_action_vector(hive)
 
     def getNextState(self, board, player, action_number):
         assert action_number >= 0
-        hive = Hive()
-        hive.load_state_with_player(board, Environment._player_to_inner_player(player))
+        hive = Hive.load_state_with_player(board, Environment._player_to_inner_player(player))
         try:
             (piece, to_cell) = hive.action_from_vector(action_number)
         except HiveException as error:
             logging.error("HiveException was caught: {}".format(error))
             logging.error("action number: {}".format(action_number))
-            logging.error("\n{}".format(HiveView(hive)))
+            #logging.error("\n{}".format(HiveView(hive)))
             raise
         # TODO handle pass
         try:
@@ -123,7 +116,7 @@ class Environment(Game):
         except HiveException as error:
             logging.error("HiveException was caught: {}".format(error))
             logging.error("action number: {}, resulting action: ({}, {})".format(action_number, piece, to_cell))
-            logging.error("\n{}".format(HiveView(hive)))
+            #logging.error("\n{}".format(HiveView(hive)))
             raise
         self.debug_hive = hive
         return represent.two_dim_representation(represent.get_adjacency_state(hive)), player*(-1)
@@ -154,5 +147,4 @@ class Environment(Game):
 
     def getBoardSize(self):
         hive = Hive()
-        hive.setup()
         return represent.two_dim_representation(represent.canonical_adjacency_state(hive)).shape
