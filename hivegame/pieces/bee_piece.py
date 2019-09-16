@@ -1,7 +1,7 @@
 from hivegame.pieces.piece import HivePiece
 
 from typing import TYPE_CHECKING
-from utils import hexutil
+from hivegame.utils import hexutil
 if TYPE_CHECKING:
     from hivegame.hive import Hive
 
@@ -20,6 +20,7 @@ class BeePiece(HivePiece):
         return hive.bee_moves(self.position)
 
     def available_moves_vector(self, hive: 'Hive'):
+        super().available_moves(hive)
         if self.check_blocked(hive):
             return [0] * 6
         result = []

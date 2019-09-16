@@ -90,6 +90,10 @@ class GameState(object):
         else:
             return set([piece for tile in self.tiles.values() for piece in tile])
 
+    @staticmethod
+    def _subset(p_set1, p_set2):
+        return {p for p in p_set1 if str(p) not in [str(played) for played in p_set2]}
+
     def get_unplayed_pieces(self, player_color: Optional[Player] = None) -> Set[HivePiece]:
         """
         :param player_color: Color of the bugs you are interested in. None means both.
@@ -101,7 +105,8 @@ class GameState(object):
         else:
             all_pieces.update(piece_factory.piece_set(Player.WHITE))
             all_pieces.update(piece_factory.piece_set(Player.BLACK))
-        return all_pieces.difference(self.get_played_pieces(player_color))
+        played_p = self.get_played_pieces(player_color)
+        return self._subset(all_pieces, played_p)
 
     def get_all_pieces(self, player_color: Optional[Player] = None) -> Set[HivePiece]:
         """
@@ -109,7 +114,11 @@ class GameState(object):
         :param player_color: Color of the bugs you are interested in. None means both.
         :return: Set of all pieces.
         """
-        return self.get_played_pieces(player_color).union(self.get_unplayed_pieces(player_color))
+        result =  self.get_played_pieces(player_color).union(self.get_unplayed_pieces(player_color))
+        if not len(result) == len(piece_factory.piece_set(Player.WHITE)) * 2:
+            logging.error("{} != {}".format(len(result), len(piece_factory.piece_set(Player.WHITE)) * 2))
+            assert False
+        return result
 
     def available_kinds_to_place(self, player_color: Player) -> Dict[str,int]:
         unplayed = self.get_unplayed_pieces(player_color)
@@ -128,14 +137,15 @@ class GameState(object):
         return [nb for nb in hexagon.neighbours() if nb in self.tiles.keys()]
 
     _dir_to_hex = {
-        Direction.HX_W : hexutil.Hex(2, 0),
-        Direction.HX_E : hexutil.Hex(-2, 0),
-        Direction.HX_NE : hexutil.Hex(1, 1),
-        Direction.HX_SE : hexutil.Hex(1, -1),
-        Direction.HX_NW : hexutil.Hex(-1, 1),
-        Direction.HX_SW : hexutil.Hex(-1, -1),
+        Direction.HX_W : hexutil.Hex(-2, 0),
+        Direction.HX_E : hexutil.Hex(2, 0),
+        Direction.HX_NE : hexutil.Hex(1, -1),
+        Direction.HX_SE : hexutil.Hex(1, 1),
+        Direction.HX_NW : hexutil.Hex(-1, -1),
+        Direction.HX_SW : hexutil.Hex(-1, 1),
         Direction.HX_LOW : hexutil.Hex(0, 0), # under me TODO
-        Direction.HX_UP : hexutil.Hex(0, 0) # over me
+        Direction.HX_UP : hexutil.Hex(0, 0), # over me
+        Direction.HX_O : hexutil.Hex(0, 0)
     }
 
     def goto_direction(self, ref_hexagon: hexutil.Hex, poc: Direction) -> hexutil.Hex:
@@ -148,7 +158,7 @@ class GameState(object):
         return set(hex1.neighbours()).intersection(hex2.neighbours())
 
     def is_cell_free(self, hexagon:hexutil.Hex) -> bool:
-        return hexagon in self.tiles.keys()
+        return not hexagon in self.tiles.keys()
 
     def find_piece_played(self, piece_to_find: HivePiece) -> Optional[HivePiece]:
         pieces = self.get_played_pieces()

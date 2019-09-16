@@ -234,18 +234,18 @@ def get_all_action_vector(hive: 'Hive') -> List[int]:
     # moving pieces
     for p in piece_list:
         # find piece on board
-        p = hive.level.find_piece_played(p)
+        p_pos = hive.level.find_piece_played(p)
 
         # It cannot move if:
         #  - not yet placed
         #  - queen not yet placed
         #  - If picking up the piece would break the one-hive rule
-        if not p or not hive.get_piece_by_name(get_queen_name(hive.current_player)).position or\
+        if not p_pos or not hive.get_piece_by_name(get_queen_name(hive.current_player)).position or\
                 not valid.validate_one_hive(hive, p):
             result += [0] * p.move_vector_size
             continue
 
-        result += p.available_moves_vector(hive)
+        result += p_pos.available_moves_vector(hive)
 
     expected_len = len(piece_list) - 1 + (possible_neighbor_count * direction_count) * len(piece_list) + \
                    1 * 6 + 3 * 6 + 3 * AntPiece.MAX_STEP_COUNT + 2 * SpiderPiece.MAX_STEP_COUNT + 2 * 6

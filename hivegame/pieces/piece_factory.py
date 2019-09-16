@@ -29,7 +29,7 @@ def sorted_piece_dict(color: Player) -> OrderedDict:
         piece_set[str(beetle)] = beetle
     queen = BeePiece(color, 1)
     piece_set[str(queen)] = queen
-    return OrderedDict(sorted(piece_set.items(), key= lambda x: x[1]))
+    return OrderedDict(sorted(piece_set.items(), key= lambda x: x[0]))
 
 def sorted_piece_list(color: Player) -> List[HivePiece]:
     pieces = list(piece_set(color))

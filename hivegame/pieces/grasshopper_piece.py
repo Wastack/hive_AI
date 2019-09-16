@@ -20,6 +20,7 @@ class GrassHopperPiece(HivePiece):
         return endcell in self.available_moves(hive)
     
     def available_moves(self, hive: 'Hive'):
+        super().available_moves(hive)
         if self.check_blocked(hive):
             return []
         result = []

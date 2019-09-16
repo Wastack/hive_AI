@@ -5,9 +5,9 @@ import abc
 from typing import Optional
 
 from hivegame.hive_utils import HiveException
-import functools
+import logging
 
-from utils import hexutil
+from hivegame.utils import hexutil
 
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
@@ -30,6 +30,10 @@ class HivePiece(metaclass=abc.ABCMeta):
         """
         Check if the piece is blocked by a beetle. Returns True if blocked
         """
+        if not self.position:
+            logging.warning("Check_blocked called without having a position.")
+            return False
+        assert hive.level.get_tile_content(self.position)
         if hive.level.get_tile_content(self.position)[-1] == self:
             return False
         return True
@@ -44,6 +48,8 @@ class HivePiece(metaclass=abc.ABCMeta):
 
     @abc.abstractmethod
     def available_moves(self, hive: 'Hive'):
+        if not self.position:
+            raise HiveException("Bug not yet placed.", 9997)
         return []
 
     @abc.abstractmethod
@@ -65,4 +71,4 @@ class HivePiece(metaclass=abc.ABCMeta):
         return isinstance(obj, HivePiece) and str(obj) == str(self)
 
     def __hash__(self):
-        return hash(self.color) ^ hash(self.kind) ^ hash(self.number)
+        return hash((self.color, self.kind, self.number))

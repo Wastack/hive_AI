@@ -19,16 +19,25 @@ class Arena(object):
             self.env = Environment()
         self._player1 = player1
         self._player2 = player2
+        self._passed = False
 
     def playGame(self):
         self.env.reset_game()  # TODO what?
         env = self.env
         while self.env.check_victory() == GameStatus.UNFINISHED:
+            print(self.env.hive)
             current_player = self._player1 if env.current_player == "w" else self._player2
             response = current_player.step(env)
             if response == "pass":
+                if self._passed:
+                    # both player passed. Ouch
+                    logging.error("Both player passed. Ouch.")
+                    raise RuntimeError(":(")
                 self.env.pass_turn(self.env.hive)
+                self._passed = True
                 continue
+            else:
+                self._passed = False
             if not response:
                 break  # e.g. keyboard interrupt
             else:

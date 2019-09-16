@@ -8,7 +8,7 @@ if TYPE_CHECKING:
     from hivegame.hive import Hive
     from hivegame.pieces.piece import HivePiece
 
-from utils import hexutil
+from hivegame.utils import hexutil
 
 
 def validate_queen_rules(hive: 'Hive', piece: 'HivePiece', action: str) -> bool:
@@ -20,7 +20,7 @@ def validate_queen_rules(hive: 'Hive', piece: 'HivePiece', action: str) -> bool:
     :return: Returns if the action is valid or not.
     """
     # Tournament rule: no queen in the first move
-    if len(hive.level.get_played_pieces()) < 3 and isinstance(piece, BeePiece):
+    if len(hive.level.get_played_pieces()) < 2 and isinstance(piece, BeePiece):
         logging.info("Queen should not be placed in the first turn")
         return False
 
@@ -29,7 +29,7 @@ def validate_queen_rules(hive: 'Hive', piece: 'HivePiece', action: str) -> bool:
     # Move actions are only allowed after the queen is on the board
     if action == 'move':
         if not queen.position:
-            logging.info("Moves actions permitted until queen is on board")
+            logging.info("Move actions not permitted until queen is on board")
             return False
 
     # White Queen must be placed by turn 7 (4th white action), black queen in turn 8
@@ -107,7 +107,7 @@ def validate_place_piece(hive: 'Hive', piece: 'HivePiece', target_cell: hexutil.
         return False
 
     # The below rules apply only after the second turn. E.g. neighbor color matching is not enforced
-    if len(hive.level.get_played_pieces()) < 3:
+    if len(hive.level.get_played_pieces()) < 2:
         return True
 
     nbs = hive.level.occupied_surroundings(target_cell)
@@ -136,7 +136,6 @@ def validate_one_hive(hive: 'Hive', piece: 'HivePiece'):
         return True
 
     if not hive.level.tiles:
-        print("[DEBUG] why is that called then?")
         return True
 
     # Get all pieces that are in contact with the removed one and try to
@@ -152,12 +151,11 @@ def validate_one_hive(hive: 'Hive', piece: 'HivePiece'):
         found = []
         for cell in to_explore:
             found += hive.level.occupied_surroundings(cell)
-            if piece in found:
-                found.remove(piece)  # as if the current piece would be removed
+            if piece.position in found:
+                found.remove(piece.position)  # as if the current piece would be removed
             visited.add(cell)
         to_explore = set(found) - visited
         if to_reach.issubset(visited):
-            print("True is the verdict")
             res = True
             break
 

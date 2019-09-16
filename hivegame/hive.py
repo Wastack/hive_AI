@@ -44,7 +44,7 @@ class Hive(object):
         """
         return self.level.current_player
 
-    def get_piece_by_name(self, piece_name: str):
+    def get_piece_by_name(self, piece_name: str) -> HivePiece:
         """
         :param piece_name: 3 digit name of piece. E.g. wQ1
         :return: The piece object
@@ -124,6 +124,7 @@ class Hive(object):
             raise HiveException("Invalid Piece Placement", 10003)
 
         if not valid.validate_place_piece(self, piece, to_cell):
+            logging.debug("incalid piece placement")
             raise HiveException("Invalid Piece Placement", 10003)
 
         self.level.move_or_append_to(piece, to_cell)
@@ -179,6 +180,12 @@ class Hive(object):
         """
         assert point_of_contract < 9
         ref_cell = self.locate(ref_piece)
+        if not ref_cell:
+            logging.error("Cannot find piece by name: {}".format(ref_piece))
+            logging.debug(self)
+            error_msg = "Cannot locate reference piece by name"
+            raise HiveException(error_msg, 9996)
+
         if point_of_contract > 6:
             return ref_cell  # above or below
         return self.level.goto_direction(ref_cell, point_of_contract)
@@ -336,7 +343,6 @@ class Hive(object):
                     pos = hive.poc2cell(name, adjacency[name][to_place_name])
                     # create the bug
                     my_new_piece = piece_fact.name_to_piece(to_place_name)
-                    my_new_piece.position = pos
                     # Visit this bug next time
                     nodes_to_visit.append(to_place_name)
                     # remove from remaining pieces

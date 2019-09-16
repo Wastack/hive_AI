@@ -38,6 +38,7 @@ class AntPiece(HivePiece):
         :return: available moves. The order of the list depends on the distance of the target cell.
         Cells in a shorter distance come first.
         """
+        super().available_moves(hive)
         if self.check_blocked(hive):
             return []
 
