@@ -93,6 +93,7 @@ class GameWidget(QtWidgets.QWidget):
             except:
                 # TODO deal with user error
                 pass
+            self.selected_hexagon = None
             self.repaint()
             return
         elif event.button() == QtCore.Qt.LeftButton:
@@ -113,13 +114,15 @@ class GameWidget(QtWidgets.QWidget):
             if self.selected_hexagon:
                 try:
                     self.hive.action_piece_to(self.level.get_tile_content(self.selected_hexagon)[-1], hexagon)
-                    self.selected_hexagon = None
                 except:
                     # TODO deal with user error
                     pass
+                finally:
+                    self.selected_hexagon = None
             else:
                 # perform selection
-                self.selected_hexagon = hexagon
+                if self.level.get_tile_content(hexagon) and self.level.get_tile_content(hexagon)[-1].color == self.level.current_player:
+                    self.selected_hexagon = hexagon
             self.repaint()
 
     def mouseMoveEvent(self, event):
