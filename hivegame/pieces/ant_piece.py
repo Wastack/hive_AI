@@ -13,6 +13,8 @@ class AntPiece(HivePiece):
     def validate_move(self, hive: 'Hive', end_cell: hexutil.Hex):
         if self.check_blocked(hive):
             return False
+        # remove piece temporary
+        del hive.level.tiles[self.position]
 
         toExplore = {self.position}
         visited = {self.position}
@@ -31,6 +33,7 @@ class AntPiece(HivePiece):
             visited.update(found)
             toExplore = found
 
+        hive.level.tiles[self.position] = [self]
         return res
     
     def available_moves(self, hive: 'Hive'):
@@ -41,6 +44,8 @@ class AntPiece(HivePiece):
         super().available_moves(hive)
         if self.check_blocked(hive):
             return []
+        # remove piece temporary
+        del hive.level.tiles[self.position]
 
         toExplore = {self.position}
         visited = {self.position}
@@ -53,7 +58,7 @@ class AntPiece(HivePiece):
 
             visited.update(found)
             toExplore = found
-
+        hive.level.tiles[self.position] = [self]
         return sorted(visited)
 
     def available_moves_vector(self, hive: 'Hive'):

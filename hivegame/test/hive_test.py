@@ -173,6 +173,7 @@ class TestHive(TestCase):
         )
 
     def test_queen_moves(self):
+        print(self.hive)
         end_cell = self.hive.poc2cell('bQ1', Direction.HX_E)
         self.assertTrue(
             self.hive.get_piece_by_name('bQ1').validate_move(self.hive, end_cell)
@@ -187,6 +188,7 @@ class TestHive(TestCase):
         self.hive.level.current_player = Player.WHITE
         self.hive.move_piece_without_action('wQ1', 'wS1', Direction.HX_W)
         self.hive.level.current_player = Player.BLACK
+        print(self.hive)
         self.hive.move_piece_without_action('bA1', 'wG1', Direction.HX_NE)
 
         end_cell = self.hive.poc2cell('wS1', Direction.HX_NW)

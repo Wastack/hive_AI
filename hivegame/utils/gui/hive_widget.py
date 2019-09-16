@@ -1,6 +1,9 @@
 import sys
 
 from PyQt5 import QtCore, QtGui, QtWidgets
+
+from hive_utils import Player, HiveException
+from hivegame.hive import Hive
 from hivegame.utils import hexutil
 from hivegame.utils.game_state import GameState
 from hivegame.pieces import piece_factory
@@ -29,13 +32,14 @@ class GameWidget(QtWidgets.QWidget):
 
     def set_state(self, level: GameState) -> None:
         self.level = level
+        self.hive.level = level
         self.repaint()
 
     def __init__(self, *args, **kws):
         super().__init__(*args, **kws)
         self.setMouseTracking(True) # we want to receive mouseMoveEvents
-
-        self.level = GameState()
+        self.hive = Hive()
+        self.level = self.hive.level
         self.hexgrid = hexutil.HexGrid(24)
 
         # initialize GUI objects needed for painting
@@ -75,9 +79,7 @@ class GameWidget(QtWidgets.QWidget):
 
             # Show dropdown menu
             menu = QtWidgets.QMenu()
-            # TODO color
-            color = "w"
-            available_kinds = self.level.available_kinds_to_place(color)
+            available_kinds = self.level.available_kinds_to_place(self.level.current_player)
             for kind in available_kinds:
                 action_to_add = menu.addAction(self._kind_to_text.get(kind))
 
@@ -85,9 +87,12 @@ class GameWidget(QtWidgets.QWidget):
             action = menu.exec_(self.mapToGlobal(event.pos()))
             if not action:
                 return  # user clicked elsewhere, or no more pieces available
-            # TODO clean up text to kind
-            self.level.move_or_append_to(piece_factory.create_piece(color, self._text_to_piece[action.text()],
-                                                                    available_kinds[action.text()[0]]), hexagon)
+            try:
+                # TODO clean up text to kind
+                self.hive.action_piece_to(piece_factory.create_piece(self.level.current_player, self._text_to_piece[action.text()],available_kinds[action.text()[0]]), hexagon)
+            except:
+                # TODO deal with user error
+                pass
             self.repaint()
             return
         elif event.button() == QtCore.Qt.LeftButton:
@@ -104,7 +109,17 @@ class GameWidget(QtWidgets.QWidget):
             # perform selection
             game_pos = event.pos() + self.center
             hexagon = self.hexagon_of_pos(game_pos)
-            self.selected_hexagon = hexagon
+            # perform movement
+            if self.selected_hexagon:
+                try:
+                    self.hive.action_piece_to(self.level.get_tile_content(self.selected_hexagon)[-1], hexagon)
+                    self.selected_hexagon = None
+                except:
+                    # TODO deal with user error
+                    pass
+            else:
+                # perform selection
+                self.selected_hexagon = hexagon
             self.repaint()
 
     def mouseMoveEvent(self, event):
@@ -156,7 +171,10 @@ class GameWidget(QtWidgets.QWidget):
                     if hexagon == self.selected_hexagon:
                         painter.setBrush(QtGui.QColor("yellow"))
                     else:
-                        painter.setBrush(QtGui.QColor("lightGray"))
+                        if self.level.get_tile_content(hexagon)[-1].color == Player.WHITE:
+                            painter.setBrush(QtGui.QColor("lightGray"))
+                        else:
+                            painter.setBrush(QtGui.QColor("red"))
                     painter.drawPolygon(polygon)
 
                     # draw bug (which is currently represented with a letter)
@@ -186,5 +204,5 @@ def main():
     window.show()
     app.exec_()
 
-
-main()
+if __name__ == '__main__':
+    sys.exit(main())

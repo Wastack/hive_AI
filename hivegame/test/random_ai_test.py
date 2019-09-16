@@ -9,11 +9,16 @@ from unittest import TestCase
 
 import logging
 
+FORMAT = "[%(filename)s:%(lineno)s - %(funcName)20s() ] %(message)s"
+logging.basicConfig(level=logging.DEBUG, format=FORMAT)
+logger = logging.getLogger()
 
 class TestRandomAi(TestCase):
     """Verify the HexBoard logic"""
 
     def setUp(self):
+        self.sh = logging.StreamHandler(sys.stdout)
+        logger.addHandler(self.sh)
         self.game = Arena(RandomPlayer(), RandomPlayer())
 
     def test_run_against_itself(self):

@@ -5,8 +5,11 @@ from AI.environment import Environment
 from hivegame.AI.random_player import RandomPlayer
 from hivegame.AI.human_player import HumanPlayer
 from hivegame.hive_utils import GameStatus
+from PyQt5 import QtWidgets
 
 import logging
+
+from hivegame.utils.gui.hive_widget import GameWidget
 
 
 class Arena(object):
@@ -43,7 +46,6 @@ class Arena(object):
             else:
                 try:
                     (piece, coord) = response
-                    logging.debug("piece: {}, coord: {}".format(piece, coord))
                     feedback = env.action_piece_to(piece, coord)
                     current_player.feedback(feedback)
                 except ValueError:
@@ -78,6 +80,7 @@ class Arena(object):
         self.player1, self.player2 = self.player2, self.player1
         return white_won + white_won2, black_won + black_won2, draw + draw2
 
+headless = False
 
 def main():
     # TODO parse options for players
@@ -89,7 +92,14 @@ def main():
     logging.info("Start game with the following AIs: {}, {}".format(player1, player2))
     game = Arena(player1, player2)
     game.env.reset_game()
-    game.playGame()
+    if headless:
+        game.playGame()
+    else:
+        app = QtWidgets.QApplication(sys.argv)
+        window = GameWidget()
+        window.set_state(game.env.hive.level)
+        window.show()
+        app.exec_()
     logging.info("Thanks for playing Hive. Have a nice day!")
 
 if __name__ == '__main__':

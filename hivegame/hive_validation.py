@@ -33,7 +33,7 @@ def validate_queen_rules(hive: 'Hive', piece: 'HivePiece', action: str) -> bool:
             return False
 
     # White Queen must be placed by turn 7 (4th white action), black queen in turn 8
-    if hive.level.get_played_pieces(hive.current_player) == 3 and not queen.position:
+    if len(hive.level.get_played_pieces(hive.current_player)) >= 3 and not queen.position:
         if piece.kind != 'Q' or action != 'place':
             logging.info("Queen should be placed now")
             return False

@@ -70,14 +70,14 @@ class GameState(object):
             return None
         elif hex_diff.x > 0:
             if hex_diff.y > 0:
-                return Direction.HX_NE
-            else:
                 return Direction.HX_SE
+            else:
+                return Direction.HX_NE
         else:
             if hex_diff.y > 0:
-                return Direction.HX_NW
-            else:
                 return Direction.HX_SW
+            else:
+                return Direction.HX_NW
 
     def get_played_pieces(self, player_color: Optional[Player] = None) -> Set[HivePiece]:
         """

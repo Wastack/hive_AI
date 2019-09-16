@@ -14,16 +14,18 @@ class BeetlePiece(HivePiece):
         super().available_moves(hive)
         if self.check_blocked(hive):
             return []
-
         res = []
         # are we on top of the hive?
         # TODO this practically does the trick, but not precise
         if len(hive.level.get_tile_content(self.position)) > 1:
             res = self.position.neighbours()
         else:
+            # remove piece temporary
+            del hive.level.tiles[self.position]
             res = (hive.bee_moves(self.position) +
-                hive.level.occupied_surroundings(self.position)
-            )
+                   hive.level.occupied_surroundings(self.position)
+                   )
+            hive.level.tiles[self.position] = [self]
 
         return res
 

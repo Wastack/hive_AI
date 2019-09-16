@@ -20,6 +20,7 @@ class RandomPlayer(Player):
         #print(HiveView(environment.hive))
         action_vector = represent.get_all_action_vector(environment.hive)
         if not any(action_vector):
+            logging.info("random player just passed")
             return "pass"
         indices = [i for i, v in enumerate(action_vector) if v > 0]
         action = random.choice(indices)

@@ -15,6 +15,9 @@ class SpiderPiece(HivePiece):
         if self.check_blocked(hive):
             return []
 
+        # remove piece temporary
+        del hive.level.tiles[self.position]
+
         visited = set()
         firstStep = set()
         secondStep = set()
@@ -34,6 +37,7 @@ class SpiderPiece(HivePiece):
             thirdStep.update(set(hive.bee_moves(c)))
         thirdStep.difference_update(visited)
 
+        hive.level.tiles[self.position] = [self]
         return sorted(thirdStep)
 
     def available_moves_vector(self, hive: 'Hive'):

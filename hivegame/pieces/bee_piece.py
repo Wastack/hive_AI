@@ -9,10 +9,14 @@ class BeePiece(HivePiece):
     def validate_move(self, hive: 'Hive', endcell: hexutil.Hex):
         if self.check_blocked(hive):
             return False
+        res = True
+        # remove piece temporary
+        del hive.level.tiles[self.position]
         possible_end_cells = hive.bee_moves(self.position)
         if not endcell in possible_end_cells:
-            return False
-        return True
+            res = False
+        hive.level.tiles[self.position] = [self]
+        return res
 
     def available_moves(self, hive: 'Hive'):
         if self.check_blocked(hive):
