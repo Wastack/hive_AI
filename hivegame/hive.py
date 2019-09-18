@@ -19,7 +19,7 @@ import hivegame.pieces.piece_factory as piece_fact
 
 import logging
 
-from typing import List
+from typing import List, Tuple, Optional, Union
 
 
 class Hive(object):
@@ -124,7 +124,7 @@ class Hive(object):
             raise HiveException("Invalid Piece Placement", 10003)
 
         if not valid.validate_place_piece(self, piece, to_cell):
-            logging.debug("incalid piece placement")
+            logging.info("Invalid piece placement")
             raise HiveException("Invalid Piece Placement", 10003)
 
         self.level.move_or_append_to(piece, to_cell)
@@ -214,6 +214,43 @@ class Hive(object):
 
         return available_hexes
 
+    @staticmethod
+    def _decode_action_number(action_number: int, player: Player) -> Tuple[str, Any]:
+        # initial
+        pieces = piece_fact.sorted_piece_list(player)
+        pc = len(pieces)
+        if action_number < pc - 1:
+            pieces = [p for p in pieces if p.kind != 'Q']
+            return 'init', pieces[action_number]
+        action_number -= pc - 1
+
+        # piece placement
+        place_bound = pc * (pc - 1) * 6
+        if action_number < place_bound:
+            one_bug_bound = (pc - 1) * 6
+            action_type = action_number % one_bug_bound
+            piece_number = action_number // one_bug_bound
+            adj_piece_number = action_type // 6
+            direction = (action_type % 6) + 1  # starting from west, clockwise
+            piece = pieces[piece_number]
+            adj_piece = [p for p in pieces if p != piece][adj_piece_number]
+            return 'place', (piece, adj_piece, direction)
+        action_number -= place_bound
+
+        # movement
+        for piece in pieces:
+            assert action_number >= 0
+            # Find piece
+            if action_number - piece.move_vector_size >= 0:
+                action_number -= piece.move_vector_size
+                continue
+            return 'move', (piece, action_number)
+
+        # Index overflow
+        error_msg = "Invalid action number, out of bounds"
+        logging.error(error_msg)
+        raise HiveException(error_msg, 10010)
+
     def action_from_vector(self, action_number: int) -> (HivePiece, hexutil.Hex):
         """
         Maps an action number to an actual action. The fixed size action space is explained
@@ -223,42 +260,21 @@ class Hive(object):
         is executed. end_cell is the target location of the action.
         """
         assert action_number >= 0
-        # TODO current player az igy rendben van-e?
-        pieces_list = piece_fact.sorted_piece_list(self.level.current_player)
-        piece_count = len(pieces_list)
-        init_bound = piece_count - 1
-        # [0 ; piece_count -1]
-        if action_number < init_bound:
+        atype, decoded = Hive._decode_action_number(action_number, self.level.current_player)
+        if atype == 'init':
             # That's an initial movement
             if len(self.level.get_played_pieces()) >= 2:
                 error_msg = "Invalid action number, it should not be an initial movement"
                 logging.error(error_msg)
                 raise HiveException(error_msg, 10006)
             # remove queen piece
-            pieces_list = [p for p in pieces_list if p.kind != 'Q']
             if self.level.get_tile_content(hexutil.origin):
                 # It's symmetric, so just pick the first neighbor
-                return pieces_list[action_number], hexutil.origin.neighbours()[0]
+                return decoded, hexutil.origin.neighbours()[0]
             else:
-                return pieces_list[action_number], hexutil.origin
-
-        if len(self.level.get_played_pieces()) < 2:
-            error_msg = "Invalid action number, it ought to be an initial movement"
-            logging.error(error_msg)
-            raise HiveException(error_msg, 10007)
-        # [pc - 1 ; pc - 1 + 6*pc*(pc-1)]
-        adjacent_bug_bound = piece_count - 1
-        one_bug_bound = adjacent_bug_bound * 6
-        placement_bound = init_bound + one_bug_bound * piece_count
-        if action_number < placement_bound:
-            # It is a bug placement
-            inner_action_number = action_number - init_bound
-            action_type = inner_action_number % one_bug_bound
-            piece_number = inner_action_number // one_bug_bound
-            adj_piece_number = action_type // 6
-            direction = (action_type % 6) + 1  # starting from west, clockwise
-            piece = self._piece_from_piece_set(piece_number)
-            adj_piece = self._piece_from_piece_set(adj_piece_number, piece)
+                return decoded, hexutil.origin
+        elif atype == 'place':
+            (piece, adj_piece, direction) = decoded
             # We have to search for the pieces in the stored state, because that's how
             # it will also contain the position of the piece
             adj_piece = self.level.find_piece_played(adj_piece)
@@ -269,14 +285,8 @@ class Hive(object):
             target_cell = self.level.goto_direction(adj_piece.position, direction)
             assert not piece.position
             return piece, target_cell
-
-        # This is a bug movement
-        inner_action_number = action_number - placement_bound
-        for piece in pieces_list:
-            assert inner_action_number >= 0
-            if inner_action_number - piece.move_vector_size >= 0:
-                inner_action_number -= piece.move_vector_size
-                continue
+        elif atype == 'move':
+            (piece, inner_action) = decoded
             stored_piece = self.level.find_piece_played(piece)
             if stored_piece is None:
                 # It should be placed if we want to move it
@@ -284,10 +294,10 @@ class Hive(object):
                 logging.error(error_msg)
                 raise HiveException(error_msg, 10009)
             assert stored_piece.position
-            return stored_piece, stored_piece.index_to_target_cell(self, inner_action_number)
+            return stored_piece, stored_piece.index_to_target_cell(self, inner_action)
 
         # Index overflow
-        error_msg = "Invalid action number, out of bounds"
+        error_msg = "Invalid action"
         logging.error(error_msg)
         raise HiveException(error_msg, 10010)
 

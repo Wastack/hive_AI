@@ -1,6 +1,6 @@
 import math
 import numpy as np
-from utils.ascii_view import HiveView
+import logging
 
 EPS = 1e-8
 

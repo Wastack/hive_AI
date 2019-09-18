@@ -6,6 +6,8 @@ import numpy as np
 import os
 import json, sys
 
+from hivegame.utils import hexutil
+
 BUG_C = 22  # number of bugs without extension
 import logging
 
@@ -115,7 +117,21 @@ class TestRepresentation(TestCase):
         for action_number in indices:
             self.hive.action_from_vector(action_number)
 
-
+    def test_action_numbers(self):
+        self.hive = Hive()
+        self.hive.place_piece_without_action("wB2")
+        self.hive.level.current_player = Player.BLACK
+        self.hive.place_piece_without_action("bB1", "wB2", Direction.HX_W)
+        self.hive.level.current_player = Player.WHITE
+        self.hive.place_piece_without_action("wA2", "wB2", Direction.HX_SE)
+        self.hive.level.current_player = Player.BLACK
+        self.hive.place_piece_without_action("bS2", "bB1", Direction.HX_W)
+        self.hive.level.current_player = Player.WHITE
+        self.assertEqual(represent.get_all_action_vector(self.hive)[90], 0)
+        piece, end_cell = self.hive.action_from_vector(90)
+        self.assertEqual(piece, self.hive.get_piece_by_name("wA2"))
+        self.assertEqual(end_cell, hexutil.Hex(1, -1))
+        logging.debug(self.hive)
 
 if __name__ == '__main__':
     import unittest

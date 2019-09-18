@@ -268,7 +268,6 @@ def get_all_possible_actions_nonidentical(hive: 'Hive') -> (HivePiece, hexutil.H
         return [(p, hexutil.origin.neighbours()[0]) for p in pieces]
     return get_all_possible_actions(hive)
 
-
 def get_all_possible_actions(hive: 'Hive') -> Set[Tuple[HivePiece, hexutil.Hex]]:
     """
     Query for all the possible movements in a given state. The list of actions

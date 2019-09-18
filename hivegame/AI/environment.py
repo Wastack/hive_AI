@@ -108,7 +108,6 @@ class Environment(Game):
         except HiveException as error:
             logging.error("HiveException was caught: {}".format(error))
             logging.error("action number: {}".format(action_number))
-            #logging.error("\n{}".format(HiveView(hive)))
             raise
         # TODO handle pass
         try:
@@ -116,7 +115,6 @@ class Environment(Game):
         except HiveException as error:
             logging.error("HiveException was caught: {}".format(error))
             logging.error("action number: {}, resulting action: ({}, {})".format(action_number, piece, to_cell))
-            #logging.error("\n{}".format(HiveView(hive)))
             raise
         self.debug_hive = hive
         return represent.two_dim_representation(represent.get_adjacency_state(hive)), player*(-1)
