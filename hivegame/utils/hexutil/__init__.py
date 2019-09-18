@@ -19,7 +19,7 @@ class InvalidHex(ValueError):
 
 class Hex(namedtuple("Hex", "x y")):
     "A single hexagon in a hexagonal grid."""
-    _neighbours = ((2, 0), (1, 1), (-1, 1), (-2, 0), (-1, -1), (1, -1))
+    _neighbours = ((-2, 0), (-1, -1), (1, -1), (2, 0), (1, 1), (-1, 1))
 
     def __new__(cls, x, y):
         if (x + y) % 2 != 0:
@@ -27,7 +27,7 @@ class Hex(namedtuple("Hex", "x y")):
         return super().__new__(cls, x, y)
 
     def neighbours(self):
-        """Return the 6 direct neighbours of this hex."""
+        """Return the 6 direct neighbours of this hex. Starting from west, clockwise"""
         x, y = self
         return [Hex(x+dx, y+dy) for dx, dy in self._neighbours]
 

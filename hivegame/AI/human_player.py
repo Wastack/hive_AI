@@ -1,6 +1,6 @@
 from hivegame.AI.player import Player
 from hivegame.hive_utils import Direction, HiveException
-from utils import hexutil
+from hivegame.utils import hexutil
 
 
 class HumanPlayer(Player):

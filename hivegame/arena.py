@@ -1,7 +1,7 @@
 #! /usr/bin/env python
 
 import sys
-from AI.environment import Environment
+from hivegame.AI.environment import Environment
 from hivegame.AI.random_player import RandomPlayer
 from hivegame.AI.human_player import HumanPlayer
 from hivegame.hive_utils import GameStatus

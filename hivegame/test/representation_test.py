@@ -4,10 +4,14 @@ from unittest import TestCase
 from hivegame.hive_utils import Player, Direction
 import numpy as np
 import os
-import json
+import json, sys
 
 BUG_C = 22  # number of bugs without extension
+import logging
 
+FORMAT = "[%(filename)s:%(lineno)s - %(funcName)20s() ] %(message)s"
+logging.basicConfig(level=logging.DEBUG, format=FORMAT)
+logger = logging.getLogger()
 
 class TestRepresentation(TestCase):
     """
@@ -33,6 +37,8 @@ class TestRepresentation(TestCase):
             return np.array(d["repr_list"])
 
     def setUp(self) -> None:
+        self.sh = logging.StreamHandler(sys.stdout)
+        logger.addHandler(self.sh)
         self.hive = Hive()
         pass
 
@@ -82,7 +88,7 @@ class TestRepresentation(TestCase):
 
         # Test transforming it back to the list representation
         result = represent.two_dim_representation(represent.get_adjacency_state(self.hive))
-        np.testing.assert_equal(represent.two_dim_representation(represent.get_adjacency_state(self.hive)), input_list)
+        np.testing.assert_equal(result, input_list)
 
     def test_action_vector(self):
         self.hive = Hive.load_state_with_player(self._list_repr, Player.WHITE)
@@ -93,8 +99,6 @@ class TestRepresentation(TestCase):
             d = json.load(f)
             res = represent.get_all_action_vector(self.hive)
             print(res)
-            print(d["test_action_vector"])
-            # TODO
             assert all([a == b for a,b in zip(res, d["test_action_vector"])])
 
     def test_actions_from_vector(self):

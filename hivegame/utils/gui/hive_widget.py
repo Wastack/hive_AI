@@ -2,7 +2,7 @@ import sys
 
 from PyQt5 import QtCore, QtGui, QtWidgets
 
-from hive_utils import Player, HiveException
+from hivegame.hive_utils import Player
 from hivegame.hive import Hive
 from hivegame.utils import hexutil
 from hivegame.utils.game_state import GameState

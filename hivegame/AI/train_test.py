@@ -25,7 +25,8 @@ args = dotdict({
 })
 
 def main():
-    logging.basicConfig(level=logging.INFO)
+    FORMAT = "[%(filename)s:%(lineno)s - %(funcName)20s() ] %(message)s"
+    logging.basicConfig(level=logging.DEBUG, format=FORMAT)
     env = Environment()
     nnet = NNetWrapper(env)
     c = Coach(env, nnet, args)

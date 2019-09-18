@@ -2,7 +2,7 @@ from __future__ import annotations
 from hivegame.pieces.piece import HivePiece
 
 from typing import TYPE_CHECKING
-from utils import hexutil
+from hivegame.utils import hexutil
 if TYPE_CHECKING:
     from hivegame.hive import Hive
 
@@ -59,6 +59,8 @@ class AntPiece(HivePiece):
             visited.update(found)
             toExplore = found
         hive.level.tiles[self.position] = [self]
+        # cannot step to the same tile
+        visited.remove(self.position)
         return sorted(visited)
 
     def available_moves_vector(self, hive: 'Hive'):

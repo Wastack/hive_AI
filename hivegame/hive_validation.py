@@ -127,17 +127,22 @@ def validate_one_hive(hive: 'Hive', piece: 'HivePiece'):
     """
     # if the piece is not in the board then placing it won't break the hive
     if piece.position is None:
+        logging.error("Calling one-hive on a piece not yet placed")
         return True
 
     # if there is another piece in the same cell then the one hive rule
     # won't be broken
     piece_list = hive.level.get_tile_content(piece.position)
     if len(piece_list) > 1:
+        logging.info("Calling one-hive on tile with multiple elements")
         return True
 
     if not hive.level.tiles:
+        logging.error("One hive rule called on empty tile")
         return True
 
+    # temporary remove piece
+    del hive.level.tiles[piece.position]
     # Get all pieces that are in contact with the removed one and try to
     # reach all of them from one of them.
     occupied = hive.level.occupied_surroundings(piece.position)
@@ -151,12 +156,11 @@ def validate_one_hive(hive: 'Hive', piece: 'HivePiece'):
         found = []
         for cell in to_explore:
             found += hive.level.occupied_surroundings(cell)
-            if piece.position in found:
-                found.remove(piece.position)  # as if the current piece would be removed
             visited.add(cell)
         to_explore = set(found) - visited
         if to_reach.issubset(visited):
             res = True
             break
+    hive.level.tiles[piece.position] = [piece]
 
     return res

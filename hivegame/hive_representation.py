@@ -8,6 +8,7 @@ from hivegame.utils.game_state import GameState
 
 from typing import Dict, List, Set, Tuple
 import numpy as np
+import logging
 
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
@@ -29,8 +30,8 @@ if TYPE_CHECKING:
 #
 #   + eg. in row of bA2 and column of bG1 there is a 3.
 #     That means bG1 is north-east from bA2.
-from pieces.piece import HivePiece
-from utils import hexutil
+from hivegame.pieces.piece import HivePiece
+from hivegame.utils import hexutil
 
 
 def get_adjacency_state(hive: 'Hive') -> Dict[str, Dict[str, int]]:
@@ -240,9 +241,12 @@ def get_all_action_vector(hive: 'Hive') -> List[int]:
         #  - not yet placed
         #  - queen not yet placed
         #  - If picking up the piece would break the one-hive rule
-        if not p_pos or not hive.get_piece_by_name(get_queen_name(hive.current_player)).position or\
-                not valid.validate_one_hive(hive, p):
+        if not p_pos:
             result += [0] * p.move_vector_size
+            continue
+        if not hive.get_piece_by_name(get_queen_name(hive.current_player)).position or\
+                not valid.validate_one_hive(hive, p_pos):
+            result += [0] * p_pos.move_vector_size
             continue
 
         result += p_pos.available_moves_vector(hive)

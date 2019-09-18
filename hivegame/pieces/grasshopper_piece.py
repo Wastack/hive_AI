@@ -2,7 +2,7 @@ from hivegame.pieces.piece import HivePiece
 from hivegame.hive_utils import Direction
 
 from typing import TYPE_CHECKING
-from utils import hexutil
+from hivegame.utils import hexutil
 if TYPE_CHECKING:
     from hivegame.hive import Hive
 

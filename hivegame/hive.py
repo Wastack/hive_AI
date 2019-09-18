@@ -11,7 +11,7 @@ from hivegame.pieces.bee_piece import BeePiece
 from hivegame.pieces.piece import HivePiece
 
 from hivegame.hive_utils import Player, HiveException, GameStatus, Direction
-from utils.ascii_view import HiveView
+from hivegame.utils.ascii_view import HiveView
 
 import hivegame.hive_validation as valid
 import hivegame.hive_representation as represent
@@ -234,6 +234,8 @@ class Hive(object):
                 error_msg = "Invalid action number, it should not be an initial movement"
                 logging.error(error_msg)
                 raise HiveException(error_msg, 10006)
+            # remove queen piece
+            pieces_list = [p for p in pieces_list if p.kind != 'Q']
             if self.level.get_tile_content(hexutil.origin):
                 # It's symmetric, so just pick the first neighbor
                 return pieces_list[action_number], hexutil.origin.neighbours()[0]
@@ -265,6 +267,7 @@ class Hive(object):
                 logging.error(error_msg)
                 raise HiveException(error_msg, 10008)
             target_cell = self.level.goto_direction(adj_piece.position, direction)
+            assert not piece.position
             return piece, target_cell
 
         # This is a bug movement
@@ -280,6 +283,7 @@ class Hive(object):
                 error_msg = "Invalid action number, trying to move a piece which is not yet placed"
                 logging.error(error_msg)
                 raise HiveException(error_msg, 10009)
+            assert stored_piece.position
             return stored_piece, stored_piece.index_to_target_cell(self, inner_action_number)
 
         # Index overflow
