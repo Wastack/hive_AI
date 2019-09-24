@@ -61,6 +61,8 @@ class GrassHopperPiece(HivePiece):
 
     def index_to_target_cell(self, hive: 'Hive', number: int):
         aval_moves = self.available_moves(hive)
-        num_in_list = sum(self.available_moves_vector(hive)[:number])
+        # index of available moves, starting from 0
+        num_in_list = sum(self.available_moves_vector(hive)[:number]) - 1
+        assert len(aval_moves) > num_in_list
         return aval_moves[num_in_list]
     

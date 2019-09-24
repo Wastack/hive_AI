@@ -26,7 +26,7 @@ class HivePiece(metaclass=abc.ABCMeta):
     def __repr__(self):
         return "%s%s%s" % (self.color, "?", self.number)
     
-    def check_blocked(self, hive: 'Hive'):
+    def check_blocked(self, hive: 'Hive') -> bool:
         """
         Check if the piece is blocked by a beetle. Returns True if blocked
         """
@@ -56,9 +56,9 @@ class HivePiece(metaclass=abc.ABCMeta):
     def available_moves_vector(self, hive: 'Hive'):
         return []
 
-    def index_to_target_cell(self, hive: 'Hive', number: int):
+    def index_to_target_cell(self, hive: 'Hive', number: int) -> 'hexutil.Hex':
         aval_moves = self.available_moves(hive)
-        if len(aval_moves) < number or number >= self.move_vector_size:
+        if len(aval_moves) <= number or number >= self.move_vector_size:
             raise HiveException("moving piece with action number is out of bounds", 10001)
         return aval_moves[number]
 

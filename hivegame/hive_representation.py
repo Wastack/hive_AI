@@ -1,4 +1,4 @@
-from hivegame.hive_utils import Direction, Player, get_queen_name
+from hivegame.hive_utils import Direction, Player, get_queen_name, HiveException
 import hivegame.hive_validation as valid
 import hivegame.pieces.piece_factory as piece_fact
 from hivegame.pieces.ant_piece import AntPiece
@@ -254,6 +254,17 @@ def get_all_action_vector(hive: 'Hive') -> List[int]:
     expected_len = len(piece_list) - 1 + (possible_neighbor_count * direction_count) * len(piece_list) + \
                    1 * 6 + 3 * 6 + 3 * AntPiece.MAX_STEP_COUNT + 2 * SpiderPiece.MAX_STEP_COUNT + 2 * 6
     assert len(result) == expected_len
+
+    # Validating. Remove this part for a faster code
+    for i, v in enumerate(result):
+        if v == 1:
+            assert hive.validate_action(*hive.action_from_vector(i))
+        else:
+            try:
+                assert not hive.validate_action(*hive.action_from_vector(i))
+            except HiveException:
+                pass
+
     return result
 
 

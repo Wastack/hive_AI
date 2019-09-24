@@ -19,7 +19,7 @@ import hivegame.pieces.piece_factory as piece_fact
 
 import logging
 
-from typing import List, Tuple, Optional, Union
+from typing import List, Tuple, Optional, Union, Any
 
 
 class Hive(object):
@@ -83,6 +83,26 @@ class Hive(object):
         else:
             self._move_piece_to(piece, target_cell)
         self.level.current_player = self._toggle_player(self.level.current_player)
+
+    def validate_action(self, piece: HivePiece, target_cell: hexutil.Hex) -> bool:
+        # movement
+        if piece.position is None:
+            if not valid.validate_turn(self, piece, 'place'):
+                logging.info("Turn fault (movement)")
+                return False
+
+            if not valid.validate_place_piece(self, piece, target_cell):
+                logging.info("Invalid piece placement")
+                return False
+        # placement
+        if not valid.validate_turn(self, piece, 'place'):
+            logging.info("Turn fault (placement)")
+            return False
+
+        if not valid.validate_place_piece(self, piece, target_cell):
+            logging.info("Invalid piece placement")
+            return False
+        return True
 
     def _move_piece_to(self, piece: HivePiece, target_cell: hexutil.Hex) -> None:
         """

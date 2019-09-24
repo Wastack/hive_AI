@@ -133,6 +133,7 @@ class TestRepresentation(TestCase):
         self.assertEqual(end_cell, hexutil.Hex(1, -1))
         logging.debug(self.hive)
 
+
 if __name__ == '__main__':
     import unittest
     unittest.main()
