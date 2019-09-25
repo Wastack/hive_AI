@@ -52,8 +52,8 @@ def get_adjacency_state(hive: 'Hive') -> Dict[str, Dict[str, int]]:
             if col != row:
                 result[row][col] = 0
 
-    for piece, relations in result.items():
-        cell = hive.locate(piece)
+    for piece_str, relations in result.items():
+        cell = hive.locate(piece_str)
 
         # the piece is not set yet
         if not cell:
@@ -66,14 +66,15 @@ def get_adjacency_state(hive: 'Hive') -> Dict[str, Dict[str, int]]:
         # check if there are more pieces at the same cell (beetles)
         pieces_in_cell = hive.level.get_tile_content(cell)
         if len(pieces_in_cell) > 1:
+            piece = piece_fact.name_to_piece(piece_str)
             # get index in list
-            position = pieces_in_cell.index(piece)
+            idx_piece = pieces_in_cell.index(piece)
             # set relations to the lower pieces
-            for lower_piece in pieces_in_cell[:position]:
+            for lower_piece in pieces_in_cell[:idx_piece]:
                 relations[lower_piece] = Direction.HX_LOW
             # set relations to the higher pieces (if any)
-            if position + 1 < len(pieces_in_cell):
-                for upper_piece in pieces_in_cell[position + 1:]:
+            if idx_piece + 1 < len(pieces_in_cell):
+                for upper_piece in pieces_in_cell[idx_piece + 1:]:
                     relations[upper_piece] = Direction.HX_UP
 
         surrounding_cells = hive.level.occupied_surroundings(cell)
