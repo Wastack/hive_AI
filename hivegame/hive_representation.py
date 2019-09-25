@@ -204,9 +204,8 @@ def get_all_action_vector(hive: 'Hive') -> List[int]:
         # Cannot place piece if:
         #   - it is already placed or
         #   - If the queen is not yet played in the fourth turn
-        if p in my_pieces or (len(my_pieces) == 3 and
-                              not hive.get_piece_by_name(get_queen_name(hive.current_player)).position and
-                              p.kind != "Q"):
+        queen_pos = hive.locate(get_queen_name(hive.current_player))
+        if p in my_pieces or (len(my_pieces) == 3 and not queen_pos and p.kind != "Q"):
             result += [0] * (possible_neighbor_count * direction_count)
         else:
             for adj_piece in piece_list:
@@ -214,18 +213,18 @@ def get_all_action_vector(hive: 'Hive') -> List[int]:
                 if adj_piece == p:
                     continue
                 # find position on board
-                adj_piece = hive.level.find_piece_played(adj_piece)
-                if adj_piece is None:
+                adj_pos = hive.level.find_piece_position(adj_piece)
+                if not adj_pos:
                     # neighbor candidate not placed yet
                     result += [0] * direction_count
                     continue
                 # get all boundary free cells
-                surroundings = adj_piece.position.neighbours()
+                surroundings = adj_pos.neighbours()
                 for sur in surroundings:
                     if hive.level.get_tile_content(sur):
                         result.append(0)  # it is already occupied
                     # cannot place if it is adjacent with the opponent
-                    elif   any(hive.level.get_tile_content(nb_of_nb)[-1].color !=
+                    elif any(hive.level.get_tile_content(nb_of_nb)[-1].color !=
                                  hive.level.current_player for nb_of_nb in hive.level.occupied_surroundings(sur)):
                         result.append(0)
                     else:
@@ -235,7 +234,7 @@ def get_all_action_vector(hive: 'Hive') -> List[int]:
     # moving pieces
     for p in piece_list:
         # find piece on board
-        p_pos = hive.level.find_piece_played(p)
+        p_pos = hive.level.find_piece_position(p)
 
         # It cannot move if:
         #  - not yet placed
@@ -244,26 +243,27 @@ def get_all_action_vector(hive: 'Hive') -> List[int]:
         if not p_pos:
             result += [0] * p.move_vector_size
             continue
-        if not hive.get_piece_by_name(get_queen_name(hive.current_player)).position or\
-                not valid.validate_one_hive(hive, p_pos):
-            result += [0] * p_pos.move_vector_size
+        queen_pos = hive.locate(get_queen_name(hive.current_player))
+        if not queen_pos or not valid.validate_one_hive(hive, p_pos, p):
+            result += [0] * p.move_vector_size
             continue
 
-        result += p_pos.available_moves_vector(hive)
+        result += p.available_moves_vector(hive, p_pos)
 
     expected_len = len(piece_list) - 1 + (possible_neighbor_count * direction_count) * len(piece_list) + \
                    1 * 6 + 3 * 6 + 3 * AntPiece.MAX_STEP_COUNT + 2 * SpiderPiece.MAX_STEP_COUNT + 2 * 6
     assert len(result) == expected_len
 
     # Validating. Remove this part for a faster code
-    for i, v in enumerate(result):
-        if v == 1:
-            assert hive.validate_action(*hive.action_from_vector(i))
-        else:
-            try:
-                assert not hive.validate_action(*hive.action_from_vector(i))
-            except HiveException:
-                pass
+    #for i, v in enumerate(result):
+    #    if v == 1:
+    #        assert hive.validate_action(*hive.action_from_vector(i))
+    #    else:
+    #        try:
+    #            if hive.validate_action(*hive.action_from_vector(i)):
+    #                assert False
+    #        except:
+    #            pass
 
     return result
 
@@ -278,6 +278,7 @@ def get_all_possible_actions_nonidentical(hive: 'Hive') -> (HivePiece, hexutil.H
         pieces = [p for p in hive.level.get_unplayed_pieces(hive.current_player) if p.kind != "Q"]
         return [(p, hexutil.origin.neighbours()[0]) for p in pieces]
     return get_all_possible_actions(hive)
+
 
 def get_all_possible_actions(hive: 'Hive') -> Set[Tuple[HivePiece, hexutil.Hex]]:
     """
@@ -308,13 +309,16 @@ def get_all_possible_actions(hive: 'Hive') -> Set[Tuple[HivePiece, hexutil.Hex]]
 
     # Collect action from moving pieces
     # It can only happen if queen is set
-    if hive.get_piece_by_name(get_queen_name(hive.current_player)).position:
+    queen_pos = hive.locate(get_queen_name(hive.current_player))
+    if queen_pos:
         # Actions of pieces already on board
         for piece in my_pieces:
-            if not valid.validate_one_hive(hive, piece):
+            # TODO get position more efficient
+            p_pos = hive.level.find_piece_position(piece)
+            if not valid.validate_one_hive(hive, p_pos, piece):
                 continue
-            end_cells = piece.available_moves(hive)
-            result.update([(piece, end_cell) for end_cell in end_cells if end_cell != piece.position])
+            end_cells = piece.available_moves(hive, p_pos)
+            result.update([(piece, end_cell) for end_cell in end_cells if end_cell != p_pos])
 
     # pieces which can be put down from hand
     pieces_to_put_down = set()
@@ -322,14 +326,15 @@ def get_all_possible_actions(hive: 'Hive') -> Set[Tuple[HivePiece, hexutil.Hex]]
     available_cells = set()
 
     queen_piece = hive.get_piece_by_name(get_queen_name(hive.current_player))
-    if len(my_pieces) == 3 and not queen_piece.position:
+    if len(my_pieces) == 3 and not queen_pos:
         pieces_to_put_down.add(queen_piece)
     else:
         pieces_to_put_down.update(hive.level.get_unplayed_pieces(hive.current_player))
 
     # get all boundary free cells
     for p in my_pieces:
-        nbs = p.position.neighbours()
+        p_pos = hive.level.find_piece_position(p)
+        nbs = p_pos.neighbours()
         available_cells.update({sur for sur in nbs if not hive.level.get_tile_content(sur)})
     # Keep only those which have no opposite side neighbors
     cells_to_remove = set()

@@ -3,7 +3,8 @@ from hivegame.hive_utils import get_queen_name
 from hivegame.pieces.bee_piece import BeePiece
 import logging
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional
+
 if TYPE_CHECKING:
     from hivegame.hive import Hive
     from hivegame.pieces.piece import HivePiece
@@ -24,16 +25,16 @@ def validate_queen_rules(hive: 'Hive', piece: 'HivePiece', action: str) -> bool:
         logging.info("Queen should not be placed in the first turn")
         return False
 
-    queen = hive.get_piece_by_name(get_queen_name(hive.current_player))
+    queen_pos = hive.locate(get_queen_name(hive.current_player))
 
     # Move actions are only allowed after the queen is on the board
     if action == 'move':
-        if not queen.position:
+        if not queen_pos:
             logging.info("Move actions not permitted until queen is on board")
             return False
 
     # White Queen must be placed by turn 7 (4th white action), black queen in turn 8
-    if len(hive.level.get_played_pieces(hive.current_player)) >= 3 and not queen.position:
+    if len(hive.level.get_played_pieces(hive.current_player)) >= 3 and not queen_pos:
         if piece.kind != 'Q' or action != 'place':
             logging.info("Queen should be placed now")
             return False
@@ -41,12 +42,12 @@ def validate_queen_rules(hive: 'Hive', piece: 'HivePiece', action: str) -> bool:
     return True
 
 
-def validate_turn(hive: 'Hive', piece: 'HivePiece', action: str) -> bool:
+def validate_turn(hive: 'Hive', pos: Optional[hexutil.Hex], piece: 'HivePiece') -> bool:
     """
     Verifies if the action is valid on this turn.
     :param hive: State of game
     :param piece: Piece on which the action is performed
-    :param action: move or place
+    :param pos: Current position of piece
     :return: Whether the action is valid or not
     """
 
@@ -55,32 +56,33 @@ def validate_turn(hive: 'Hive', piece: 'HivePiece', action: str) -> bool:
         logging.info("validate_turn: Attempt to move or place a piece with wrong color")
         return False
 
+    action_type = "move" if pos else "place"
     # Validate queen rules
-    if not validate_queen_rules(hive, piece, action):
+    if not validate_queen_rules(hive, piece, action_type):
         logging.info("validate_turn: Queen rules violated")
         return False
 
     return True
 
 
-def validate_move_piece(hive: 'Hive', moving_piece: 'HivePiece', target_cell: hexutil.Hex) -> bool:
+def validate_move_piece(hive: 'Hive', moving_piece: 'HivePiece', pos: hexutil.Hex, target_cell: hexutil.Hex) -> bool:
     # check if the piece has been placed
-    moving_piece = hive.level.find_piece_played(moving_piece)
-    if moving_piece is None:
+    check_pos = hive.level.find_piece_position(moving_piece)
+    if check_pos is None:
         logging.info("validate_move_piece: piece was not played yet")
         return False
 
     # Do not move to the very same cell
-    if moving_piece.position == target_cell:
+    if pos == target_cell:
         logging.info("validate_move_piece: moving to the same place")
         return False
 
     # check if moving this piece won't break the hive
-    if not validate_one_hive(hive, moving_piece):
+    if not validate_one_hive(hive, pos, moving_piece):
         logging.info("validate_move_piece: break one_hive rule")
         return False
 
-    if not moving_piece.validate_move(hive, target_cell):
+    if not moving_piece.validate_move(hive, target_cell, pos):
         logging.info("validate_move_piece: piece is unable to move there")
         return False
     return True
@@ -102,7 +104,7 @@ def validate_place_piece(hive: 'Hive', piece: 'HivePiece', target_cell: hexutil.
         logging.info("validate_place_piece: cell not free")
         return False
 
-    if hive.level.find_piece_played(piece):
+    if hive.level.find_piece_position(piece):
         logging.info("validate_place_piece: piece has been already placed")
         return False
 
@@ -118,7 +120,7 @@ def validate_place_piece(hive: 'Hive', piece: 'HivePiece', target_cell: hexutil.
     return True
 
 
-def validate_one_hive(hive: 'Hive', piece: 'HivePiece'):
+def validate_one_hive(hive: 'Hive', pos: hexutil.Hex, piece: 'HivePiece'):
     """
     Check if removing a piece doesn't break the one hive rule.
     :param hive: game state
@@ -126,13 +128,13 @@ def validate_one_hive(hive: 'Hive', piece: 'HivePiece'):
     :return: False if the hive is broken.
     """
     # if the piece is not in the board then placing it won't break the hive
-    if piece.position is None:
+    if not pos:
         logging.error("Calling one-hive on a piece not yet placed")
         return True
 
     # if there is another piece in the same cell then the one hive rule
     # won't be broken
-    piece_list = hive.level.get_tile_content(piece.position)
+    piece_list = hive.level.get_tile_content(pos)
     if len(piece_list) > 1:
         logging.info("Calling one-hive on tile with multiple elements")
         return True
@@ -142,10 +144,10 @@ def validate_one_hive(hive: 'Hive', piece: 'HivePiece'):
         return True
 
     # temporary remove piece
-    del hive.level.tiles[piece.position]
+    del hive.level.tiles[pos]
     # Get all pieces that are in contact with the removed one and try to
     # reach all of them from one of them.
-    occupied = hive.level.occupied_surroundings(piece.position)
+    occupied = hive.level.occupied_surroundings(pos)
     assert occupied
     visited = set()
     to_explore = {occupied[0]}
@@ -161,6 +163,6 @@ def validate_one_hive(hive: 'Hive', piece: 'HivePiece'):
         if to_reach.issubset(visited):
             res = True
             break
-    hive.level.tiles[piece.position] = [piece]
+    hive.level.tiles[pos] = [piece]
 
     return res

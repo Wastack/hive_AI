@@ -52,8 +52,10 @@ class TestHive(TestCase):
         logger.removeHandler(self.sh)
 
     def test_one_hive(self):
-        self.assertFalse(valid.validate_one_hive(self.hive, self.hive.get_piece_by_name('wS1')))
-        self.assertTrue(valid.validate_one_hive(self.hive, self.hive.get_piece_by_name('wQ1')))
+        wS1 = self.hive.get_piece_by_name('wS1')
+        wS1_pos = self.hive.level.find_piece_position(wS1)
+        self.assertFalse(valid.validate_one_hive(self.hive, wS1_pos, wS1))
+        self.assertTrue(valid.validate_one_hive(self.hive, self.hive.locate('wQ1'), self.hive.get_piece_by_name('wQ1')))
 
     def test_one_hive_with_load_state(self):
         #for k,v in represent.get_adjacency_state(self.hive).items():
@@ -62,8 +64,8 @@ class TestHive(TestCase):
         hive = Hive.load_state_with_player(represent.two_dim_representation(represent.get_adjacency_state(self.hive)),
                                          self.hive.current_player)
 
-        self.assertFalse(valid.validate_one_hive(hive, hive.get_piece_by_name('wS1')))
-        self.assertTrue(valid.validate_one_hive(hive, hive.get_piece_by_name('wQ1')))
+        self.assertFalse(valid.validate_one_hive(hive, hive.locate('wS1'), hive.get_piece_by_name('wS1')))
+        self.assertTrue(valid.validate_one_hive(hive, hive.locate("wQ1"), hive.get_piece_by_name('wQ1')))
 
     def test_bee_moves(self):
         print(self.hive)
@@ -82,52 +84,52 @@ class TestHive(TestCase):
     def test_ant_moves(self):
         end_cell = self.hive.poc2cell('wS1', Direction.HX_W)
         self.assertFalse(
-            self.hive.get_piece_by_name('bA1').validate_move(self.hive, end_cell)
+            self.hive.get_piece_by_name('bA1').validate_move(self.hive, end_cell, self.hive.locate("bA1"))
         )
 
         end_cell = self.hive.poc2cell('wS2', Direction.HX_SW)
         self.assertTrue(
-            self.hive.get_piece_by_name('bA1').validate_move(self.hive, end_cell)
+            self.hive.get_piece_by_name('bA1').validate_move(self.hive, end_cell, self.hive.locate("bA1"))
         )
 
         end_cell = self.hive.poc2cell('bA1', Direction.HX_SW)
         self.assertTrue(
-            self.hive.get_piece_by_name('bA1').validate_move(self.hive, end_cell)
+            self.hive.get_piece_by_name('bA1').validate_move(self.hive, end_cell, self.hive.locate("bA1"))
         )
 
         end_cell = self.hive.poc2cell('bS1', Direction.HX_SW)
         self.assertTrue(
-            self.hive.get_piece_by_name('bA1').validate_move(self.hive, end_cell)
+            self.hive.get_piece_by_name('bA1').validate_move(self.hive, end_cell, self.hive.locate("bA1"))
         )
 
         end_cell = self.hive.poc2cell('wS1', Direction.HX_NE)
         self.assertTrue(
-            self.hive.get_piece_by_name('bA1').validate_move(self.hive, end_cell)
+            self.hive.get_piece_by_name('bA1').validate_move(self.hive, end_cell, self.hive.locate("bA1"))
         )
 
         end_cell = self.hive.poc2cell('wQ1', Direction.HX_W)
         self.assertTrue(
-            self.hive.get_piece_by_name('bA1').validate_move(self.hive, end_cell)
+            self.hive.get_piece_by_name('bA1').validate_move(self.hive, end_cell, self.hive.locate("bA1"))
         )
 
     def test_beetle_moves(self):
         # moving in the ground level
         end_cell = self.hive.poc2cell('wS2', Direction.HX_E)
         self.assertTrue(
-            self.hive.get_piece_by_name('bB1').validate_move(self.hive, end_cell)
+            self.hive.get_piece_by_name('bB1').validate_move(self.hive, end_cell, self.hive.locate("bB1"))
         )
 
         self.hive.level.current_player = Player.WHITE
         self.hive.place_piece_without_action('wB2', 'wQ1', Direction.HX_W)
         end_cell = self.hive.poc2cell('wQ1', Direction.HX_SE)
         self.assertFalse(
-            self.hive.get_piece_by_name('bB1').validate_move(self.hive, end_cell)
+            self.hive.get_piece_by_name('bB1').validate_move(self.hive, end_cell, self.hive.locate("bB1"))
         )
 
         # moving from ground to top
         end_cell = self.hive.poc2cell('bS1', Direction.HX_O)
         self.assertTrue(
-            self.hive.get_piece_by_name('bB1').validate_move(self.hive, end_cell)
+            self.hive.get_piece_by_name('bB1').validate_move(self.hive, end_cell, self.hive.locate("bB1"))
         )
 
         # moving on top of the pieces
@@ -135,53 +137,53 @@ class TestHive(TestCase):
         self.hive.move_piece_without_action('bB1', 'bS1', Direction.HX_O)
         end_cell = self.hive.poc2cell('bS1', Direction.HX_E)
         self.assertTrue(
-            self.hive.get_piece_by_name('bB1').validate_move(self.hive, end_cell)
+            self.hive.get_piece_by_name('bB1').validate_move(self.hive, end_cell, self.hive.locate("bB1"))
         )
 
         self.hive.move_piece_without_action('bB1', 'bS1', Direction.HX_E)
         # Piece under beetle should be blocked
         end_cell = self.hive.poc2cell('bA1', Direction.HX_E)
         self.assertFalse(
-            self.hive.get_piece_by_name('bG1').validate_move(self.hive, end_cell)
+            self.hive.get_piece_by_name('bG1').validate_move(self.hive, end_cell, self.hive.locate("bG1"))
         )
 
         # moving from top to ground
         end_cell = self.hive.poc2cell('bG1', Direction.HX_E)
         self.assertTrue(
-            self.hive.get_piece_by_name('bB1').validate_move(self.hive, end_cell)
+            self.hive.get_piece_by_name('bB1').validate_move(self.hive, end_cell, self.hive.locate("bB1"))
         )
 
     def test_grasshopper_moves(self):
         end_cell = self.hive.poc2cell('wS1', Direction.HX_W)
         self.assertTrue(
-            self.hive.get_piece_by_name('bG1').validate_move(self.hive, end_cell)
+            self.hive.get_piece_by_name('bG1').validate_move(self.hive, end_cell, self.hive.locate("bG1"))
         )
 
         end_cell = self.hive.poc2cell('bA1', Direction.HX_NW)
         self.assertTrue(
-            self.hive.get_piece_by_name('bG1').validate_move(self.hive, end_cell)
+            self.hive.get_piece_by_name('bG1').validate_move(self.hive, end_cell, self.hive.locate("bG1"))
         )
 
         end_cell = self.hive.poc2cell('wG1', Direction.HX_W)
         self.assertFalse(
-            self.hive.get_piece_by_name('bG1').validate_move(self.hive, end_cell)
+            self.hive.get_piece_by_name('bG1').validate_move(self.hive, end_cell, self.hive.locate("bG1"))
         )
 
         end_cell = self.hive.poc2cell('wB1', Direction.HX_SE)
         self.assertTrue(
-            self.hive.get_piece_by_name('wG1').validate_move(self.hive, end_cell)
+            self.hive.get_piece_by_name('wG1').validate_move(self.hive, end_cell, self.hive.locate("wG1"))
         )
 
     def test_queen_moves(self):
         print(self.hive)
         end_cell = self.hive.poc2cell('bQ1', Direction.HX_E)
         self.assertTrue(
-            self.hive.get_piece_by_name('bQ1').validate_move(self.hive, end_cell)
+            self.hive.get_piece_by_name('bQ1').validate_move(self.hive, end_cell, self.hive.locate("bQ1"))
         )
 
         end_cell = self.hive.poc2cell('bQ1', Direction.HX_W)
         self.assertFalse(
-            self.hive.get_piece_by_name('bQ1').validate_move(self.hive, end_cell)
+            self.hive.get_piece_by_name('bQ1').validate_move(self.hive, end_cell, self.hive.locate("bQ1"))
         )
 
         # moving out of a surrounding situation
@@ -193,7 +195,7 @@ class TestHive(TestCase):
 
         end_cell = self.hive.poc2cell('wS1', Direction.HX_NW)
         self.assertFalse(
-            self.hive.get_piece_by_name('wQ1').validate_move(self.hive, end_cell)
+            self.hive.get_piece_by_name('wQ1').validate_move(self.hive, end_cell, self.hive.locate("wQ1"))
         )
 
     def test_spider_moves(self):
@@ -201,27 +203,27 @@ class TestHive(TestCase):
 
         end_cell = self.hive.poc2cell('wQ1', Direction.HX_E)
         self.assertFalse(
-            self.hive.get_piece_by_name('bS2').validate_move(self.hive, end_cell)
+            self.hive.get_piece_by_name('bS2').validate_move(self.hive, end_cell, self.hive.locate("bS2"))
         )
 
         end_cell = self.hive.poc2cell('wQ1', Direction.HX_NW)
         self.assertTrue(
-            self.hive.get_piece_by_name('bS2').validate_move(self.hive, end_cell)
+            self.hive.get_piece_by_name('bS2').validate_move(self.hive, end_cell, self.hive.locate("bS2"))
         )
 
         end_cell = self.hive.poc2cell('wQ1', Direction.HX_W)
         self.assertFalse(
-            self.hive.get_piece_by_name('bS2').validate_move(self.hive, end_cell)
+            self.hive.get_piece_by_name('bS2').validate_move(self.hive, end_cell, self.hive.locate("bS2"))
         )
 
         end_cell = self.hive.poc2cell('bG1', Direction.HX_E)
         self.assertTrue(
-            self.hive.get_piece_by_name('bS2').validate_move(self.hive, end_cell)
+            self.hive.get_piece_by_name('bS2').validate_move(self.hive, end_cell, self.hive.locate("bS2"))
         )
 
         end_cell = self.hive.poc2cell('bA1', Direction.HX_E)
         self.assertFalse(
-            self.hive.get_piece_by_name('bS2').validate_move(self.hive, end_cell)
+            self.hive.get_piece_by_name('bS2').validate_move(self.hive, end_cell, self.hive.locate("bS2"))
         )
 
     def test_spider_moves2(self):
@@ -229,7 +231,7 @@ class TestHive(TestCase):
 
         end_cell = self.hive.poc2cell('wS2', Direction.HX_SE)
         self.assertTrue(
-            self.hive.get_piece_by_name('bS2').validate_move(self.hive, end_cell)
+            self.hive.get_piece_by_name('bS2').validate_move(self.hive, end_cell, self.hive.locate("bS2"))
         )
 
     def test_validate_place_piece(self):
@@ -285,6 +287,9 @@ class TestHive(TestCase):
         hive = Hive()
 
         hive.action_piece_to(AntPiece('w', 1), hexutil.origin)
+
+        # Check if placement succeeded
+        self.assertEqual(hexutil.origin, hive.locate('wA1'))
         hive.action_piece_to(hive.get_piece_by_name('bA1'), hive.level.goto_direction(hexutil.origin, Direction.HX_SW))
         try:
             # This placement fails

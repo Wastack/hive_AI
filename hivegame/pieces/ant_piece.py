@@ -10,14 +10,17 @@ if TYPE_CHECKING:
 class AntPiece(HivePiece):
     MAX_STEP_COUNT = 50
 
-    def validate_move(self, hive: 'Hive', end_cell: hexutil.Hex):
-        if self.check_blocked(hive):
+    def __new__(cls, color, number):
+        return super().__new__(cls, color, "A", number)
+
+    def validate_move(self, hive: 'Hive', end_cell: hexutil.Hex, pos: hexutil.Hex):
+        if self.check_blocked(hive, pos):
             return False
         # remove piece temporary
-        del hive.level.tiles[self.position]
+        del hive.level.tiles[pos]
 
-        toExplore = {self.position}
-        visited = {self.position}
+        toExplore = {pos}
+        visited = {pos}
         res = False
 
         while len(toExplore) > 0:
@@ -33,22 +36,22 @@ class AntPiece(HivePiece):
             visited.update(found)
             toExplore = found
 
-        hive.level.tiles[self.position] = [self]
+        hive.level.tiles[pos] = [self]
         return res
     
-    def available_moves(self, hive: 'Hive'):
+    def available_moves(self, hive: 'Hive', pos: hexutil.Hex):
         """
         :return: available moves. The order of the list depends on the distance of the target cell.
         Cells in a shorter distance come first.
         """
-        super().available_moves(hive)
-        if self.check_blocked(hive):
+        super().available_moves(hive, pos)
+        if self.check_blocked(hive, pos):
             return []
         # remove piece temporary
-        del hive.level.tiles[self.position]
+        del hive.level.tiles[pos]
 
-        toExplore = {self.position}
-        visited = {self.position}
+        toExplore = {pos}
+        visited = {pos}
 
         while len(toExplore) > 0:
             found = set()
@@ -58,16 +61,16 @@ class AntPiece(HivePiece):
 
             visited.update(found)
             toExplore = found
-        hive.level.tiles[self.position] = [self]
+        hive.level.tiles[pos] = [self]
         # cannot step to the same tile
-        visited.remove(self.position)
+        visited.remove(pos)
         return sorted(visited)
 
-    def available_moves_vector(self, hive: 'Hive'):
+    def available_moves_vector(self, hive: 'Hive', pos: hexutil.Hex):
         """
-        It assumes that the ant can step onto a maximum of pre-specified number of cells
+        It assumes that the ant can step onto a maximum of pre-specifihive.locate('wA1')ed number of cells
         """
-        available_moves_count = len(self.available_moves(hive))
+        available_moves_count = len(self.available_moves(hive, pos))
         assert available_moves_count < AntPiece.MAX_STEP_COUNT
         result = [1] * available_moves_count + [0] * (AntPiece.MAX_STEP_COUNT - available_moves_count)
         assert len(result) == AntPiece.MAX_STEP_COUNT

@@ -15,22 +15,32 @@ class GameState(object):
         self.tiles = {}
         self.current_player = Player.WHITE
 
-    def move_or_append_to(self, piece: HivePiece, hexagon: hexutil.Hex) -> None:
-        if piece.position:
-            old_cell = self.tiles.get(piece.position)
-            assert old_cell  # dangling position
-            old_cell.remove(piece)
-            if not old_cell: # no more bugs there
-                # remove from dictionary
-                del self.tiles[piece.position]
+    def move_to(self, piece: HivePiece, pos:hexutil.Hex, target_cell: hexutil.Hex) -> None:
+        old_cell = self.tiles.get(pos)
+        assert old_cell  # dangling position
+        old_cell.remove(piece)
+        if not old_cell:  # no more bugs there
+            # remove from dictionary
+            del self.tiles[pos]
+        pieces = self.get_tile_content(target_cell)
+        if not pieces:
+            self.tiles[target_cell] = [piece]
+        else:
+            pieces.append(piece)
+
+    def append_to(self, piece: HivePiece, hexagon: hexutil.Hex) -> None:
         cell = self.tiles.get(hexagon)
         if not cell:
             self.tiles[hexagon] = [piece]
         else:
             cell.append(piece)
 
-        # Update position of piece
-        piece.position = hexagon
+    def move_or_append_to(self, piece: HivePiece, hexagon: hexutil.Hex) -> None:
+        pos = self.find_piece_position(piece)
+        if pos:
+            self.move_to(piece, pos, hexagon)
+        else:
+            self.append_to(piece, hexagon)
 
     def get_tile_content(self, hexagon):
         return self.tiles.get(hexagon)
@@ -160,9 +170,8 @@ class GameState(object):
     def is_cell_free(self, hexagon:hexutil.Hex) -> bool:
         return not hexagon in self.tiles.keys()
 
-    def find_piece_played(self, piece_to_find: HivePiece) -> Optional[HivePiece]:
-        pieces = self.get_played_pieces()
-        for p in pieces:
-            if p == piece_to_find:
-                return p
+    def find_piece_position(self, piece_to_find: HivePiece) -> Optional[hexutil.Hex]:
+        for hexi, pieces in self.tiles.items():
+            if piece_to_find in pieces:
+                return hexi
         return None

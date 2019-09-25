@@ -1,7 +1,7 @@
 from hivegame.hive import Hive
 import hivegame.hive_representation as represent
 from unittest import TestCase
-from hivegame.hive_utils import Player, Direction
+from hivegame.hive_utils import Player, Direction, HiveException
 import numpy as np
 import os
 import json, sys
@@ -128,10 +128,7 @@ class TestRepresentation(TestCase):
         self.hive.place_piece_without_action("bS2", "bB1", Direction.HX_W)
         self.hive.level.current_player = Player.WHITE
         self.assertEqual(represent.get_all_action_vector(self.hive)[90], 0)
-        piece, end_cell = self.hive.action_from_vector(90)
-        self.assertEqual(piece, self.hive.get_piece_by_name("wA2"))
-        self.assertEqual(end_cell, hexutil.Hex(1, -1))
-        logging.debug(self.hive)
+        self.assertRaises(HiveException, self.hive.action_from_vector, 90)
 
 
 if __name__ == '__main__':

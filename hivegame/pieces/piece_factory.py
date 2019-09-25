@@ -62,11 +62,11 @@ _kind_to_instance = {
 }
 
 
-def create_piece(color: Player, kind: str, number: int) -> HivePiece:
+def create_piece(color: str, kind: str, number: int) -> HivePiece:
     return _kind_to_instance[kind](color, number)
 
 
 def name_to_piece(name: str) -> HivePiece:
     letters = list(name)
     assert (len(letters) == 3)  # color, type, number
-    return create_piece(*letters)
+    return create_piece(name[0], name[1], int(name[2]))

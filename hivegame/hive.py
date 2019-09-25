@@ -49,12 +49,7 @@ class Hive(object):
         :param piece_name: 3 digit name of piece. E.g. wQ1
         :return: The piece object
         """
-        # Look at the un-played pieces. If not found, look at the played pieces.
-        pieces = self.level.get_all_pieces()
-        for p in pieces:
-            if str(p) == piece_name:
-                return p
-        raise HiveException("Piece name could not been recognized", 9998)
+        return piece_fact.name_to_piece(piece_name)
 
     def pass_turn(self):
         self.level.current_player = self._toggle_player(self.level.current_player)  # switch active player
@@ -64,8 +59,8 @@ class Hive(object):
         Returns the cell where the piece is positioned.
         piece_name is a piece identifier (string)
         """
-        p = self.get_piece_by_name(piece_name)
-        return p.position
+        p = piece_fact.name_to_piece(piece_name)
+        return self.level.find_piece_position(p)
 
     @staticmethod
     def _toggle_player(player: Player):
@@ -77,49 +72,48 @@ class Hive(object):
         If the place is already on board it means a movement. Otherwise it
         means a piece placement.
         """
-
-        if piece.position is None:
+        pos = self.locate(piece)
+        if not pos:
             self._place_piece_to(piece, target_cell)
         else:
-            self._move_piece_to(piece, target_cell)
+            self._move_piece_to(piece, pos, target_cell)
         self.level.current_player = self._toggle_player(self.level.current_player)
 
     def validate_action(self, piece: HivePiece, target_cell: hexutil.Hex) -> bool:
-        # movement
-        if piece.position is None:
-            if not valid.validate_turn(self, piece, 'place'):
-                logging.info("Turn fault (movement)")
-                return False
+        pos = self.locate(piece)
 
+        # TODO move queen rules outside of function
+        if not valid.validate_turn(self, pos, piece):
+            logging.info("Turn fault")
+            return False
+
+        # movement
+        if pos:
+            if not valid.validate_move_piece(self, piece, pos, target_cell):
+                logging.info("Invalid piece placement")
+                return False
+        else:
             if not valid.validate_place_piece(self, piece, target_cell):
                 logging.info("Invalid piece placement")
                 return False
-        # placement
-        if not valid.validate_turn(self, piece, 'place'):
-            logging.info("Turn fault (placement)")
-            return False
-
-        if not valid.validate_place_piece(self, piece, target_cell):
-            logging.info("Invalid piece placement")
-            return False
         return True
 
-    def _move_piece_to(self, piece: HivePiece, target_cell: hexutil.Hex) -> None:
+    def _move_piece_to(self, piece: HivePiece, pos:hexutil.Hex, target_cell: hexutil.Hex) -> None:
         """
         Moves the given piece to the target cell.
         It does start a complete action, since it does
         not increment the turn value.
         """
-        assert piece.position  # It should be already placed
+        assert pos
         # is the move valid
-        if not valid.validate_turn(self, piece, 'move'):
+        if not valid.validate_turn(self, pos, piece):
             raise HiveException("Invalid Piece Movement", 10002)
 
-        if not valid.validate_move_piece(self, piece, target_cell):
+        if not valid.validate_move_piece(self, piece, pos, target_cell):
             raise HiveException("Invalid Piece Movement", 10002)
 
         # Update piece and map
-        self.level.move_or_append_to(piece, target_cell)
+        self.level.move_to(piece, pos, target_cell)
 
     def move_piece_without_action(self, piece_name: str, ref_piece_name: str, ref_direction: Direction) -> None:
         """
@@ -131,7 +125,10 @@ class Hive(object):
 
         target_cell = self.poc2cell(ref_piece_name, ref_direction)
         piece = self.get_piece_by_name(piece_name)
-        self._move_piece_to(piece, target_cell)
+        piece_pos = self.level.find_piece_position(piece)
+        if not piece_pos:
+            raise HiveException("Cannot move piece which is not on board", 9996)
+        self._move_piece_to(piece, piece_pos, target_cell)
 
     def _place_piece_to(self, piece: HivePiece, to_cell: hexutil.Hex) -> None:
         """
@@ -139,15 +136,16 @@ class Hive(object):
         It does start a complete action, since it does
         not increment the turn value.
         """
+
         # is the placement valid
-        if not valid.validate_turn(self, piece, 'place'):
+        if not valid.validate_turn(self, None, piece):
             raise HiveException("Invalid Piece Placement", 10003)
 
         if not valid.validate_place_piece(self, piece, to_cell):
             logging.info("Invalid piece placement")
             raise HiveException("Invalid Piece Placement", 10003)
 
-        self.level.move_or_append_to(piece, to_cell)
+        self.level.append_to(piece, to_cell)
 
     def place_piece_without_action(self, piece_name: str, ref_piece_name: str = None, ref_direction: Direction = None)\
             -> None:
@@ -176,13 +174,13 @@ class Hive(object):
         res = GameStatus.UNFINISHED
 
         # if white queen is surrounded => black wins
-        queen_tile = self.get_piece_by_name('wQ1').position
+        queen_tile = self.locate("wQ1")
         if queen_tile and len(self.level.occupied_surroundings(queen_tile)) == 6:
             black = True
             res = GameStatus.BLACK_WIN
 
         # if black queen is surrounded => white wins
-        queen_tile = self.get_piece_by_name('bQ1').position
+        queen_tile = self.locate('bQ1')
         if queen_tile and len(self.level.occupied_surroundings(queen_tile)) == 6:
             white = True
             res = GameStatus.WHITE_WIN
@@ -251,7 +249,7 @@ class Hive(object):
             action_type = action_number % one_bug_bound
             piece_number = action_number // one_bug_bound
             adj_piece_number = action_type // 6
-            direction = (action_type % 6) + 1  # starting from west, clockwise
+            direction = (action_type % 6) + 1 # starting from west, clockwise
             piece = pieces[piece_number]
             adj_piece = [p for p in pieces if p != piece][adj_piece_number]
             return 'place', (piece, adj_piece, direction)
@@ -295,26 +293,28 @@ class Hive(object):
                 return decoded, hexutil.origin
         elif atype == 'place':
             (piece, adj_piece, direction) = decoded
-            # We have to search for the pieces in the stored state, because that's how
-            # it will also contain the position of the piece
-            adj_piece = self.level.find_piece_played(adj_piece)
-            if adj_piece is None:
+            # piece should not be placed yet.
+            if self.level.find_piece_position(piece):
+                error_msg = "Attempt to place piece which is already placed"
+                logging.error(error_msg)
+                raise HiveException(error_msg, 10010)
+            # Find adjacent piece on board
+            adj_pos = self.level.find_piece_position(adj_piece)
+            if adj_pos is None:
                 error_msg = "Invalid action number, trying to place piece next to an unplayed piece"
                 logging.error(error_msg)
                 raise HiveException(error_msg, 10008)
-            target_cell = self.level.goto_direction(adj_piece.position, direction)
-            assert not piece.position
+            target_cell = self.level.goto_direction(adj_pos, direction)
             return piece, target_cell
         elif atype == 'move':
             (piece, inner_action) = decoded
-            stored_piece = self.level.find_piece_played(piece)
-            if stored_piece is None:
+            pos = self.level.find_piece_position(piece)
+            if not pos:
                 # It should be placed if we want to move it
                 error_msg = "Invalid action number, trying to move a piece which is not yet placed"
                 logging.error(error_msg)
                 raise HiveException(error_msg, 10009)
-            assert stored_piece.position
-            return stored_piece, stored_piece.index_to_target_cell(self, inner_action)
+            return piece, piece.index_to_target_cell(self, inner_action, pos)
 
         # Index overflow
         error_msg = "Invalid action"

@@ -3,7 +3,6 @@
 import sys
 
 from hivegame.hive import Hive, HiveException
-from hivegame.utils.ascii_view import HiveView
 from hivegame.hive_utils import GameStatus, Player
 from hivegame.AI.utils.Game import Game
 
@@ -25,7 +24,6 @@ class Environment(Game):
         """
         super(Environment, self).__init__()
         self.hive = Hive()
-        self.view = HiveView(self.hive)
         self.input = sys.stdin
         self.reset_game()
         self.debug_hive = Hive()
