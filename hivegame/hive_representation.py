@@ -1,4 +1,4 @@
-from hivegame.hive_utils import Direction, Player, get_queen_name, HiveException
+from hivegame.hive_utils import Direction, Player, get_queen_name
 import hivegame.hive_validation as valid
 import hivegame.pieces.piece_factory as piece_fact
 from hivegame.pieces.ant_piece import AntPiece
@@ -71,11 +71,11 @@ def get_adjacency_state(hive: 'Hive') -> Dict[str, Dict[str, int]]:
             idx_piece = pieces_in_cell.index(piece)
             # set relations to the lower pieces
             for lower_piece in pieces_in_cell[:idx_piece]:
-                relations[lower_piece] = Direction.HX_LOW
+                relations[str(lower_piece)] = Direction.HX_LOW
             # set relations to the higher pieces (if any)
             if idx_piece + 1 < len(pieces_in_cell):
                 for upper_piece in pieces_in_cell[idx_piece + 1:]:
-                    relations[upper_piece] = Direction.HX_UP
+                    relations[str(upper_piece)] = Direction.HX_UP
 
         surrounding_cells = hive.level.occupied_surroundings(cell)
         for neighbor_cell in surrounding_cells:
@@ -115,7 +115,7 @@ def list_representation(adjacency: Dict[str, Dict[str, int]]) -> List[int]:
     return directions
 
 
-def two_dim_representation(adjacency) -> np.ndarray:
+def two_dim_representation(adjacency: Dict[str, Dict[str, int]]) -> np.ndarray:
     directions = []  # current turn number is the first data
     for sorted_row in [v for (k, v) in sorted(adjacency.items(), key=lambda row: row[0])]:
         row = []
