@@ -11,7 +11,6 @@ import logging
 
 from hivegame.utils.gui.hive_widget import GameWidget
 
-
 class Arena(object):
 
     def __init__(self, player1, player2, environment=None):

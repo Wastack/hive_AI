@@ -1,4 +1,4 @@
-from hive_utils import HiveException
+from hivegame.hive_utils import HiveException
 from hivegame.pieces.piece import HivePiece
 
 from typing import TYPE_CHECKING

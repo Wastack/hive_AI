@@ -3,8 +3,8 @@ import sys
 
 from hivegame.AI.utils.keras.NNet import NNetWrapper
 from hivegame.AI.utils.Coach import Coach
-from AI.environment import Environment
-from hive_utils import *
+from hivegame.AI.environment import Environment
+from hivegame.hive_utils import *
 
 
 args = dotdict({
