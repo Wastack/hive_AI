@@ -42,3 +42,6 @@ nosetests.xml
 
 # OS X
 .DS_Store
+
+# saved games
+hivegame/saved_games/*
