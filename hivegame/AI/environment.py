@@ -83,7 +83,23 @@ class Environment(Game):
         hive = Hive.load_state_with_player(board, self._player_to_inner_player(player_num))
         return represent.two_dim_representation(represent.canonical_adjacency_state(hive))
 
-    def getGameEnded(self, board, player_num):
+    def getGameEnded(self, board, player):
+        return self.getGameEnded_simpified(board, player)
+
+    def getGameEnded_simpified(self, board, player):
+        hive = Hive.load_state_with_player(board, self._player_to_inner_player(player))
+        res = 0
+        white_queen_pos = hive.locate("wQ1")
+        if white_queen_pos:
+            if len(hive.level.occupied_surroundings(white_queen_pos)) > 1:
+                res = 1 if player == 1 else -1
+        black_queen_pos = hive.locate("bQ1")
+        if black_queen_pos:
+            if len(hive.level.occupied_surroundings(black_queen_pos)) > 1:
+                res = -1 if player == 1 else 1
+        return res
+
+    def getGameEnded_original(self, board, player_num):
         hive = Hive.load_state_with_player(board, self._player_to_inner_player(player_num))
         status = hive.check_victory()
         if status == GameStatus.UNFINISHED:
@@ -129,7 +145,7 @@ class Environment(Game):
         # Rotate the board 5 times
         for i in range(5):
             symmetries.append(self._rotate_adjacency(board))
-        return map(lambda sim: (sim, pi), symmetries)
+        return [(sim, pi) for sim in symmetries]
 
     @staticmethod
     def _rotate_adjacency(two_dim_adjacency):

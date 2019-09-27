@@ -44,23 +44,24 @@ class Coach():
         """
         trainExamples = []
         board = self.game.getInitBoard()
-        self.curPlayer = 1
+        self.curPlayer = 1  # white starts
         episodeStep = 0
         logging.info("Start executing episode")
         while True:
             episodeStep += 1
-            canonicalBoard = board #self.game.getCanonicalForm(board,self.curPlayer)
             temp = int(episodeStep < self.args.tempThreshold)
 
+            canonicalBoard = self.game.getCanonicalForm(board, self.curPlayer)
             pi = self.mcts.getActionProb(canonicalBoard, temp=temp)
             sym = self.game.getSymmetries(canonicalBoard, pi)
             for b,p in sym:
                 trainExamples.append([b, self.curPlayer, p, None])
 
             action = np.random.choice(len(pi), p=pi)
-            canonicalBoard, self.curPlayer = self.game.getNextState(self.game.getCanonicalForm(board,self.curPlayer), self.curPlayer, action)
-
+            board, _ = self.game.getNextState(canonicalBoard, self.curPlayer, action)
+            logging.debug("\n{}".format(self.game.debug_hive))
             r = self.game.getGameEnded(board, self.curPlayer)
+            logging.debug("result: {}".format(r))
 
             if r!=0:
                 logging.info("A game has ended, winner: {}".format(r))
@@ -89,7 +90,7 @@ class Coach():
                 for eps in range(self.args.numEps):
                     self.mcts = MCTS(self.game, self.nnet, self.args)   # reset search tree
                     iterationTrainExamples += self.executeEpisode()
-    
+
                     # bookkeeping + plot progress
                     eps_time.update(time.time() - end)
                     end = time.time()

@@ -21,7 +21,7 @@ class MCTS():
         self.game_ended_s = {}        # stores game.getGameEnded ended for board s
         self.valid_moves_s = {}        # stores game.getValidMoves for board s
 
-    def getActionProb(self, canonicalBoard, temp=1):
+    def getActionProb(self, board, temp=1):
         """
         This function performs numMCTSSims simulations of MCTS starting from
         canonicalBoard.
@@ -30,6 +30,7 @@ class MCTS():
             probs: a policy vector where the probability of the ith action is
                    proportional to Nsa[(s,a)]**(1./temp)
         """
+        canonicalBoard = board[:]
         logging.info("Starting simulations")
         for i in range(self.args.numMCTSSims):
             self.search(canonicalBoard)
@@ -94,7 +95,7 @@ class MCTS():
 
             self.valid_moves_s[s] = valids
             self.visit_number_s[s] = 0
-            #print(self.game.debug_hive)
+            #logging.debug("\n{}".format(self.game.debug_hive))
             return -value
 
         valids = self.valid_moves_s[s]
