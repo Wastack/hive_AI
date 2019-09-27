@@ -42,7 +42,9 @@ class TestRepresentation(TestCase):
         self.sh = logging.StreamHandler(sys.stdout)
         logger.addHandler(self.sh)
         self.hive = Hive()
-        pass
+
+    def tearDown(self) -> None:
+        logger.removeHandler(self.sh)
 
     def test_empty_adjacency_state(self):
         adj = represent.get_adjacency_state(self.hive)

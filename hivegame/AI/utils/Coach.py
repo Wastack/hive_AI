@@ -7,6 +7,7 @@ from pytorch_classification.utils import Bar, AverageMeter
 import time, os, sys
 from pickle import Pickler, Unpickler
 from random import shuffle
+import logging
 
 from hivegame.AI.alpha_player import AlphaPlayer
 
@@ -45,7 +46,7 @@ class Coach():
         board = self.game.getInitBoard()
         self.curPlayer = 1
         episodeStep = 0
-
+        logging.info("Start executing episode")
         while True:
             episodeStep += 1
             canonicalBoard = board #self.game.getCanonicalForm(board,self.curPlayer)
@@ -62,6 +63,7 @@ class Coach():
             r = self.game.getGameEnded(board, self.curPlayer)
 
             if r!=0:
+                logging.info("A game has ended, winner: {}".format(r))
                 return [(x[0],x[2],r*((-1)**(x[1]!=self.curPlayer))) for x in trainExamples]
 
     def learn(self):

@@ -33,6 +33,9 @@ class TestImportExport(TestCase):
         self.hive.level.move_or_append_to(self.hive.get_piece_by_name("bB1"), hexutil.Hex(3, 1))
         self.hive.level.current_player = Player.BLACK
 
+    def tearDown(self) -> None:
+        logger.removeHandler(self.sh)
+
     def test_export_hive(self):
         importexport.export_hive(self.hive, importexport.saved_game_path("test_export.json"))
         exported_data = json.load(open(importexport.saved_game_path('test_export.json'), 'r'))

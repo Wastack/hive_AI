@@ -30,7 +30,7 @@ class MCTS():
             probs: a policy vector where the probability of the ith action is
                    proportional to Nsa[(s,a)]**(1./temp)
         """
-        print("[DEBUG] getActionProb CALLED")
+        logging.info("Starting simulations")
         for i in range(self.args.numMCTSSims):
             self.search(canonicalBoard)
 
@@ -94,7 +94,7 @@ class MCTS():
 
             self.valid_moves_s[s] = valids
             self.visit_number_s[s] = 0
-            print(self.game.debug_hive)
+            #print(self.game.debug_hive)
             return -value
 
         valids = self.valid_moves_s[s]

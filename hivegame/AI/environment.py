@@ -8,6 +8,7 @@ from hivegame.AI.utils.Game import Game
 
 import logging
 import hivegame.hive_representation as represent
+from utils import importexport
 
 
 class Environment(Game):
@@ -106,6 +107,7 @@ class Environment(Game):
         except HiveException as error:
             logging.error("HiveException was caught: {}".format(error))
             logging.error("action number: {}".format(action_number))
+            importexport.export_hive(hive, importexport.saved_game_path("last_error.json"))
             raise
         # TODO handle pass
         try:
@@ -113,6 +115,7 @@ class Environment(Game):
         except HiveException as error:
             logging.error("HiveException was caught: {}".format(error))
             logging.error("action number: {}, resulting action: ({}, {})".format(action_number, piece, to_cell))
+            importexport.export_hive(hive, importexport.saved_game_path("last_error.json"))
             raise
         self.debug_hive = hive
         return represent.two_dim_representation(represent.get_adjacency_state(hive)), player*(-1)
