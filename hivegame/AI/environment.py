@@ -1,6 +1,7 @@
 #! /usr/bin/env python
 
 import sys
+from typing import List
 
 from hivegame.hive import Hive, HiveException
 from hivegame.hive_utils import GameStatus, Player
@@ -8,7 +9,7 @@ from hivegame.AI.utils.Game import Game
 
 import logging
 import hivegame.hive_representation as represent
-from utils import importexport
+from hivegame.utils import importexport
 
 
 class Environment(Game):
@@ -140,7 +141,7 @@ class Environment(Game):
         hive = Hive()
         return represent.two_dim_representation(represent.get_adjacency_state(hive))
 
-    def getSymmetries(self, board, pi):
+    def getSymmetries(self, board: List[List[int]], pi):
         symmetries = []
         # Rotate the board 5 times
         for i in range(5):
@@ -148,16 +149,18 @@ class Environment(Game):
         return [(sim, pi) for sim in symmetries]
 
     @staticmethod
-    def _rotate_adjacency(two_dim_adjacency):
+    def _rotate_adjacency(two_dim_adjacency: List[List[int]]) -> List[List[int]]:
         result = []
         for row in two_dim_adjacency:
+            new_row = []
             for direction in row:
                 if 0 < direction <= 5:
-                    result.append(direction + 1)
+                    new_row.append(direction + 1)
                 elif direction == 6:
-                    result.append(1)  # overflow of directions
+                    new_row.append(1)  # overflow of directions
                 else:
-                    result.append(direction)
+                    new_row.append(direction)
+            result.append(new_row)
         return result
 
     def getBoardSize(self):

@@ -6,6 +6,9 @@ import random
 import numpy as np
 import math
 import sys
+
+import logging
+
 sys.path.append('../..')
 from hivegame.hive_utils import dotdict
 from hivegame.AI.utils.NeuralNet import NeuralNet
@@ -34,6 +37,7 @@ class NNetWrapper(NeuralNet):
         """
         input_boards, target_pis, target_vs = list(zip(*examples))
         input_boards = np.asarray(input_boards)
+        logging.debug("input dimensions: {}".format(input_boards.shape))
         target_pis = np.asarray(target_pis)
         target_vs = np.asarray(target_vs)
         self.nnet.model.fit(x = input_boards, y = [target_pis, target_vs], batch_size = args.batch_size, epochs = args.epochs)

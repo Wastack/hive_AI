@@ -119,7 +119,7 @@ class Coach():
             self.nnet.save_checkpoint(folder=self.args.checkpoint, filename='temp.pth.tar')
             self.pnet.load_checkpoint(folder=self.args.checkpoint, filename='temp.pth.tar')
             pAlphaPlayer = AlphaPlayer(self.game, self.pnet, self.args)
-            
+
             self.nnet.train(trainExamples)
             nAplhaPlayer = AlphaPlayer(self.game, self.nnet, self.args)
 
