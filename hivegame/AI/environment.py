@@ -103,11 +103,11 @@ class Environment(Game):
         white_queen_pos = hive.locate("wQ1")
         if white_queen_pos:
             if len(hive.level.occupied_surroundings(white_queen_pos)) > 1:
-                res = 1 if player == 1 else -1
+                res = -1 if player == 1 else -1
         black_queen_pos = hive.locate("bQ1")
         if black_queen_pos:
             if len(hive.level.occupied_surroundings(black_queen_pos)) > 1:
-                res = -1 if player == 1 else 1
+                res = 1 if player == 1 else 1
         return res
 
     def getGameEnded_original(self, board, player_num):
