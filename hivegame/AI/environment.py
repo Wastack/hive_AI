@@ -45,7 +45,17 @@ class Environment(Game):
         DRAW = 3
         :return: status of the game
         """
-        return self.hive.check_victory()
+        current_player = self.hive.current_player
+        white_queen_pos = self.hive.locate("wQ1")
+        if white_queen_pos:
+            if len(self.hive.level.occupied_surroundings(white_queen_pos)) > 1:
+                return GameStatus.BLACK_WIN
+        black_queen_pos = self.hive.locate("bQ1")
+        if black_queen_pos:
+            if len(self.hive.level.occupied_surroundings(black_queen_pos)) > 1:
+                return GameStatus.WHITE_WIN
+        return GameStatus.UNFINISHED
+        #return self.hive.check_victory()
 
     @property
     def current_player(self):
@@ -80,8 +90,8 @@ class Environment(Game):
         hive = Hive()
         return len(represent.get_all_action_vector(hive))
 
-    def getCanonicalForm(self, board, player_num):
-        hive = Hive.load_state_with_player(board, self._player_to_inner_player(player_num))
+    def getCanonicalForm(self, two_dim_repr: List[List[int]], player_num):
+        hive = Hive.load_state_with_player(two_dim_repr, self._player_to_inner_player(player_num))
         return represent.two_dim_representation(represent.canonical_adjacency_state(hive))
 
     def getGameEnded(self, board, player):

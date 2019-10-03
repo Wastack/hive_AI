@@ -27,7 +27,7 @@ class Arena(object):
         self.env.reset_game()  # TODO what?
         env = self.env
         while self.env.check_victory() == GameStatus.UNFINISHED:
-            print(self.env.hive)
+            #print(self.env.hive)
             current_player = self._player1 if env.current_player == "w" else self._player2
             response = current_player.step(env)
             if response == "pass":
@@ -41,6 +41,7 @@ class Arena(object):
             else:
                 self._passed = False
             if not response:
+                logging.debug("AI JUST PASSED")
                 break  # e.g. keyboard interrupt
             else:
                 try:
@@ -65,18 +66,18 @@ class Arena(object):
             elif gameResult == GameStatus.DRAW:
                 draws += 1
             else:
-                raise ValueError  # Invalid response of environment
+                logging.error("Invalid response from environment: {}".format(gameResult))
+                raise ValueError
         return whiteWon, blackWon, draws
 
     def playGames(self, num):
-        logging.INFO("called")
         # White starts
         (white_won, black_won, draw) = self._playNumberOfGames(num//2)
-        self.player1, self.player2 = self.player2, self.player1
+        self._player1, self._player2 = self._player2, self._player1
         # Black starts
         (black_won2, white_won2, draw2) = self._playNumberOfGames(num//2)
         # Switch it back
-        self.player1, self.player2 = self.player2, self.player1
+        self._player1, self._player2 = self._player2, self._player1
         return white_won + white_won2, black_won + black_won2, draw + draw2
 
 headless = False

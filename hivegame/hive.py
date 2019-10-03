@@ -297,12 +297,16 @@ class Hive(object):
             if self.level.find_piece_position(piece):
                 error_msg = "Attempt to place piece which is already placed"
                 logging.error(error_msg)
+                logging.error("piece: {}, adjacent piece: {}, direction: {}, action number: {}".format(
+                    piece, adj_piece, direction, action_number))
                 raise HiveException(error_msg, 10010)
             # Find adjacent piece on board
             adj_pos = self.level.find_piece_position(adj_piece)
             if adj_pos is None:
                 error_msg = "Invalid action number, trying to place piece next to an unplayed piece"
                 logging.error(error_msg)
+                logging.error("piece: {}, adjacent piece: {}, direction: {}, action number: {}".format(
+                    piece, adj_piece, direction, action_number))
                 raise HiveException(error_msg, 10008)
             target_cell = self.level.goto_direction(adj_pos, direction)
             return piece, target_cell
@@ -350,7 +354,7 @@ class Hive(object):
     }
 
     @staticmethod
-    def load_state_with_player(two_dim_repr, current_player) -> Hive:
+    def load_state_with_player(two_dim_repr: List[List[int]], current_player) -> Hive:
         assert current_player == Player.WHITE or current_player == Player.BLACK
         # count number of pieces already on board
         # It is needed in order to guess turn number

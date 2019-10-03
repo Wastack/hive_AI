@@ -97,6 +97,9 @@ def canonical_adjacency_state(hive: 'Hive') -> Dict[str, Dict[str, int]]:
     """
     # sorted by their names. That means black piece are at front.
     matrix = get_adjacency_state(hive)
+    # We should flip only if it is white's turn
+    if hive.current_player == "b":
+        return matrix
     inverse_matrix = {}
     for (row_name, row) in matrix.items():
         inverse_row = {}
@@ -125,7 +128,7 @@ def two_dim_representation(adjacency: Dict[str, Dict[str, int]]) -> np.ndarray:
     return np.array(directions)
 
 
-def dict_representation(two_dim_list: np.ndarray) -> Dict[str, Dict[str, int]]:
+def dict_representation(two_dim_list: List[List[int]]) -> Dict[str, Dict[str, int]]:
     """
     :param adjacency_list: List representation of the state
     :return: Dictionary representation of the state
@@ -197,39 +200,40 @@ def get_all_action_vector(hive: 'Hive') -> List[int]:
     # Also, we do not need action for placing the queen, because that is forbidden in the first turn.
     if not my_pieces:
         result += [1] * (len(piece_list) - 1)
+        result += [0] * (piece_count * possible_neighbor_count * direction_count)
     else:
         result += [0] * (len(piece_list) - 1)
 
-    # Placing pieces
-    for p in piece_list:
-        # Cannot place piece if:
-        #   - it is already placed or
-        #   - If the queen is not yet played in the fourth turn
-        queen_pos = hive.locate(get_queen_name(hive.current_player))
-        if p in my_pieces or (len(my_pieces) == 3 and not queen_pos and p.kind != "Q"):
-            result += [0] * (possible_neighbor_count * direction_count)
-        else:
-            for adj_piece in piece_list:
-                # It cannot be put next to itself
-                if adj_piece == p:
-                    continue
-                # find position on board
-                adj_pos = hive.level.find_piece_position(adj_piece)
-                if not adj_pos:
-                    # neighbor candidate not placed yet
-                    result += [0] * direction_count
-                    continue
-                # get all boundary free cells
-                surroundings = adj_pos.neighbours()
-                for sur in surroundings:
-                    if hive.level.get_tile_content(sur):
-                        result.append(0)  # it is already occupied
-                    # cannot place if it is adjacent with the opponent
-                    elif any(hive.level.get_tile_content(nb_of_nb)[-1].color !=
-                                 hive.level.current_player for nb_of_nb in hive.level.occupied_surroundings(sur)):
-                        result.append(0)
-                    else:
-                        result.append(1)  # it can be placed
+        # Placing pieces
+        for p in piece_list:
+            # Cannot place piece if:
+            #   - it is already placed or
+            #   - If the queen is not yet played in the fourth turn
+            queen_pos = hive.locate(get_queen_name(hive.current_player))
+            if p in my_pieces or (len(my_pieces) == 3 and not queen_pos and p.kind != "Q"):
+                result += [0] * (possible_neighbor_count * direction_count)
+            else:
+                for adj_piece in piece_list:
+                    # It cannot be put next to itself
+                    if adj_piece == p:
+                        continue
+                    # find position on board
+                    adj_pos = hive.level.find_piece_position(adj_piece)
+                    if not adj_pos:
+                        # neighbor candidate not placed yet
+                        result += [0] * direction_count
+                        continue
+                    # get all boundary free cells
+                    surroundings = adj_pos.neighbours()
+                    for sur in surroundings:
+                        if hive.level.get_tile_content(sur):
+                            result.append(0)  # it is already occupied
+                        # cannot place if it is adjacent with the opponent
+                        elif any(hive.level.get_tile_content(nb_of_nb)[-1].color !=
+                                     hive.level.current_player for nb_of_nb in hive.level.occupied_surroundings(sur)):
+                            result.append(0)
+                        else:
+                            result.append(1)  # it can be placed
     assert len(result) == piece_count - 1 + piece_count * (possible_neighbor_count * direction_count)
 
     # moving pieces

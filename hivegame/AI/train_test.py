@@ -8,7 +8,7 @@ from hivegame.hive_utils import *
 
 
 args = dotdict({
-    'numIters': 1000,
+    'numIters': 3,
     'numEps': 5,
     'tempThreshold': 15,
     'updateThreshold': 0.6,
