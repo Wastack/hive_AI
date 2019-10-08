@@ -1,3 +1,5 @@
+from functools import reduce
+
 from hivegame.hive_utils import Direction, Player, get_queen_name
 import hivegame.hive_validation as valid
 import hivegame.pieces.piece_factory as piece_fact
@@ -98,7 +100,7 @@ def canonical_adjacency_state(hive: 'Hive') -> Dict[str, Dict[str, int]]:
     # sorted by their names. That means black piece are at front.
     matrix = get_adjacency_state(hive)
     # We should flip only if it is white's turn
-    if hive.current_player == "b":
+    if hive.current_player == "w":
         return matrix
     inverse_matrix = {}
     for (row_name, row) in matrix.items():
@@ -156,7 +158,9 @@ def string_representation(two_dim_repr: np.ndarray):
     :return:  Hashable string representation of the current state
     """
     # We need to use comma as separator, because turn number can consist of more digits.
-    return ",".join(str(x) for x in (y for y in two_dim_repr))
+    # Use reduce instead of string's join, because we want to avoid other than left recursion
+    return reduce(lambda i,j: i+j, reduce(lambda x,y: str(x)+str(y), two_dim_repr, ","), ",")
+    #return ",".join(str(x) for x in (y for y in two_dim_repr))
 
 
 def _toggle_color(piece_name):
@@ -201,7 +205,9 @@ def get_all_action_vector(hive: 'Hive') -> List[int]:
     if not my_pieces:
         result += [1] * (len(piece_list) - 1)
         result += [0] * (piece_count * possible_neighbor_count * direction_count)
+        #logging.debug("No my pieces")
     else:
+        #logging.debug("my pieces: {}".format(my_pieces))
         result += [0] * (len(piece_list) - 1)
 
         # Placing pieces

@@ -98,16 +98,17 @@ class Environment(Game):
         return self.getGameEnded_simpified(board, player)
 
     def getGameEnded_simpified(self, board, player):
-        hive = Hive.load_state_with_player(board, self._player_to_inner_player(player))
+        inner_player = self._player_to_inner_player(player)
+        hive = Hive.load_state_with_player(board, inner_player)
         res = 0
         white_queen_pos = hive.locate("wQ1")
         if white_queen_pos:
             if len(hive.level.occupied_surroundings(white_queen_pos)) > 1:
-                res = -1 if player == 1 else -1
+                res = -1 if inner_player == Player.WHITE else 1
         black_queen_pos = hive.locate("bQ1")
         if black_queen_pos:
             if len(hive.level.occupied_surroundings(black_queen_pos)) > 1:
-                res = 1 if player == 1 else 1
+                res = -1 if inner_player == Player.BLACK else 1
         return res
 
     def getGameEnded_original(self, board, player_num):
@@ -115,10 +116,10 @@ class Environment(Game):
         status = hive.check_victory()
         if status == GameStatus.UNFINISHED:
             return 0
-        if player_num == 1:  # Hive.BLACK
-            return 1 if status == GameStatus.BLACK_WIN else -1
-        elif player_num == -1:  # Hive.WHITE
-            return 1 if status == GameStatus.WHITE_WIN else -1
+        if player_num == 1:  # Hive.WHITE
+            return -1 if status == GameStatus.BLACK_WIN else 1
+        elif player_num == -1:  # Hive.BLACK
+            return -1 if status == GameStatus.WHITE_WIN else 1
         else:
             raise ValueError('Unexpected game status')
 
@@ -142,6 +143,7 @@ class Environment(Game):
         except HiveException as error:
             logging.error("HiveException was caught: {}".format(error))
             logging.error("action number: {}, resulting action: ({}, {})".format(action_number, piece, to_cell))
+            logging.error("Hive:\n{}".format(hive))
             importexport.export_hive(hive, importexport.saved_game_path("last_error.json"))
             raise
         self.debug_hive = hive

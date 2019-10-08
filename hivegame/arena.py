@@ -70,7 +70,17 @@ class Arena(object):
                 raise ValueError
         return whiteWon, blackWon, draws
 
-    def playGames(self, num):
+
+    def playGames(self, num: int):
+        """
+        Play a number of games. Half of the game start with player 1 to begin, and player 2 starts the game
+        in the other half.
+
+        :param num:
+            Number of games to play.
+        :return:
+            A tuple of two items: The count of winning for each player
+        """
         # White starts
         (white_won, black_won, draw) = self._playNumberOfGames(num//2)
         self._player1, self._player2 = self._player2, self._player1

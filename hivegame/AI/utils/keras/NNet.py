@@ -1,10 +1,6 @@
-import argparse
 import os
-import shutil
 import time
-import random
 import numpy as np
-import math
 import sys
 
 import logging
@@ -13,8 +9,8 @@ sys.path.append('../..')
 from hivegame.hive_utils import dotdict
 from hivegame.AI.utils.NeuralNet import NeuralNet
 
-import argparse
 from .HiveNNet import HiveNNet as hivenet
+from keras.models import load_model
 
 args = dotdict({
     'lr': 0.001,
@@ -71,5 +67,17 @@ class NNetWrapper(NeuralNet):
         # https://github.com/pytorch/examples/blob/master/imagenet/main.py#L98
         filepath = os.path.join(folder, filename)
         if not os.path.exists(filepath):
-            raise("No model in path {}".format(filepath))
+            raise(RuntimeError("No model in path {}".format(filepath)))
         self.nnet.model.load_weights(filepath)
+
+    def save_model(self, folder='checkpoint', filename='model.h5'):
+        file_path = os.path.join(folder, filename)
+        if not os.path.exists(folder):
+            os.mkdir(folder)
+        self.nnet.model.save(file_path)
+
+    def load_model(self, folder='checkpoint', filename='model.h5'):
+        file_path = os.path.join(folder, filename)
+        if not os.path.exists(file_path):
+            raise(RuntimeError("No model in path {}".format(file_path)))
+        self.nnet.model = load_model(file_path)

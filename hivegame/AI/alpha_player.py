@@ -15,7 +15,6 @@ class AlphaPlayer(Player):
 
     def __init__(self, environment, predictor, args):
         self.mcts = MCTS(environment, predictor, args)
-        self.predictor = predictor
 
     def step(self, environment):
         logging.debug("alpha player steps")
@@ -27,9 +26,9 @@ class AlphaPlayer(Player):
             flipped_hive.level.current_player = PlayerColor.WHITE
             board = represent.two_dim_representation(represent.get_adjacency_state(flipped_hive))
 
-            pis, _ = self.predictor.predict(board)
+            pis = self.mcts.getActionProb(board)
             valids = environment.getValidMoves(board, 1)
-            pis = pis * valids  # mask invalid moves
+            pis = pis * np.array(valids)  # mask invalid moves
             #pis = self.mcts.getActionProb(board, temp=0)
             action_number = np.argmax(pis)
             logging.debug("Flipped hive:\n{}".format(flipped_hive))
@@ -39,9 +38,9 @@ class AlphaPlayer(Player):
         else:
             board = represent.two_dim_representation(represent.get_adjacency_state(environment.hive))
             # board = environment.getCanonicalForm(board, player_num)
-            pis, _ = self.predictor.predict(board)
+            pis = self.mcts.getActionProb(board)
             valids = environment.getValidMoves(board, 1)
-            pis = pis * valids  # mask invalid moves
+            pis = pis * np.array(valids)  # mask invalid moves
             # pis = self.mcts.getActionProb(board, temp=0)
             action_number = np.argmax(pis)
             (piece, end_cell) = environment.hive.action_from_vector(action_number)
