@@ -70,6 +70,8 @@ class AntPiece(HivePiece):
         """
         It assumes that the ant can step onto a maximum of pre-specifihive.locate('wA1')ed number of cells
         """
+        if self.check_blocked(hive, pos):
+            return [0] * self.move_vector_size
         available_moves_count = len(self.available_moves(hive, pos))
         assert available_moves_count < AntPiece.MAX_STEP_COUNT
         result = [1] * available_moves_count + [0] * (AntPiece.MAX_STEP_COUNT - available_moves_count)

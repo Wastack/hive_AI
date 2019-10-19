@@ -34,7 +34,7 @@ class BeetlePiece(HivePiece):
 
     def available_moves_vector(self, hive: 'Hive', pos: hexutil.Hex):
         if self.check_blocked(hive, pos):
-            return [0] * 6
+            return [0] * self.move_vector_size
 
         result = []
         aval_moves = self.available_moves(hive, pos)
@@ -60,8 +60,6 @@ class BeetlePiece(HivePiece):
         return "%s%s%s" % (self.color, "B", self.number)
 
     def index_to_target_cell(self, hive: 'Hive', number: int, pos: hexutil.Hex):
-        aval_moves = self.available_moves(hive, pos)
-        # index of available moves, starting from 0
-        num_in_list = sum(self.available_moves_vector(hive, pos)[:number]) - 1
-        assert len(aval_moves)  > num_in_list
-        return aval_moves[num_in_list]
+        aval_indexes = (i for i, v in enumerate(self.available_moves_vector(hive, pos)) if v > 0)
+        assert number in aval_indexes
+        return pos.neighbours()[number]

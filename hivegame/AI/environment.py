@@ -123,7 +123,7 @@ class Environment(Game):
         else:
             raise ValueError('Unexpected game status')
 
-    def getValidMoves(self, board, player_num):
+    def getValidMoves(self, board, player_num) -> List[int]:
         hive = Hive.load_state_with_player(board, self._player_to_inner_player(player_num))
         return represent.get_all_action_vector(hive)
 

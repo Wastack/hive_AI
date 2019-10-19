@@ -52,6 +52,9 @@ class HivePiece(namedtuple("HivePiece", "color kind number"), metaclass=abc.ABCM
     def index_to_target_cell(self, hive: 'Hive', number: int, pos: hexutil.Hex) -> 'hexutil.Hex':
         aval_moves = self.available_moves(hive, pos)
         if len(aval_moves) <= number or number >= self.move_vector_size:
+            print(self)
+            print("check_blocked: {}".format(self.check_blocked(hive, pos)))
+            print("len aval moves: {}, number: {}, move_vector_size: {}".format(len(aval_moves), number, self.move_vector_size))
             raise HiveException("moving piece with action number is out of bounds", 10001)
         return aval_moves[number]
 

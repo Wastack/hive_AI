@@ -302,7 +302,6 @@ def get_all_possible_actions(hive: 'Hive') -> Set[Tuple[HivePiece, hexutil.Hex]]
              the target location of the action.
     """
     result = set()
-    print(hive)
 
     # choose the current players played pieces
     my_pieces = hive.level.get_played_pieces(hive.current_player)
