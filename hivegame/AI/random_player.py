@@ -13,6 +13,7 @@ class RandomPlayer(Player):
     def step(self, environment):
         self._dg_hive = environment.hive
         if not self.use_repr:
+            logging.debug("\n{}".format(environment.hive))
             actions = environment.get_all_possible_actions()
             if not actions:
                 logging.info("random player just passed")

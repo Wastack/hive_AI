@@ -11,13 +11,14 @@ import numpy as np
 
 class HiveEnv(Env):
     def _state(self):
-        return represent.string_representation(represent.two_dim_representation(represent.get_adjacency_state(self.env.hive)))
+        return represent.two_dim_representation(represent.get_adjacency_state(self.env.hive))
 
     def __init__(self):
+        super(HiveEnv, self).__init__()
         self.reward_range = (-1., 1.)
         self.env = Environment()
         self.action_space = HiveActionSpace(self.env.hive)
-        self.observation_space = Box(low=0, high=9, shape= (12, 11), dtype=np.int32)
+        self.observation_space = Box(low=0, high=9, shape= (22, 21), dtype=np.uint8)
 
         # opponent
         self.opponent = RandomPlayer()
@@ -25,7 +26,7 @@ class HiveEnv(Env):
     def reset(self):
         self.env = Environment()
         self.action_space = HiveActionSpace(self.env.hive)
-        return self._state()
+        return np.array(self._state())
 
     def _reward(self) -> (float, bool):
         reward = 0.
@@ -37,8 +38,11 @@ class HiveEnv(Env):
         return reward, done
 
     def step(self, action: int):
-        inner_action = self.env.hive.action_from_vector(action)
-        self.env.hive.action_piece_to(*inner_action)
+        try:
+            inner_action = self.env.hive.action_from_vector(action)
+            self.env.hive.action_piece_to(*inner_action)
+        except:
+            return self._state(), -1, 0, {"success" : False}
         (reward, done) = self._reward()
         if not done:
             # opponent's turn
@@ -57,3 +61,6 @@ class HiveEnv(Env):
                     passed = True
             return self._state(), reward, done, {}
         return self._state(), reward, done, {}
+
+    def render(self, mode='human'):
+        print("Rendering board: \n{}".format(self.env.hive))
