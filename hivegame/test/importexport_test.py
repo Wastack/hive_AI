@@ -3,8 +3,8 @@ import os
 from unittest import TestCase
 import json
 
-from hive_utils import Player
-from hivegame.hive import Hive
+from engine.hive_utils import Player
+from engine.hive import Hive
 from hivegame.utils import hexutil, importexport
 
 FORMAT = "[%(filename)s:%(lineno)s - %(funcName)20s() ] %(message)s"

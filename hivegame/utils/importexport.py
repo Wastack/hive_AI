@@ -1,5 +1,5 @@
 import json, logging, os
-from hivegame.hive import Hive
+from engine.hive import Hive
 from hivegame.utils.hexutil import Hex
 import ast
 import hivegame.pieces.piece_factory as piecefact

@@ -1,12 +1,12 @@
 from __future__ import annotations
-from hivegame.hive_utils import get_queen_name
+from engine.hive_utils import get_queen_name
 from hivegame.pieces.bee_piece import BeePiece
 import logging
 
 from typing import TYPE_CHECKING, Optional
 
 if TYPE_CHECKING:
-    from hivegame.hive import Hive
+    from engine.hive import Hive
     from hivegame.pieces.piece import HivePiece
 
 from hivegame.utils import hexutil

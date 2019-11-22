@@ -1,7 +1,7 @@
 from functools import reduce
 
-from hivegame.hive_utils import Direction, Player, get_queen_name
-import hivegame.hive_validation as valid
+from engine.hive_utils import Direction, Player, get_queen_name, GameStatus
+import engine.hive_validation as valid
 import hivegame.pieces.piece_factory as piece_fact
 from hivegame.pieces.ant_piece import AntPiece
 from hivegame.pieces.spider_piece import SpiderPiece
@@ -10,11 +10,8 @@ from hivegame.utils.game_state import GameState
 
 from typing import Dict, List, Set, Tuple
 import numpy as np
-import logging
 
-from typing import TYPE_CHECKING
-if TYPE_CHECKING:
-    from hivegame.hive import Hive
+from hivegame.engine.hive import Hive
 
 
 # Adjacency matrix of pieces
@@ -358,3 +355,41 @@ def get_all_possible_actions(hive: 'Hive') -> Set[Tuple[HivePiece, hexutil.Hex]]
     for piece in pieces_to_put_down:
         result.update([(piece, end_cell) for end_cell in available_cells])
     return result
+
+
+def load_state_with_player(two_dim_repr: List[List[int]], current_player) -> 'Hive':
+    assert current_player == Player.WHITE or current_player == Player.BLACK
+
+    # count number of pieces already on board
+    # It is needed in order to guess turn number
+    adjacency = dict_representation(two_dim_repr)
+    hive = Hive()
+    to_be_placed = Hive._get_piece_names_on_board(adjacency)
+    if len(to_be_placed) <= 0:
+        return hive  # initial state
+
+    # put down the first bug which should be placed
+    first_bug_name = to_be_placed.pop()
+    hive.level.move_or_append_to(piece_fact.name_to_piece(first_bug_name), hexutil.origin)
+
+    # BFS on adjacency matrix
+    nodes_to_visit = [first_bug_name]
+    while nodes_to_visit:
+        name = nodes_to_visit.pop()
+
+        # list need to be reversed, since we want to remove from it
+        for to_place_name in reversed(to_be_placed):
+            if 9 > adjacency[to_place_name][name] > 0:
+                # Calculate position of new bug
+                pos = hive.poc2cell(name, adjacency[name][to_place_name])
+                # create the bug
+                my_new_piece = piece_fact.name_to_piece(to_place_name)
+                # Visit this bug next time
+                nodes_to_visit.append(to_place_name)
+                # remove from remaining pieces
+                to_be_placed.remove(to_place_name)
+                # Put down the piece
+                hive.level.move_or_append_to(my_new_piece, pos)
+    assert to_be_placed == []  # found place for everyone
+    hive.level.current_player = current_player
+    return hive

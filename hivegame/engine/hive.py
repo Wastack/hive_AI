@@ -3,23 +3,17 @@ from __future__ import annotations
 from hivegame.utils.game_state import GameState
 from hivegame.utils import hexutil
 
-from hivegame.pieces.ant_piece import AntPiece
-from hivegame.pieces.beetle_piece import BeetlePiece
-from hivegame.pieces.grasshopper_piece import GrassHopperPiece
-from hivegame.pieces.spider_piece import SpiderPiece
-from hivegame.pieces.bee_piece import BeePiece
 from hivegame.pieces.piece import HivePiece
 
-from hivegame.hive_utils import Player, HiveException, GameStatus, Direction
+from engine.hive_utils import Player, HiveException, Direction
 from hivegame.utils.ascii_view import HiveView
 
-import hivegame.hive_validation as valid
-import hivegame.hive_representation as represent
+import engine.hive_validation as valid
 import hivegame.pieces.piece_factory as piece_fact
 
 import logging
 
-from typing import List, Tuple, Optional, Union, Any
+from typing import List, Tuple, Any
 
 
 class Hive(object):
@@ -51,8 +45,6 @@ class Hive(object):
         """
         return piece_fact.name_to_piece(piece_name)
 
-    def pass_turn(self):
-        self.level.current_player = self._toggle_player(self.level.current_player)  # switch active player
 
     def locate(self, piece_name: str) -> hexutil.Hex:
         """
@@ -164,32 +156,7 @@ class Hive(object):
         piece = self.get_piece_by_name(piece_name)
         return self._place_piece_to(piece, target_cell)
 
-    def check_victory(self) -> GameStatus:
-        """
-        Check the status of the game.
-        :return: The status of the game (white wins | black wins | draw | unfinished)
-        """
-        white = False
-        black = False
-        res = GameStatus.UNFINISHED
 
-        # if white queen is surrounded => black wins
-        queen_tile = self.locate("wQ1")
-        if queen_tile and len(self.level.occupied_surroundings(queen_tile)) == 6:
-            black = True
-            res = GameStatus.BLACK_WIN
-
-        # if black queen is surrounded => white wins
-        queen_tile = self.locate('bQ1')
-        if queen_tile and len(self.level.occupied_surroundings(queen_tile)) == 6:
-            white = True
-            res = GameStatus.WHITE_WIN
-
-        # if both queens are surrounded
-        if white and black:
-            res = GameStatus.DRAW
-
-        return res
 
     def poc2cell(self, ref_piece: str, point_of_contract: Direction) -> hexutil.Hex:
         """
@@ -344,53 +311,6 @@ class Hive(object):
                 continue  # not played, nothing to do here
             result.append(piece_name)
         return result
-
-    _letter_to_piece = {
-        "A": AntPiece,
-        "B": BeetlePiece,
-        "G": GrassHopperPiece,
-        "Q": BeePiece,
-        "S": SpiderPiece
-    }
-
-    @staticmethod
-    def load_state_with_player(two_dim_repr: List[List[int]], current_player) -> Hive:
-        assert current_player == Player.WHITE or current_player == Player.BLACK
-        # count number of pieces already on board
-        # It is needed in order to guess turn number
-        adjacency = represent.dict_representation(two_dim_repr)
-
-        hive = Hive()
-
-        to_be_placed = Hive._get_piece_names_on_board(adjacency)
-        if len(to_be_placed) <= 0:
-            return hive  # initial state
-
-        # put down the first bug which should be placed
-        first_bug_name = to_be_placed.pop()
-        hive.level.move_or_append_to(piece_fact.name_to_piece(first_bug_name), hexutil.origin)
-
-        # BFS on adjacency matrix
-        nodes_to_visit = [first_bug_name]
-        while nodes_to_visit:
-            name = nodes_to_visit.pop()
-            # list need to be reversed, since we want to remove from it
-            for to_place_name in reversed(to_be_placed):
-                if 9 > adjacency[to_place_name][name] > 0:
-                    # Calculate position of new bug
-                    pos = hive.poc2cell(name, adjacency[name][to_place_name])
-                    # create the bug
-                    my_new_piece = piece_fact.name_to_piece(to_place_name)
-                    # Visit this bug next time
-                    nodes_to_visit.append(to_place_name)
-                    # remove from remaining pieces
-                    to_be_placed.remove(to_place_name)
-                    # Put down the piece
-                    hive.level.move_or_append_to(my_new_piece, pos)
-
-        assert to_be_placed == []  # found place for everyone
-        hive.level.current_player = current_player
-        return hive
 
     def __str__(self):
         return HiveView(self.level).__str__()

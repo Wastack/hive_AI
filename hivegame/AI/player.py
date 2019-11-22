@@ -1,10 +1,12 @@
 import abc
 
+from hivegame.engine.hive import Hive
+
 
 class Player(metaclass=abc.ABCMeta):
 
     @abc.abstractmethod
-    def step(self, environment):
+    def step(self, hive: 'Hive'):
         """
         Calculates or asks for the next step of the player. It does not perform the step on the engine.
         :param environment: Environment object used for asking about the state of the game. Preferably this is a

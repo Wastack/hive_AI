@@ -1,14 +1,15 @@
-from hivegame.hive import Hive, HiveException
+from hivegame.engine.environment.environment import Environment
+from hivegame.engine.hive import Hive, HiveException
 from unittest import TestCase
 
 
 from hivegame.pieces.ant_piece import AntPiece
 from hivegame.pieces.beetle_piece import BeetlePiece
 from hivegame.pieces.spider_piece import SpiderPiece
-from hivegame.hive_utils import Direction, GameStatus, Player
+from hivegame.engine.hive_utils import Direction, GameStatus, Player
 
-import hivegame.hive_validation as valid
-import hivegame.hive_representation as represent
+import hivegame.engine.hive_validation as valid
+import hivegame.engine.hive_representation as represent
 from utils import hexutil
 import logging
 import sys
@@ -302,7 +303,7 @@ class TestHive(TestCase):
 
     def test_victory_conditions(self):
         """Test that we end the game when a victory/draw condition is meet."""
-        hive = Hive()
+        hive = Environment()
 
         hive.action_piece_to(SpiderPiece('w', 1), hexutil.origin)
         hive.action_piece_to(SpiderPiece('b', 1), hive.level.goto_direction(hexutil.origin, Direction.HX_E))

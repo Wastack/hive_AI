@@ -1,12 +1,10 @@
-from hivegame.hive import Hive
-import hivegame.hive_representation as represent
+from engine.hive import Hive
+import engine.hive_representation as represent
 from unittest import TestCase
-from hivegame.hive_utils import Player, Direction, HiveException
+from engine.hive_utils import Player, Direction, HiveException
 import numpy as np
 import os
 import json, sys
-
-from hivegame.utils import hexutil
 
 BUG_C = 22  # number of bugs without extension
 import logging

@@ -1,4 +1,4 @@
-from hive import Hive
+from engine.hive import Hive
 from utils import hexutil
 from utils.ascii_view import HiveView
 

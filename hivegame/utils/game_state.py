@@ -1,7 +1,7 @@
 from typing import Set, Optional, Dict
 
 from hivegame.utils import hexutil
-from hivegame.hive_utils import Direction, Player
+from engine.hive_utils import Direction, Player
 from hivegame.pieces.piece import HivePiece
 from hivegame.pieces import piece_factory
 

@@ -1,6 +1,6 @@
 import abc
 
-class Game(metaclass=abc.ABCMeta):
+class AIGameEnv(metaclass=abc.ABCMeta):
     """
     This class specifies the base Game class. To define your own game, subclass
     this class and implement the functions below. This works when the game is
@@ -13,8 +13,9 @@ class Game(metaclass=abc.ABCMeta):
     def __init__(self):
         pass
 
+    @staticmethod
     @abc.abstractmethod
-    def getInitBoard(self):
+    def getInitBoard():
         """
         Returns:
             startBoard: a representation of the board (ideally this is the form
@@ -22,24 +23,27 @@ class Game(metaclass=abc.ABCMeta):
         """
         pass
 
+    @staticmethod
     @abc.abstractmethod
-    def getBoardSize(self):
+    def getBoardSize():
         """
         Returns:
             (x,y): a tuple of board dimensions
         """
         pass
 
+    @staticmethod
     @abc.abstractmethod
-    def getActionSize(self):
+    def getActionSize():
         """
         Returns:
             actionSize: number of all possible actions
         """
         pass
 
+    @staticmethod
     @abc.abstractmethod
-    def getNextState(self, board, player, action):
+    def getNextState(board, player, action):
         """
         Input:
             board: current board
@@ -52,8 +56,9 @@ class Game(metaclass=abc.ABCMeta):
         """
         pass
 
+    @staticmethod
     @abc.abstractmethod
-    def getValidMoves(self, board, player):
+    def getValidMoves(board, player):
         """
         Input:
             board: current board
@@ -66,8 +71,9 @@ class Game(metaclass=abc.ABCMeta):
         """
         pass
 
+    @staticmethod
     @abc.abstractmethod
-    def getGameEnded(self, board, player):
+    def getGameEnded(board, player):
         """
         Input:
             board: current board
@@ -80,8 +86,9 @@ class Game(metaclass=abc.ABCMeta):
         """
         pass
 
+    @staticmethod
     @abc.abstractmethod
-    def getCanonicalForm(self, board, player):
+    def getCanonicalForm(board, player):
         """
         Input:
             board: current board
@@ -97,8 +104,9 @@ class Game(metaclass=abc.ABCMeta):
         """
         pass
 
+    @staticmethod
     @abc.abstractmethod
-    def getSymmetries(self, board, pi):
+    def getSymmetries(board, pi):
         """
         Input:
             board: current board
@@ -111,8 +119,9 @@ class Game(metaclass=abc.ABCMeta):
         """
         pass
 
+    @staticmethod
     @abc.abstractmethod
-    def stringRepresentation(self, board):
+    def stringRepresentation(board):
         """
         Input:
             board: current board

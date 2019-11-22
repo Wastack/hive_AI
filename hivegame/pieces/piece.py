@@ -3,16 +3,14 @@
 
 import abc
 from collections import namedtuple
-from typing import Optional
 
-from hivegame.hive_utils import HiveException
-import logging
+from engine.hive_utils import HiveException
 
 from hivegame.utils import hexutil
 
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
-    from hivegame.hive import Hive
+    from engine.hive import Hive
 
 class HivePiece(namedtuple("HivePiece", "color kind number"), metaclass=abc.ABCMeta):
     """Representation of Playing Piece"""

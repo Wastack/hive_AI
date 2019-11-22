@@ -1,16 +1,25 @@
+import logging
 import math
 import numpy as np
-import logging
+
+from engine.hive_utils import Player
+from hivegame.engine.environment.aienvironment import ai_environment
+
+from hivegame.engine import hive_representation as represent
 
 EPS = 1e-8
+
+def _debug_board(canonicalBoard):
+    hive  = represent.load_state_with_player(canonicalBoard, Player.WHITE)
+    logging.debug("\n{}".format(hive))
+
 
 class MCTS():
     """
     Monte carlo tree search algorithm
     """
 
-    def __init__(self, game, predictor, args):
-        self.game = game
+    def __init__(self, predictor, args):
         self.predictor = predictor
         self.args = args
         self.Qsa = {}       # stores Q values for s,a (as defined in the paper)
@@ -33,14 +42,13 @@ class MCTS():
             probs: a policy vector where the probability of the ith action is
                    proportional to visit_number_s_a[(s,a)]**(1./temp)
         """
-        logging.info("Starting simulations")
         for i in range(self.args.numMCTSSims):
             self.search(canonicalBoard)
 
-        s = self.game.stringRepresentation(canonicalBoard)
+        s = ai_environment.stringRepresentation(canonicalBoard)
 
         # The number of visits - during the search() - for each available state from the current one
-        counts = [self.visit_number_s_a[(s, a)] if (s, a) in self.visit_number_s_a else 0 for a in range(self.game.getActionSize())]
+        counts = [self.visit_number_s_a[(s, a)] if (s, a) in self.visit_number_s_a else 0 for a in range(ai_environment.getActionSize())]
 
         if temp==0:
             bestA = np.argmax(counts)
@@ -49,6 +57,9 @@ class MCTS():
             return probs
 
         counts = [x**(1./temp) for x in counts]
+        if sum(counts) <= 0:
+            logging.error("Algorithm failure")
+            _debug_board(canonicalBoard)
         probs = [x/float(sum(counts)) for x in counts]
         return probs
 
@@ -72,10 +83,10 @@ class MCTS():
             v: the negative of the value of the current canonicalBoard
         """
 
-        s = self.game.stringRepresentation(canonicalBoard)
+        s = ai_environment.stringRepresentation(canonicalBoard)
 
         if s not in self.game_ended_s:
-            self.game_ended_s[s] = self.game.getGameEnded(canonicalBoard, 1)
+            self.game_ended_s[s] = ai_environment.getGameEnded(canonicalBoard, 1)
         if self.game_ended_s[s]!=0:
             # terminal node
             return -self.game_ended_s[s]
@@ -83,7 +94,7 @@ class MCTS():
         if s not in self.policy_s:
             # leaf node
             self.policy_s[s], value = self.predictor.predict(canonicalBoard)
-            valids = self.game.getValidMoves(canonicalBoard, 1)
+            valids = ai_environment.getValidMoves(canonicalBoard, 1)
             self.policy_s[s] = self.policy_s[s] * valids      # masking invalid moves
             sum_current_policy = np.sum(self.policy_s[s])
             if sum_current_policy > 0:
@@ -99,7 +110,6 @@ class MCTS():
 
             self.valid_moves_s[s] = valids
             self.visit_number_s[s] = 0
-            #logging.debug("\n{}".format(self.game.debug_hive))
             return -value
 
         valids = self.valid_moves_s[s]
@@ -107,10 +117,11 @@ class MCTS():
         best_act = -1
 
         # pick the action with the highest upper confidence bound
-        for a in range(self.game.getActionSize()):
+        for a in range(ai_environment.getActionSize()):
             if valids[a]:
-                if (s,a) in self.Qsa:
-                    u = self.Qsa[(s,a)] + self.args.cpuct * self.policy_s[s][a] * math.sqrt(self.visit_number_s[s]) / (1 + self.visit_number_s_a[(s, a)])
+                if (s, a) in self.Qsa:
+                    u = self.Qsa[(s, a)] + self.args.cpuct * self.policy_s[s][a] * math.sqrt(
+                            self.visit_number_s[s]) / (1 + self.visit_number_s_a[(s, a)])
                 else:
                     u = self.args.cpuct * self.policy_s[s][a] * math.sqrt(self.visit_number_s[s] + EPS)     # Q = 0 ?
 
@@ -119,18 +130,19 @@ class MCTS():
                     best_act = a
 
         a = best_act
-        next_s, next_player = self.game.getNextState(canonicalBoard, 1, a)
+        next_s, next_player = ai_environment.getNextState(canonicalBoard, 1, a)
 
-        next_s = self.game.getCanonicalForm(next_s, next_player)
+        next_s = ai_environment.getCanonicalForm(next_s, next_player)
 
         value = self.search(next_s)
 
-        if (s,a) in self.Qsa:
-            self.Qsa[(s,a)] = (self.visit_number_s_a[(s, a)] * self.Qsa[(s, a)] + value) / (self.visit_number_s_a[(s, a)] + 1)
+        if (s, a) in self.Qsa:
+            self.Qsa[(s, a)] = (self.visit_number_s_a[(s, a)] * self.Qsa[(s, a)] + value) / (
+                        self.visit_number_s_a[(s, a)] + 1)
             self.visit_number_s_a[(s, a)] += 1
 
         else:
-            self.Qsa[(s,a)] = value
+            self.Qsa[(s, a)] = value
             self.visit_number_s_a[(s, a)] = 1
 
         self.visit_number_s[s] += 1

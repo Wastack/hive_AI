@@ -1,12 +1,11 @@
 from gym import Env
 from gym.spaces import Box
 
-from AI.environment import Environment
+from engine.environment.aienvironment import AIEnvironment
 from AI.gym.HiveSpace import HiveActionSpace
 from AI.random_player import RandomPlayer
-from hive_utils import GameStatus
-from hivegame.hive import Hive
-from hivegame import hive_representation as represent
+from engine.hive_utils import GameStatus
+from engine import hive_representation as represent
 import numpy as np
 
 class HiveEnv(Env):
@@ -16,7 +15,7 @@ class HiveEnv(Env):
     def __init__(self):
         super(HiveEnv, self).__init__()
         self.reward_range = (-1., 1.)
-        self.env = Environment()
+        self.env = AIEnvironment()
         self.action_space = HiveActionSpace(self.env.hive)
         self.observation_space = Box(low=0, high=9, shape= (22, 21), dtype=np.uint8)
 
@@ -24,7 +23,7 @@ class HiveEnv(Env):
         self.opponent = RandomPlayer()
 
     def reset(self):
-        self.env = Environment()
+        self.env = AIEnvironment()
         self.action_space = HiveActionSpace(self.env.hive)
         return np.array(self._state())
 

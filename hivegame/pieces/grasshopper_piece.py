@@ -1,10 +1,10 @@
 from hivegame.pieces.piece import HivePiece
-from hivegame.hive_utils import Direction, HiveException
+from engine.hive_utils import Direction, HiveException
 
 from typing import TYPE_CHECKING, Optional
 from hivegame.utils import hexutil
 if TYPE_CHECKING:
-    from hivegame.hive import Hive
+    from engine.hive import Hive
 
 class GrassHopperPiece(HivePiece):
     directions = [

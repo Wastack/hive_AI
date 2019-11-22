@@ -1,10 +1,10 @@
 import random
 
-from gym.spaces import Discrete, Box
+from gym.spaces import Discrete
 
-from AI.environment import Environment
-from hive import Hive
-from hivegame import hive_representation as represent
+from engine.environment.aienvironment import AIEnvironment
+from engine.hive import Hive
+from engine import hive_representation as represent
 
 
 class HiveActionSpace(Discrete):
@@ -14,7 +14,7 @@ class HiveActionSpace(Discrete):
         return [i for i, v in enumerate(val_moves) if v > 0]
 
     def __init__(self, hive: Hive):
-        self.env = Environment()
+        self.env = AIEnvironment()
         self.env.hive = hive
         super().__init__(self.env.getActionSize())
 

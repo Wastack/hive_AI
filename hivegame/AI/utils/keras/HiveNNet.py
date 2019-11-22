@@ -1,17 +1,41 @@
 import sys
-sys.path.append('..')
-from pytorch_classification.utils import *
 
-import argparse
-from keras.models import *
-from keras.layers import *
-from keras.optimizers import *
+from hivegame.engine.environment.aienvironment import ai_environment
+from contextlib import redirect_stderr
+import os
+
+sys.path.append('..')
+
+withGPU = False
+with redirect_stderr(open(os.devnull, "w")):
+    if withGPU:
+        from tensorflow.keras.models import *
+        from tensorflow.keras.layers import *
+        from tensorflow.keras.optimizers import *
+        import tensorflow as tf
+    else:
+        from keras.models import *
+        from keras.layers import *
+        from keras.optimizers import *
+
 
 class HiveNNet():
-    def __init__(self, game, args):
+    def __init__(self, args):
+
+        if withGPU:
+            gpus = tf.config.experimental.list_physical_devices('GPU')
+            if gpus:
+                try:
+                    for gpu in gpus:
+                        tf.config.experimental.set_memory_growth(gpu, True)
+
+                except RuntimeError as e:
+                    print(e)
+
+
         # game params
-        self.board_x, self.board_y = game.getBoardSize()
-        self.action_size = game.getActionSize()
+        self.board_x, self.board_y = ai_environment.getBoardSize()
+        self.action_size = ai_environment.getActionSize()
         self.args = args
         print("[INFO] Create nnet with: board_x: {}, board_y: {}, action_size: {}, args: {} ".format(self.board_x,
                                                                                                     self.board_y,

@@ -3,7 +3,7 @@ from hivegame.pieces.piece import HivePiece
 from typing import TYPE_CHECKING
 from hivegame.utils import hexutil
 if TYPE_CHECKING:
-    from hivegame.hive import Hive
+    from engine.hive import Hive
 
 
 class BeetlePiece(HivePiece):

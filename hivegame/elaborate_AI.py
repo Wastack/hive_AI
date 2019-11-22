@@ -1,13 +1,14 @@
+import argparse
 import sys, os
 
 import logging
 
 from AI.alpha_player import AlphaPlayer
-from AI.environment import Environment
+from engine.environment.aienvironment import AIEnvironment
 from AI.random_player import RandomPlayer
 from AI.utils.keras.NNet import NNetWrapper
 from arena import Arena
-from hive_utils import dotdict
+from engine.hive_utils import dotdict
 from project import ROOT_DIR
 
 args = dotdict({
@@ -28,15 +29,21 @@ args = dotdict({
 })
 
 def main():
+    parser = argparse.ArgumentParser(description="Evaluate AI with the given model.")
+    parser.add_argument("--with-gpu", dest='with_gpu', action='store_const', const=True, default=False)
+    opt_args = parser.parse_args()
+    args["with_gpu"] = opt_args.with_gpu
+    logging.debug("With gpu: {}".format(args["with_gpu"]))
+
     FORMAT = "[%(filename)s:%(lineno)s - %(funcName)20s() ] %(message)s"
     logging.basicConfig(level=logging.DEBUG, format=FORMAT)
-    env = Environment()
+    env = AIEnvironment()
     nnet = NNetWrapper(env)
     nnet.load_model(folder=os.path.join(ROOT_DIR, 'model_saved'), filename='model.h5')
     alphaPlayer = AlphaPlayer(env, nnet, args)
     randomPlayer = RandomPlayer()
     arena = Arena(alphaPlayer, randomPlayer, env)
-    alpha_wins, random_wins, draws = arena.playGames(5000)
+    alpha_wins, random_wins, draws = arena.playGames(500)
     print("aplha won: {} times, random won: {} times, number of draws: {}".format(alpha_wins, random_wins, draws))
 
 

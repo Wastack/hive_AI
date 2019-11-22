@@ -2,7 +2,7 @@ from unittest import TestCase
 import logging, sys
 
 from hivegame.utils import importexport
-from hivegame import hive_representation as represent
+from engine import hive_representation as represent
 
 FORMAT = "[%(filename)s:%(lineno)s - %(funcName)20s() ] %(message)s"
 logging.basicConfig(level=logging.DEBUG, format=FORMAT)

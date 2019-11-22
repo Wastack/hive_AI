@@ -1,41 +1,40 @@
 #! /usr/bin/env python
 
 import sys
-from hivegame.AI.environment import Environment
+from hivegame.engine.environment.environment import Environment
 from hivegame.AI.random_player import RandomPlayer
 from hivegame.AI.human_player import HumanPlayer
-from hivegame.hive_utils import GameStatus
-from PyQt5 import QtWidgets
+from engine.hive_utils import GameStatus, HiveException
+
+hasPyQt5 = False
+if hasPyQt5:
+    from PyQt5 import QtWidgets
+    from hivegame.utils.gui.hive_widget import GameWidget
 
 import logging
 
-from hivegame.utils.gui.hive_widget import GameWidget
 
 class Arena(object):
 
-    def __init__(self, player1, player2, environment=None):
+    def __init__(self, player1, player2):
         super(Arena, self).__init__()
-        if environment is not None:
-            self.env = environment
-        else:
-            self.env = Environment()
         self._player1 = player1
         self._player2 = player2
         self._passed = False
 
     def playGame(self):
-        self.env.reset_game()  # TODO what?
-        env = self.env
-        while self.env.check_victory() == GameStatus.UNFINISHED:
+        logging.info("Start a game")
+        hive = Environment()
+        while hive.check_victory() == GameStatus.UNFINISHED:
             #print(self.env.hive)
-            current_player = self._player1 if env.current_player == "w" else self._player2
-            response = current_player.step(env)
+            current_player = self._player1 if hive.current_player == "w" else self._player2
+            response = current_player.step(hive)
             if response == "pass":
                 if self._passed:
                     # both player passed. Ouch
                     logging.error("Both player passed. Ouch.")
                     raise RuntimeError(":(")
-                self.env.pass_turn(self.env.hive)
+                hive.pass_turn()
                 self._passed = True
                 continue
             else:
@@ -46,12 +45,15 @@ class Arena(object):
             else:
                 try:
                     (piece, coord) = response
-                    feedback = env.action_piece_to(piece, coord)
-                    current_player.feedback(feedback)
+                    try:
+                        hive.action_piece_to(piece, coord)
+                        current_player.feedback(True)
+                    except HiveException:
+                        current_player.feedback(False)
                 except ValueError:
                     logging.error("ValueError when unpacking and executing response")
 
-        return env.check_victory()
+        return hive.check_victory()
 
     def _playNumberOfGames(self, num):
         whiteWon = 0
@@ -70,7 +72,6 @@ class Arena(object):
                 raise ValueError
         return whiteWon, blackWon, draws
 
-
     def playGames(self, num: int):
         """
         Play a number of games. Half of the game start with player 1 to begin, and player 2 starts the game
@@ -81,6 +82,9 @@ class Arena(object):
         :return:
             A tuple of two items: The count of winning for each player
         """
+        if num == 1:
+            self.playGame()
+        logging.info(f"Execute {num} games")
         # White starts
         (white_won, black_won, draw) = self._playNumberOfGames(num//2)
         self._player1, self._player2 = self._player2, self._player1
@@ -101,16 +105,16 @@ def main():
     player2 = RandomPlayer()
     logging.info("Start game with the following AIs: {}, {}".format(player1, player2))
     game = Arena(player1, player2)
-    game.env.reset_game()
     if headless:
         game.playGame()
-    else:
+    elif hasPyQt5:
+        # TODO put it elsewhere
         app = QtWidgets.QApplication(sys.argv)
         window = GameWidget()
-        window.set_state(game.env.hive.level)
         window.show()
         app.exec_()
     logging.info("Thanks for playing Hive. Have a nice day!")
+
 
 if __name__ == '__main__':
     sys.exit(main())

@@ -1,78 +1,26 @@
 #! /usr/bin/env python
 
-import sys
 from typing import List
 
-from hivegame.hive import Hive, HiveException
-from hivegame.hive_utils import GameStatus, Player
-from hivegame.AI.utils.Game import Game
+from engine.hive import Hive, HiveException
+from engine.hive_utils import GameStatus, Player
+from engine.environment.AIGameEnv import AIGameEnv
 
 import logging
-import hivegame.hive_representation as represent
+import engine.hive_representation as represent
 from hivegame.utils import importexport
 
-
-class Environment(Game):
+class AIEnvironment(AIGameEnv):
     """
     Environment controls the game. It contains all the methods to
     create a game, move or put down pieces, ask information about
-    current state etc.
+    current state etc. This interface is stateless.
     """
-
-    def __init__(self):
-        """
-        Creates an environment which is reset to initial state. That means no
-        bugs are placed yet, etc.
-        """
-        super(Environment, self).__init__()
-        self.hive = Hive()
-        self.input = sys.stdin
-        self.reset_game()
-        self.debug_hive = Hive()
-
-    def reset_game(self):
-        self.hive.reset()
 
     @staticmethod
     def pass_turn(hive):
         hive.pass_turn()
 
-    def check_victory(self):
-        """
-        UNFINISHED = 0
-        WHITE_WIN = 1
-        BLACK_WIN = 2
-        DRAW = 3
-        :return: status of the game
-        """
-        current_player = self.hive.current_player
-        white_queen_pos = self.hive.locate("wQ1")
-        if white_queen_pos:
-            if len(self.hive.level.occupied_surroundings(white_queen_pos)) > 1:
-                return GameStatus.BLACK_WIN
-        black_queen_pos = self.hive.locate("bQ1")
-        if black_queen_pos:
-            if len(self.hive.level.occupied_surroundings(black_queen_pos)) > 1:
-                return GameStatus.WHITE_WIN
-        return GameStatus.UNFINISHED
-        #return self.hive.check_victory()
-
-    @property
-    def current_player(self):
-        return self.hive.current_player
-    
-    def unplayed_pieces(self, player):
-        return self.hive.level.get_unplayed_pieces(player)
-    
-    def get_all_possible_actions(self):
-        return represent.get_all_possible_actions(self.hive)
-    
-    def action_piece_to(self, piece, to_cell):
-        try:
-            self.hive.action_piece_to(piece, to_cell)
-            return True
-        except HiveException:
-            return False
 
     @staticmethod
     def _player_to_inner_player(player_num):
@@ -80,26 +28,32 @@ class Environment(Game):
         return Player.WHITE if player_num == 1 else Player.BLACK
 
 # Methods for Game.py interface
-    def stringRepresentation(self, board):
+    @staticmethod
+    def stringRepresentation(board):
         return represent.string_representation(board)
 
-    def getActionSize(self):
+    @staticmethod
+    def getActionSize():
         """
         :return: Number of possible actions in the given state
         """
         hive = Hive()
         return len(represent.get_all_action_vector(hive))
 
-    def getCanonicalForm(self, two_dim_repr: List[List[int]], player_num):
-        hive = Hive.load_state_with_player(two_dim_repr, self._player_to_inner_player(player_num))
+    @staticmethod
+    def getCanonicalForm(two_dim_repr: List[List[int]], player_num):
+        hive = represent.load_state_with_player(two_dim_repr, AIEnvironment._player_to_inner_player(player_num))
         return represent.two_dim_representation(represent.canonical_adjacency_state(hive))
 
-    def getGameEnded(self, board, player):
-        return self.getGameEnded_simpified(board, player)
+    @staticmethod
+    def getGameEnded(board, player):
+        # TODO victory condition should be configurable
+        return AIEnvironment.getGameEnded_simpified(board, player)
 
-    def getGameEnded_simpified(self, board, player):
-        inner_player = self._player_to_inner_player(player)
-        hive = Hive.load_state_with_player(board, inner_player)
+    @staticmethod
+    def getGameEnded_simpified(board, player):
+        inner_player = AIEnvironment._player_to_inner_player(player)
+        hive = represent.load_state_with_player(board, inner_player)
         res = 0
         white_queen_pos = hive.locate("wQ1")
         if white_queen_pos:
@@ -111,8 +65,9 @@ class Environment(Game):
                 res = -1 if inner_player == Player.BLACK else 1
         return res
 
-    def getGameEnded_original(self, board, player_num):
-        hive = Hive.load_state_with_player(board, self._player_to_inner_player(player_num))
+    @staticmethod
+    def getGameEnded_original(board, player_num):
+        hive = represent.load_state_with_player(board, AIEnvironment._player_to_inner_player(player_num))
         status = hive.check_victory()
         if status == GameStatus.UNFINISHED:
             return 0
@@ -123,13 +78,15 @@ class Environment(Game):
         else:
             raise ValueError('Unexpected game status')
 
-    def getValidMoves(self, board, player_num) -> List[int]:
-        hive = Hive.load_state_with_player(board, self._player_to_inner_player(player_num))
+    @staticmethod
+    def getValidMoves(board, player_num) -> List[int]:
+        hive = represent.load_state_with_player(board, AIEnvironment._player_to_inner_player(player_num))
         return represent.get_all_action_vector(hive)
 
-    def getNextState(self, board, player, action_number):
+    @staticmethod
+    def getNextState(board, player, action_number):
         assert action_number >= 0
-        hive = Hive.load_state_with_player(board, Environment._player_to_inner_player(player))
+        hive = represent.load_state_with_player(board, AIEnvironment._player_to_inner_player(player))
         try:
             (piece, to_cell) = hive.action_from_vector(action_number)
         except HiveException as error:
@@ -146,18 +103,19 @@ class Environment(Game):
             logging.error("Hive:\n{}".format(hive))
             importexport.export_hive(hive, importexport.saved_game_path("last_error.json"))
             raise
-        self.debug_hive = hive
         return represent.two_dim_representation(represent.get_adjacency_state(hive)), player*(-1)
 
-    def getInitBoard(self):
+    @staticmethod
+    def getInitBoard():
         hive = Hive()
         return represent.two_dim_representation(represent.get_adjacency_state(hive))
 
-    def getSymmetries(self, board: List[List[int]], pi):
+    @staticmethod
+    def getSymmetries(board: List[List[int]], pi):
         symmetries = []
         # Rotate the board 5 times
         for i in range(5):
-            symmetries.append(self._rotate_adjacency(board))
+            symmetries.append(AIEnvironment._rotate_adjacency(board))
         return [(sim, pi) for sim in symmetries]
 
     @staticmethod
@@ -175,6 +133,10 @@ class Environment(Game):
             result.append(new_row)
         return result
 
-    def getBoardSize(self):
+    @staticmethod
+    def getBoardSize():
         hive = Hive()
         return represent.two_dim_representation(represent.canonical_adjacency_state(hive)).shape
+
+
+ai_environment = AIEnvironment()

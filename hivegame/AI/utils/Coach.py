@@ -1,6 +1,7 @@
 from collections import deque
 from hivegame.arena import Arena
 from hivegame.AI.utils.MCTS import MCTS
+from hivegame.engine.environment.aienvironment import ai_environment
 import numpy as np
 from pytorch_classification.utils import Bar, AverageMeter
 
@@ -17,12 +18,11 @@ class Coach():
     This class executes the self-play + learning. It uses the functions defined
     in Game and NeuralNet. args are specified in main.py.
     """
-    def __init__(self, game, nnet, args):
-        self.game = game
+    def __init__(self, nnet, args):
         self.nnet = nnet
-        self.pnet = self.nnet.__class__(self.game)  # the competitor network
+        self.pnet = self.nnet.__class__()  # the competitor network
         self.args = args
-        self.mcts = MCTS(self.game, self.nnet, self.args)
+        self.mcts = MCTS(self.nnet, self.args)
         self.trainExamplesHistory = []    # history of examples from args.numItersForTrainExamplesHistory latest iterations
         self.skipFirstSelfPlay = False # can be overriden in loadTrainExamples()
 
@@ -43,28 +43,25 @@ class Coach():
                            the player eventually won the game, else -1.
         """
         trainExamples = []
-        board = self.game.getInitBoard()
-        self.curPlayer = 1  # white starts
+        board = ai_environment.getInitBoard()
+        self.curPlayer = -1   # Black player
         episodeStep = 0
-        logging.info("Start executing episode")
         while True:
+            self.curPlayer *= -1
             episodeStep += 1
             temp = int(episodeStep < self.args.tempThreshold)
 
-            canonicalBoard = self.game.getCanonicalForm(board, self.curPlayer)
+            canonicalBoard = ai_environment.getCanonicalForm(board, self.curPlayer)
             pi = self.mcts.getActionProb(canonicalBoard, temp=temp)
-            sym = self.game.getSymmetries(canonicalBoard, pi)
+            sym = ai_environment.getSymmetries(canonicalBoard, pi)
             for b,p in sym:
                 trainExamples.append([b, self.curPlayer, p, None])
 
             action = np.random.choice(len(pi), p=pi)
-            board, _ = self.game.getNextState(canonicalBoard, self.curPlayer, action)
-            logging.debug("\n{}".format(self.game.debug_hive))
-            r = self.game.getGameEnded(board, self.curPlayer)
-            logging.debug("result: {}".format(r))
+            board, _ = ai_environment.getNextState(canonicalBoard, 1, action)
+            r = ai_environment.getGameEnded(board, self.curPlayer)
 
             if r!=0:
-                logging.info("A game has ended, winner: {}".format(r))
                 return [(x[0],x[2],r*((-1)**(x[1]!=self.curPlayer))) for x in trainExamples]
 
     def learn(self):
@@ -86,9 +83,9 @@ class Coach():
                 eps_time = AverageMeter()
                 bar = Bar('Self Play', max=self.args.numEps)
                 end = time.time()
-    
+
                 for eps in range(self.args.numEps):
-                    self.mcts = MCTS(self.game, self.nnet, self.args)   # reset search tree
+                    self.mcts = MCTS(self.nnet, self.args)   # reset search tree
                     iterationTrainExamples += self.executeEpisode()
 
                     # bookkeeping + plot progress
@@ -108,7 +105,7 @@ class Coach():
             # backup history to a file
             # NB! the examples were collected using the model from the previous iteration, so (i-1)  
             self.saveTrainExamples(i-1)
-            
+
             # shuffle examples before training
             trainExamples = []
             for e in self.trainExamplesHistory:
@@ -118,13 +115,13 @@ class Coach():
             # training new network, keeping a copy of the old one
             self.nnet.save_checkpoint(folder=self.args.checkpoint, filename='temp.pth.tar')
             self.pnet.load_checkpoint(folder=self.args.checkpoint, filename='temp.pth.tar')
-            pAlphaPlayer = AlphaPlayer(self.game, self.pnet, self.args)
+            pAlphaPlayer = AlphaPlayer(self.pnet, self.args)
 
             self.nnet.train(trainExamples)
-            nAplhaPlayer = AlphaPlayer(self.game, self.nnet, self.args)
+            nAplhaPlayer = AlphaPlayer(self.nnet, self.args)
 
             print('PITTING AGAINST PREVIOUS VERSION')
-            arena = Arena(pAlphaPlayer, nAplhaPlayer, self.game)
+            arena = Arena(pAlphaPlayer, nAplhaPlayer)
             pwins, nwins, draws = arena.playGames(self.args.arenaCompare)
 
             print('NEW/PREV WINS : %d / %d ; DRAWS : %d' % (nwins, pwins, draws))

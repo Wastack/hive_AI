@@ -5,7 +5,7 @@ from .grasshopper_piece import GrassHopperPiece
 from .beetle_piece import BeetlePiece
 
 from collections import OrderedDict
-from hivegame.hive_utils import Player
+from engine.hive_utils import Player
 from typing import Set, List
 from hivegame.pieces.piece import HivePiece
 

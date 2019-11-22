@@ -2,8 +2,8 @@ import sys
 
 from PyQt5 import QtCore, QtGui, QtWidgets
 
-from hivegame.hive_utils import Player
-from hivegame.hive import Hive
+from engine.hive_utils import Player
+from engine.hive import Hive
 from hivegame.utils import hexutil
 from hivegame.utils.game_state import GameState
 from hivegame.pieces import piece_factory

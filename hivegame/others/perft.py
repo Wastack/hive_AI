@@ -1,6 +1,5 @@
-from hive_representation import *
-from hive import Hive
-from hive_utils import HiveException
+from engine.hive_representation import *
+from engine.hive import Hive
 
 from copy import deepcopy
 import sys

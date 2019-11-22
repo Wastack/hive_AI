@@ -6,8 +6,9 @@ import sys
 import logging
 
 sys.path.append('../..')
-from hivegame.hive_utils import dotdict
+from engine.hive_utils import dotdict
 from hivegame.AI.utils.NeuralNet import NeuralNet
+from hivegame.engine.environment.aienvironment import ai_environment
 
 from .HiveNNet import HiveNNet as hivenet
 from keras.models import load_model
@@ -22,10 +23,10 @@ args = dotdict({
 })
 
 class NNetWrapper(NeuralNet):
-    def __init__(self, game):
-        self.nnet = hivenet(game, args)
-        self.board_x, self.board_y = game.getBoardSize()
-        self.action_size = game.getActionSize()
+    def __init__(self):
+        self.nnet = hivenet(args)
+        self.board_x, self.board_y = ai_environment.getBoardSize()
+        self.action_size = ai_environment.getActionSize()
 
     def train(self, examples):
         """
@@ -46,7 +47,7 @@ class NNetWrapper(NeuralNet):
         start = time.time()
 
         # preparing input
-        board = board[np.newaxis, :, :]
+        board = np.array(board[np.newaxis, :, :], dtype=np.float64)
 
         # run
         pi, v = self.nnet.model.predict(board)

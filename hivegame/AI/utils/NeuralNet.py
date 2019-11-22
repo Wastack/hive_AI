@@ -11,7 +11,7 @@ class NeuralNet(metaclass=abc.ABCMeta):
     See othello/NNet.py for an example implementation.
     """
 
-    def __init__(self, game):
+    def __init__(self):
         pass
 
     @abc.abstractmethod

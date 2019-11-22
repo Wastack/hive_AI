@@ -1,5 +1,6 @@
+from hivegame.engine.hive import Hive
 from hivegame.AI.player import Player
-from hivegame.hive_utils import Direction, HiveException
+from engine.hive_utils import Direction, HiveException
 from hivegame.utils import hexutil
 
 
@@ -7,10 +8,11 @@ class HumanPlayer(Player):
     def __init__(self, input_stream):
         self._input = input_stream
 
-    def step(self, environment):
-        active_player = environment.current_player
+    def step(self, hive: 'Hive'):
+        active_player = hive.current_player
+        print(hive)
         print("pieces available: %s" % sorted(
-            environment.unplayed_pieces(active_player), key= lambda x: (x.kind, x.number)
+            hive.level.get_unplayed_pieces(active_player)
         ))
         print("player %s play: " % active_player)
 
@@ -21,7 +23,7 @@ class HumanPlayer(Player):
                 # Do not accept empty lines
                 while not cmd.strip():
                     cmd = self._input.readline()
-                result = HumanPlayer.parse_cmd(cmd.strip(), environment.hive)
+                result = HumanPlayer.parse_cmd(cmd.strip(), hive)
                 return result
             except KeyboardInterrupt:
                 return None
