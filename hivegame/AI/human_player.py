@@ -1,7 +1,7 @@
-from hivegame.engine.hive import Hive
-from hivegame.AI.player import Player
+from engine.hive import Hive
+from AI.player import Player
 from engine.hive_utils import Direction, HiveException
-from hivegame.utils import hexutil
+from utils import hexutil
 
 
 class HumanPlayer(Player):

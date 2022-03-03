@@ -1,9 +1,9 @@
 import json, logging, os
 from engine.hive import Hive
-from hivegame.utils.hexutil import Hex
+from utils.hexutil import Hex
 import ast
-import hivegame.pieces.piece_factory as piecefact
-from hivegame.project import ROOT_DIR
+import pieces.piece_factory as piecefact
+from project import ROOT_DIR
 
 SAVED_GAME_DIR = "saved_games"
 

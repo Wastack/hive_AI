@@ -1,8 +1,8 @@
 from __future__ import annotations
-from hivegame.pieces.piece import HivePiece
+from pieces.piece import HivePiece
 
 from typing import TYPE_CHECKING
-from hivegame.utils import hexutil
+from utils import hexutil
 if TYPE_CHECKING:
     from engine.hive import Hive
 

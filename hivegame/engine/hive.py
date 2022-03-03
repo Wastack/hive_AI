@@ -1,15 +1,15 @@
 from __future__ import annotations
 
-from hivegame.utils.game_state import GameState
-from hivegame.utils import hexutil
+from utils.game_state import GameState
+from utils import hexutil
 
-from hivegame.pieces.piece import HivePiece
+from pieces.piece import HivePiece
 
 from engine.hive_utils import Player, HiveException, Direction
-from hivegame.utils.ascii_view import HiveView
+from utils.ascii_view import HiveView
 
 import engine.hive_validation as valid
-import hivegame.pieces.piece_factory as piece_fact
+import pieces.piece_factory as piece_fact
 
 import logging
 

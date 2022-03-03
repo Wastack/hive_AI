@@ -6,7 +6,7 @@ from collections import namedtuple
 
 from engine.hive_utils import HiveException
 
-from hivegame.utils import hexutil
+from utils import hexutil
 
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:

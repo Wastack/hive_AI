@@ -1,15 +1,15 @@
 #! /usr/bin/env python
 
 import sys
-from hivegame.engine.environment.environment import Environment
-from hivegame.AI.random_player import RandomPlayer
-from hivegame.AI.human_player import HumanPlayer
+from engine.environment.environment import Environment
+from AI.random_player import RandomPlayer
+from AI.human_player import HumanPlayer
 from engine.hive_utils import GameStatus, HiveException
 
 hasPyQt5 = False
 if hasPyQt5:
     from PyQt5 import QtWidgets
-    from hivegame.utils.gui.hive_widget import GameWidget
+    from utils.gui.hive_widget import GameWidget
 
 import logging
 
@@ -94,7 +94,7 @@ class Arena(object):
         self._player1, self._player2 = self._player2, self._player1
         return white_won + white_won2, black_won + black_won2, draw + draw2
 
-headless = False
+headless = True
 
 def main():
     # TODO parse options for players

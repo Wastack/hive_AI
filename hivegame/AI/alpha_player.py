@@ -1,11 +1,11 @@
 from engine.hive import Hive
-from hivegame.AI.player import Player
-from hivegame.AI.utils.MCTS import MCTS
+from AI.player import Player
+from AI.utils.MCTS import MCTS
 from engine import hive_representation as represent
 
 import numpy as np
 from engine.hive_utils import Player as PlayerColor
-from hivegame.engine.environment.aienvironment import ai_environment
+from engine.environment.aienvironment import ai_environment
 
 
 class AlphaPlayer(Player):

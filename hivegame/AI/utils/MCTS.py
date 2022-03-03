@@ -3,9 +3,9 @@ import math
 import numpy as np
 
 from engine.hive_utils import Player
-from hivegame.engine.environment.aienvironment import ai_environment
+from engine.environment.aienvironment import ai_environment
 
-from hivegame.engine import hive_representation as represent
+from engine import hive_representation as represent
 
 EPS = 1e-8
 

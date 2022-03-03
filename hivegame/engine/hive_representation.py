@@ -2,16 +2,16 @@ from functools import reduce
 
 from engine.hive_utils import Direction, Player, get_queen_name, GameStatus
 import engine.hive_validation as valid
-import hivegame.pieces.piece_factory as piece_fact
-from hivegame.pieces.ant_piece import AntPiece
-from hivegame.pieces.spider_piece import SpiderPiece
+import pieces.piece_factory as piece_fact
+from pieces.ant_piece import AntPiece
+from pieces.spider_piece import SpiderPiece
 
-from hivegame.utils.game_state import GameState
+from utils.game_state import GameState
 
 from typing import Dict, List, Set, Tuple
 import numpy as np
 
-from hivegame.engine.hive import Hive
+from engine.hive import Hive
 
 
 # Adjacency matrix of pieces
@@ -29,8 +29,8 @@ from hivegame.engine.hive import Hive
 #
 #   + eg. in row of bA2 and column of bG1 there is a 3.
 #     That means bG1 is north-east from bA2.
-from hivegame.pieces.piece import HivePiece
-from hivegame.utils import hexutil
+from pieces.piece import HivePiece
+from utils import hexutil
 
 
 def get_adjacency_state(hive: 'Hive') -> Dict[str, Dict[str, int]]:

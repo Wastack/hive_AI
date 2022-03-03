@@ -7,7 +7,7 @@ from .beetle_piece import BeetlePiece
 from collections import OrderedDict
 from engine.hive_utils import Player
 from typing import Set, List
-from hivegame.pieces.piece import HivePiece
+from pieces.piece import HivePiece
 
 
 def sorted_piece_dict(color: Player) -> OrderedDict:

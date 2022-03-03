@@ -1,4 +1,4 @@
-from hivegame.utils.game_state import GameState
+from utils.game_state import GameState
 
 
 class HiveView(object):

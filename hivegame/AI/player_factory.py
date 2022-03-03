@@ -2,13 +2,13 @@ import os
 import sys
 from typing import Tuple, List
 
-from hivegame.AI.alpha_player import AlphaPlayer
-from hivegame.AI.human_player import HumanPlayer
-from hivegame.AI.player import Player
-from hivegame.AI.random_player import RandomPlayer
-from hivegame.AI.utils.keras.NNet import NNetWrapper
-from hivegame.engine.hive_utils import dotdict
-from hivegame.project import ROOT_DIR
+from AI.alpha_player import AlphaPlayer
+from AI.human_player import HumanPlayer
+from AI.player import Player
+from AI.random_player import RandomPlayer
+from AI.utils.keras.NNet import NNetWrapper
+from engine.hive_utils import dotdict
+from project import ROOT_DIR
 import logging
 
 

@@ -1,9 +1,9 @@
 import random
 import logging
 
-from hivegame.engine.hive import Hive
-from hivegame.engine.environment.aienvironment import ai_environment
-from hivegame.AI.player import Player
+from engine.hive import Hive
+from engine.environment.aienvironment import ai_environment
+from AI.player import Player
 import engine.hive_representation as represent
 
 class RandomPlayer(Player):

@@ -4,9 +4,9 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 
 from engine.hive_utils import Player
 from engine.hive import Hive
-from hivegame.utils import hexutil
-from hivegame.utils.game_state import GameState
-from hivegame.pieces import piece_factory
+from utils import hexutil
+from utils.game_state import GameState
+from pieces import piece_factory
 
 
 class GameWidget(QtWidgets.QWidget):

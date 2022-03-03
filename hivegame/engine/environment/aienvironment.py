@@ -8,7 +8,7 @@ from engine.environment.AIGameEnv import AIGameEnv
 
 import logging
 import engine.hive_representation as represent
-from hivegame.utils import importexport
+from utils import importexport
 
 class AIEnvironment(AIGameEnv):
     """

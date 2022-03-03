@@ -1,15 +1,15 @@
 from __future__ import annotations
 from engine.hive_utils import get_queen_name
-from hivegame.pieces.bee_piece import BeePiece
+from pieces.bee_piece import BeePiece
 import logging
 
 from typing import TYPE_CHECKING, Optional
 
 if TYPE_CHECKING:
     from engine.hive import Hive
-    from hivegame.pieces.piece import HivePiece
+    from pieces.piece import HivePiece
 
-from hivegame.utils import hexutil
+from utils import hexutil
 
 
 def validate_queen_rules(hive: 'Hive', piece: 'HivePiece', action: str) -> bool:

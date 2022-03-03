@@ -1,6 +1,6 @@
 import abc
 
-from hivegame.engine.hive import Hive
+from engine.hive import Hive
 
 
 class Player(metaclass=abc.ABCMeta):

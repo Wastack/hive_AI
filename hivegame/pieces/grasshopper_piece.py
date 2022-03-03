@@ -1,8 +1,8 @@
-from hivegame.pieces.piece import HivePiece
+from pieces.piece import HivePiece
 from engine.hive_utils import Direction, HiveException
 
 from typing import TYPE_CHECKING, Optional
-from hivegame.utils import hexutil
+from utils import hexutil
 if TYPE_CHECKING:
     from engine.hive import Hive
 

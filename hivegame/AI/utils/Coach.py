@@ -1,7 +1,7 @@
 from collections import deque
-from hivegame.arena import Arena
-from hivegame.AI.utils.MCTS import MCTS
-from hivegame.engine.environment.aienvironment import ai_environment
+from arena import Arena
+from AI.utils.MCTS import MCTS
+from engine.environment.aienvironment import ai_environment
 import numpy as np
 from pytorch_classification.utils import Bar, AverageMeter
 
@@ -10,7 +10,7 @@ from pickle import Pickler, Unpickler
 from random import shuffle
 import logging
 
-from hivegame.AI.alpha_player import AlphaPlayer
+from AI.alpha_player import AlphaPlayer
 
 
 class Coach():

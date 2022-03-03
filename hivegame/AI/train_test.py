@@ -1,9 +1,9 @@
 import logging
 import sys, os
 
-from hivegame.configure import train_args
-from hivegame.AI.utils.keras.NNet import NNetWrapper
-from hivegame.AI.utils.Coach import Coach
+from configure import train_args
+from AI.utils.keras.NNet import NNetWrapper
+from AI.utils.Coach import Coach
 
 
 def main():

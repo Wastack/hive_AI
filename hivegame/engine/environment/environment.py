@@ -1,5 +1,5 @@
 from engine.hive_utils import GameStatus
-from hivegame.engine.hive import Hive
+from engine.hive import Hive
 
 
 class Environment(Hive):
