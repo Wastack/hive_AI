@@ -10,7 +10,7 @@ from pickle import Pickler, Unpickler
 from random import shuffle
 import logging
 
-from AI.alpha_player import AlphaPlayer
+from AI.CNN_AI import AlphaPlayer
 
 
 class Coach():
