@@ -276,7 +276,7 @@ def get_all_action_vector(hive: 'Hive') -> List[int]:
     return result
 
 
-def get_all_possible_actions_nonidentical(hive: 'Hive') -> (HivePiece, hexutil.Hex):
+def get_all_possible_actions_nonidentical(hive: 'Hive') -> Tuple[(HivePiece, hexutil.Hex)]:
     """
     :param hive: The representation of the game.
     :return: All possible actions except the second turn. In the second player's first turn all the directions are
