@@ -1,8 +1,9 @@
 import math
 import numpy as np
+import logging
 
 from engine.environment.aienvironment import ai_environment
-
+from engine.hive_utils import Player
 from engine import hive_representation
 
 def ucb_score(parent, child, exploration_param = 1):
@@ -17,6 +18,10 @@ def ucb_score(parent, child, exploration_param = 1):
         value = 0
 
     return value + priors
+
+def _debug_board(canonicalBoard):
+    hive  = hive_representation.load_state_with_player(canonicalBoard, Player.WHITE)
+    logging.debug("\n{}".format(hive))
 
 
 class Node:
@@ -107,8 +112,50 @@ class Node:
     
     
 
-class Monte_Carlo_Tree_Search():
+class MonteCarloTreeSearch():
 
     def __init__(self, game, model, args):
-        #TODO complete init
-        return
+        self.game = game
+        self.model = model
+        self.args = args
+
+    def run(self, model, state, to_play):
+        root = Node(0, to_play)
+
+
+        action_probabilities, value = model.predict(state)
+
+
+    def get_action_prob(self, canonicalBoard, temp=1):
+        """
+        This function performs numMCTSSims simulations of MCTS starting from
+        canonicalBoard.
+
+        Parameters:
+            canonicalBoard:  Canonical representation of the board.
+
+        Returns:
+            probs: a policy vector where the probability of the ith action is
+                   proportional to visit_number_s_a[(s,a)]**(1./temp)
+        """
+        for i in range(self.args.numMCTSSims):
+            self.search(canonicalBoard)
+
+        s = ai_environment.stringRepresentation(canonicalBoard)
+
+        # The number of visits - during the search() - for each available state from the current one
+        counts = [self.visit_number_s_a[(s, a)] if (s, a) in self.visit_number_s_a else 0 for a in range(ai_environment.getActionSize())]
+
+        if temp==0:
+            bestA = np.argmax(counts)
+            probs = [0]*len(counts)
+            probs[bestA]=1
+            return probs
+
+        counts = [x**(1./temp) for x in counts]
+        if sum(counts) <= 0:
+            logging.error("Algorithm failure")
+            _debug_board(canonicalBoard)
+        probs = [x/float(sum(counts)) for x in counts]
+        return probs
+        
