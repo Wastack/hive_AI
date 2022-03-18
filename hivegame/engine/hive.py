@@ -236,7 +236,7 @@ class Hive(object):
         logging.error(error_msg)
         raise HiveException(error_msg, 10010)
 
-    def action_from_vector(self, action_number: int) -> (HivePiece, hexutil.Hex):
+    def action_from_vector(self, action_number: int) -> (Tuple[HivePiece, hexutil.Hex]):
         """
         Maps an action number to an actual action. The fixed size action space is explained
         in detail at :func:`.hive_representation.get_all_action_vector``
