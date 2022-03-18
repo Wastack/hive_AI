@@ -81,7 +81,7 @@ class Node:
         return best_action, best_child
 
 
-    def expand_node(self, state, to_play, action_probabilities):
+    def expand(self, state, to_play, action_probabilities):
         """
         Method to expand the children of a node while noting the priors given by the convolutional neural network
         """
@@ -119,43 +119,55 @@ class MonteCarloTreeSearch():
         self.model = model
         self.args = args
 
-    def run(self, model, state, to_play):
+
+    def run(self, model, canonical_board, state, to_play):
+
         root = Node(0, to_play)
 
+        # Expanding the root node
+        action_probs, value = model.predict(state)
+        valid_moves = ai_environment.getValidMoves(canonical_board, 1)
+        action_probs = action_probs * valid_moves  # mask invalid moves
+        action_probs /= np.sum(action_probs)
+        root.expand(state, to_play, action_probs)
 
-        action_probabilities, value = model.predict(state)
+        for _ in range(self.args['num_simulations']):
+            node = root
+            search_path = [node]
 
+            # SELECT
+            while node.is_expanded():
+                action, node = node.select_best_child()
+                search_path.append(node)
 
-    def get_action_prob(self, canonicalBoard, temp=1):
+            parent = search_path[-2]
+            state = parent.state
+            # Now we're at a leaf node and we would like to expand
+            # Players always play from their own perspective
+            next_state, _ = ai_environment.getNextState(canonical_board, player=1, action=action)
+            # Get the board from the perspective of the other player
+            next_state = ai_environment.getCanonicalForm(next_state, player=-1)
+
+            # The value of the new state from the perspective of the other player
+            value = ai_environment.getGameEnded(next_state, player=1)
+            if value == 0:
+                # If the game has not ended:
+                # EXPAND
+                action_probs, value = model.predict(next_state)
+                valid_moves = ai_environment.getValidMoves(next_state)
+                action_probs = action_probs * valid_moves  # mask invalid moves
+                action_probs /= np.sum(action_probs)
+                node.expand(next_state, parent.to_play * -1, action_probs)
+
+            self.backpropagate(search_path, value, parent.to_play * -1)
+
+        return root
+
+    def backpropagate(self, search_path, value, to_play):
         """
-        This function performs numMCTSSims simulations of MCTS starting from
-        canonicalBoard.
-
-        Parameters:
-            canonicalBoard:  Canonical representation of the board.
-
-        Returns:
-            probs: a policy vector where the probability of the ith action is
-                   proportional to visit_number_s_a[(s,a)]**(1./temp)
+        At the end of a simulation, we propagate the evaluation all the way up the tree
+        to the root.
         """
-        for i in range(self.args.numMCTSSims):
-            self.search(canonicalBoard)
-
-        s = ai_environment.stringRepresentation(canonicalBoard)
-
-        # The number of visits - during the search() - for each available state from the current one
-        counts = [self.visit_number_s_a[(s, a)] if (s, a) in self.visit_number_s_a else 0 for a in range(ai_environment.getActionSize())]
-
-        if temp==0:
-            bestA = np.argmax(counts)
-            probs = [0]*len(counts)
-            probs[bestA]=1
-            return probs
-
-        counts = [x**(1./temp) for x in counts]
-        if sum(counts) <= 0:
-            logging.error("Algorithm failure")
-            _debug_board(canonicalBoard)
-        probs = [x/float(sum(counts)) for x in counts]
-        return probs
-        
+        for node in reversed(search_path):
+            node.value_sum += value if node.to_play == to_play else -value
+            node.visit_count += 1

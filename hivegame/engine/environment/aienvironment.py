@@ -139,4 +139,5 @@ class AIEnvironment(AIGameEnv):
         return represent.two_dim_representation(represent.canonical_adjacency_state(hive)).shape
 
 
+
 ai_environment = AIEnvironment()

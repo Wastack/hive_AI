@@ -1,7 +1,7 @@
 import logging, sys
 from unittest import TestCase
 
-from AI.utils import Monte_Carlo
+from hivegame.AI.utils import Node, ucb_score, Monte_Carlo_Tree_Search
 
 
 FORMAT = "[%(filename)s:%(lineno)s - %(funcName)20s() ] %(message)s"
@@ -14,9 +14,17 @@ class TestMonteCarlo(TestCase):
         self.sh = logging.StreamHandler(sys.stdout)
         logger.addHandler(self.sh)
 
-    def createNode(self):
+    def test_create_node(self):
         #testing node creation
-        return
+        prior = 0.7
+        to_play = 1
+        node = Node(prior, to_play)
+
+        self.assertEqual(node.prior, prior)
+        self.assertEqual(node.to_play, to_play)
+
+    def test_run_monte_carlo(self):
+        pass
 
 
 if __name__ == '__main__':

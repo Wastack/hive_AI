@@ -4,7 +4,19 @@ from arena import Arena
 from engine.hive_utils import dotdict
 from project import ROOT_DIR
 
-class CNN_AI():
-    def _init_():
+import numpy as np
+
+from keras.models import *
+from keras.layers import *
+from keras.optimizers import *
+
+class CNNModel(nn.Module):
+    def _init_(self, board_size, action_size, device):
         
-        return
+        super(CNNModel, self).__init__()
+
+        self.device = device
+        self.board_size = board_size
+        self.action_size = action_size
+
+
