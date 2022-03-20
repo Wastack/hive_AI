@@ -29,11 +29,11 @@ class AIEnvironment(AIGameEnv):
 
 # Methods for Game.py interface
     @staticmethod
-    def stringRepresentation(board):
+    def string_representation(board):
         return represent.string_representation(board)
 
     @staticmethod
-    def getActionSize():
+    def get_action_size():
         """
         :return: Number of possible actions in the given state
         """
@@ -41,17 +41,17 @@ class AIEnvironment(AIGameEnv):
         return len(represent.get_all_action_vector(hive))
 
     @staticmethod
-    def getCanonicalForm(two_dim_repr: List[List[int]], player_num):
+    def get_canonical_form(two_dim_repr: List[List[int]], player_num):
         hive = represent.load_state_with_player(two_dim_repr, AIEnvironment._player_to_inner_player(player_num))
         return represent.two_dim_representation(represent.canonical_adjacency_state(hive))
 
     @staticmethod
-    def getGameEnded(board, player):
+    def get_game_ended(board, player):
         # TODO victory condition should be configurable
-        return AIEnvironment.getGameEnded_simpified(board, player)
+        return AIEnvironment.get_game_ended_simplified(board, player)
 
     @staticmethod
-    def getGameEnded_simpified(board, player):
+    def get_game_ended_simplified(board, player):
         inner_player = AIEnvironment._player_to_inner_player(player)
         hive = represent.load_state_with_player(board, inner_player)
         res = 0
@@ -66,7 +66,7 @@ class AIEnvironment(AIGameEnv):
         return res
 
     @staticmethod
-    def getGameEnded_original(board, player_num):
+    def get_game_ended_original(board, player_num):
         hive = represent.load_state_with_player(board, AIEnvironment._player_to_inner_player(player_num))
         status = hive.check_victory()
         if status == GameStatus.UNFINISHED:
@@ -79,12 +79,12 @@ class AIEnvironment(AIGameEnv):
             raise ValueError('Unexpected game status')
 
     @staticmethod
-    def getValidMoves(board, player_num) -> List[int]:
+    def get_valid_moves(board, player_num) -> List[int]:
         hive = represent.load_state_with_player(board, AIEnvironment._player_to_inner_player(player_num))
         return represent.get_all_action_vector(hive)
 
     @staticmethod
-    def getNextState(board, player, action_number):
+    def get_next_state(board, player, action_number):
         assert action_number >= 0
         hive = represent.load_state_with_player(board, AIEnvironment._player_to_inner_player(player))
         try:
@@ -105,13 +105,14 @@ class AIEnvironment(AIGameEnv):
             raise
         return represent.two_dim_representation(represent.get_adjacency_state(hive)), player*(-1)
 
+    
     @staticmethod
-    def getInitBoard():
+    def get_init_board():
         hive = Hive()
         return represent.two_dim_representation(represent.get_adjacency_state(hive))
 
     @staticmethod
-    def getSymmetries(board: List[List[int]], pi):
+    def get_symmetries(board: List[List[int]], pi):
         symmetries = []
         # Rotate the board 5 times
         for i in range(5):
@@ -134,7 +135,7 @@ class AIEnvironment(AIGameEnv):
         return result
 
     @staticmethod
-    def getBoardSize():
+    def get_board_size():
         hive = Hive()
         return represent.two_dim_representation(represent.canonical_adjacency_state(hive)).shape
 

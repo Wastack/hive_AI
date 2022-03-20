@@ -15,7 +15,7 @@ class AIGameEnv(metaclass=abc.ABCMeta):
 
     @staticmethod
     @abc.abstractmethod
-    def getInitBoard():
+    def get_init_board():
         """
         Returns:
             startBoard: a representation of the board (ideally this is the form
@@ -25,7 +25,7 @@ class AIGameEnv(metaclass=abc.ABCMeta):
 
     @staticmethod
     @abc.abstractmethod
-    def getBoardSize():
+    def get_board_size():
         """
         Returns:
             (x,y): a tuple of board dimensions
@@ -34,7 +34,7 @@ class AIGameEnv(metaclass=abc.ABCMeta):
 
     @staticmethod
     @abc.abstractmethod
-    def getActionSize():
+    def get_action_size():
         """
         Returns:
             actionSize: number of all possible actions
@@ -43,7 +43,7 @@ class AIGameEnv(metaclass=abc.ABCMeta):
 
     @staticmethod
     @abc.abstractmethod
-    def getNextState(board, player, action):
+    def get_next_state(board, player, action):
         """
         Input:
             board: current board
@@ -58,7 +58,7 @@ class AIGameEnv(metaclass=abc.ABCMeta):
 
     @staticmethod
     @abc.abstractmethod
-    def getValidMoves(board, player):
+    def get_valid_moves(board, player):
         """
         Input:
             board: current board
@@ -73,7 +73,7 @@ class AIGameEnv(metaclass=abc.ABCMeta):
 
     @staticmethod
     @abc.abstractmethod
-    def getGameEnded(board, player):
+    def get_game_ended(board, player):
         """
         Input:
             board: current board
@@ -88,7 +88,7 @@ class AIGameEnv(metaclass=abc.ABCMeta):
 
     @staticmethod
     @abc.abstractmethod
-    def getCanonicalForm(board, player):
+    def get_canonical_form(board, player):
         """
         Input:
             board: current board
@@ -106,7 +106,7 @@ class AIGameEnv(metaclass=abc.ABCMeta):
 
     @staticmethod
     @abc.abstractmethod
-    def getSymmetries(board, pi):
+    def get_symmetries(board, pi):
         """
         Input:
             board: current board
@@ -121,7 +121,7 @@ class AIGameEnv(metaclass=abc.ABCMeta):
 
     @staticmethod
     @abc.abstractmethod
-    def stringRepresentation(board):
+    def string_representation(board):
         """
         Input:
             board: current board

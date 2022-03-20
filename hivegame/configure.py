@@ -1,4 +1,4 @@
-from hivegame.engine.hive_utils import dotdict
+from engine.hive_utils import dotdict
 
 train_args = dotdict({
     'numIters': 10,

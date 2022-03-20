@@ -4,8 +4,8 @@ import os
 import sys
 
 from AI.player_factory import create_players, registered_players
-from AI.utils.Coach import Coach
-from AI.utils.keras.NNet import NNetWrapper
+from AI.trainer import Trainer
+from AI.CNN_AI import CNNModel
 from arena import Arena
 from hivegame.configure import train_args
 
@@ -31,8 +31,8 @@ def main():
 
     if opt_args.train_alpha:
         sys.setrecursionlimit(1500)
-        nnet = NNetWrapper()
-        c = Coach(nnet, train_args)
+        nnet = CNNModel()
+        c = Trainer(nnet, train_args)
         c.learn()
 
         # save model

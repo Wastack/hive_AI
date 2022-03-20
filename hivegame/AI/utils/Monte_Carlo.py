@@ -114,8 +114,7 @@ class Node:
 
 class MonteCarloTreeSearch():
 
-    def __init__(self, game, model, args):
-        self.game = game
+    def __init__(self, model, args):
         self.model = model
         self.args = args
 
