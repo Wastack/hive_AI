@@ -263,7 +263,7 @@ def get_all_action_vector(hive: 'Hive') -> List[int]:
     assert len(result) == expected_len
 
     # Validating. Remove this part for a faster code
-    #for i, v in enumerate(result):
+    # for i, v in enumerate(result):
     #    if v == 1:
     #        assert hive.validate_action(*hive.action_from_vector(i))
     #    else:
@@ -271,7 +271,7 @@ def get_all_action_vector(hive: 'Hive') -> List[int]:
     #            if hive.validate_action(*hive.action_from_vector(i)):
     #                assert False
     #        except:
-    #            pass
+    #             pass
 
     return result
 

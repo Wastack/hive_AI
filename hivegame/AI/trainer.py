@@ -1,21 +1,25 @@
 import os
 import numpy as np
 from random import shuffle
+from collections import deque
 
-import torch
-import torch.optim as optim
+from AI.CNN_player import CNN_Player 
+from arena import Arena
 
 from AI.utils.Monte_Carlo import MonteCarloTreeSearch
 from engine.environment.aienvironment import ai_environment
+from pickle import Pickler
 
 class Trainer:
 
-    def __init__(self, model, args):
+    def __init__(self, model, train_args, nnet_args):
         self.model = model
-        self.args = args
+        self.comp_model = self.model.__class__(nnet_args)    # competitor network for self play
+        self.args = train_args
+        self.train_examples_history = []
         self.mcts = MonteCarloTreeSearch(self.model, self.args)
 
-    def exceute_episode(self):
+    def execute_episode(self):
 
         train_examples = []
         current_player = 1
@@ -29,96 +33,79 @@ class Trainer:
 
             action_probs = [0 for _ in range(ai_environment.get_action_size())]
             for k, v in root.children.items():
-                action_probs[k] = v.visit_count
+                action_probs[k] = v.visits_count
 
             action_probs = action_probs / np.sum(action_probs)
             train_examples.append((canonical_board, current_player, action_probs))
 
-            action = root.select_action(temperature=0)
-            state, current_player = ai_environment.get_next_state(state, current_player, action)
+            action = root.select_best_child()
+            state, current_player = ai_environment.get_next_state(state, current_player, action[0])
             reward = ai_environment.get_game_ended(state, current_player)
 
             if reward != 0:
-                ret = []
+                replay_buffer = []
                 for hist_state, hist_current_player, hist_action_probs in train_examples:
                     # [Board, currentPlayer, actionProbabilities, Reward]
-                    ret.append((hist_state, hist_action_probs, reward * ((-1) ** (hist_current_player != current_player))))
+                    replay_buffer.append((hist_state, hist_action_probs, reward * ((-1) ** (hist_current_player != current_player))))
 
-                return ret
+                return replay_buffer
 
     def learn(self):
-        for i in range(1, self.args['numIters'] + 1):
+        
+        for i in range(0, self.args.numIters):
+            print('---------Iteration ' + str(i+1) + '------------')
 
-            print("{}/{}".format(i, self.args['numIters']))
+            if i > 0:
+                iteration_train_examples = deque([])
 
-            train_examples = []
+                for eps in range(self.args.numEps):
+                    self.mcts = MonteCarloTreeSearch(self.model, self.args)
+                    iteration_train_examples.append(self.execute_episode())
 
-            for eps in range(self.args['numEps']):
-                iteration_train_examples = self.exceute_episode()
-                train_examples.extend(iteration_train_examples)
+                
+                self.train_examples_history.append(iteration_train_examples)
 
-            shuffle(train_examples)
-            self.train(train_examples)
-            filename = self.args['checkpoint_path']
-            self.save_checkpoint(folder=".", filename=filename)
+        if len(self.train_examples_history) > self.args.numItersForTrainExamplesHistory:
+            self.train_examples_history.pop(0)
 
-    def train(self, examples):
-        optimizer = optim.Adam(self.model.parameters(), lr=5e-4)
-        pi_losses = []
-        v_losses = []
+        self.save_checkpoint(self.args.checkpoint, "checkpoint_examples")
 
-        for epoch in range(self.args['epochs']):
-            self.model.train()
+        # shuffling the training exmaples
+        train_examples = []
+        for example in self.train_examples_history:
+            train_examples.extend(example)
+        shuffle(train_examples)
 
-            batch_idx = 0
+        self.model.save_checkpoint(folder = self.args.checkpoint)
+        self.comp_model.load_checkpoint(folder = self.args.checkpoint)
 
-            while batch_idx < int(len(examples) / self.args['batch_size']):
-                sample_ids = np.random.randint(len(examples), size=self.args['batch_size'])
-                boards, pis, vs = list(zip(*[examples[i] for i in sample_ids]))
-                boards = torch.FloatTensor(np.array(boards).astype(np.float64))
-                target_pis = torch.FloatTensor(np.array(pis))
-                target_vs = torch.FloatTensor(np.array(vs).astype(np.float64))
+        comp_cnn_player = CNN_Player(self.comp_model, self.args)
+        self.model.train(train_examples)
+        cnn_player = CNN_Player(self.model, self.args)
 
-                # predict
-                boards = boards.contiguous().cuda()
-                target_pis = target_pis.contiguous().cuda()
-                target_vs = target_vs.contiguous().cuda()
+        print("------------Initiating Self Play--------------")
+        arena = Arena(cnn_player, comp_cnn_player)
+        wins, comp_wins, draws = arena.playGames(self.args.arenaCompare)
 
-                # compute output
-                out_pi, out_v = self.model(boards)
-                l_pi = self.loss_pi(target_pis, out_pi)
-                l_v = self.loss_v(target_vs, out_v)
-                total_loss = l_pi + l_v
+        print("W:L:D  -  %d:%d:%d".format(wins, comp_wins, draws))
 
-                pi_losses.append(float(l_pi))
-                v_losses.append(float(l_v))
+        if comp_wins * self.args.updateThreshold > wins or comp_wins + wins == 0:
+            print("SELECTING OLD MODEL")
+            self.model.load_checkpoint(folder=self.args.checkpoint, filename='temp.pth.tar')
+        else:
+            print("SELECTING NEW MODEL")
+            iter_filename = 'checkpoint_' + str(i) + '.pth.tar'
+            self.model.save_checkpoint(folder=self.args.checkpoint, filename= iter_filename)
+            self.model.save_checkpoint(folder=self.args.checkpoint, filename='best.pth.tar')
 
-                optimizer.zero_grad()
-                total_loss.backward()
-                optimizer.step()
-
-                batch_idx += 1
-
-            print()
-            print("Policy Loss", np.mean(pi_losses))
-            print("Value Loss", np.mean(v_losses))
-            print("Examples:")
-            print(out_pi[0].detach())
-            print(target_pis[0])
-
-    def loss_pi(self, targets, outputs):
-        loss = -(targets * torch.log(outputs)).sum(dim=1)
-        return loss.mean()
-
-    def loss_v(self, targets, outputs):
-        loss = torch.sum((targets-outputs.view(-1))**2)/targets.size()[0]
-        return loss
+            
 
     def save_checkpoint(self, folder, filename):
         if not os.path.exists(folder):
             os.mkdir(folder)
 
         filepath = os.path.join(folder, filename)
-        torch.save({
-            'state_dict': self.model.state_dict(),
-        }, filepath)
+
+        with open(filepath, "wb+") as f:
+            Pickler(f).dump(self.train_examples_history)
+

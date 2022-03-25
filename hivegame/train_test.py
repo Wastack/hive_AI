@@ -1,8 +1,8 @@
 import logging
 import sys, os
 
-from configure import train_args
-from AI.CNN_AI import CNNModel, nnet_args
+from configure import train_args, nnet_args
+from AI.CNN_AI import CNNModel
 from AI.trainer import Trainer
 
 
@@ -13,7 +13,7 @@ def main():
     logging.basicConfig(level=logging.DEBUG, format=FORMAT)
 
     nnet = CNNModel(nnet_args)
-    trainer = Trainer(nnet, train_args)
+    trainer = Trainer(nnet, train_args, nnet_args)
     trainer.learn()
     # save model
     from project import ROOT_DIR

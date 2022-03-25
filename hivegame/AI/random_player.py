@@ -31,4 +31,4 @@ class RandomPlayer(Player):
     def feedback(self, success) -> None:
         if not success:
             logging.error("Invalid action from random player")
-            raise RuntimeError
+            raise RuntimeError 

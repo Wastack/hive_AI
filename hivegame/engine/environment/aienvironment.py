@@ -46,9 +46,9 @@ class AIEnvironment(AIGameEnv):
         return represent.two_dim_representation(represent.canonical_adjacency_state(hive))
 
     @staticmethod
-    def get_game_ended(board, player):
+    def get_game_ended(board, player_num):
         # TODO victory condition should be configurable
-        return AIEnvironment.get_game_ended_simplified(board, player)
+        return AIEnvironment.get_game_ended_simplified(board, player_num)
 
     @staticmethod
     def get_game_ended_simplified(board, player):
@@ -84,9 +84,9 @@ class AIEnvironment(AIGameEnv):
         return represent.get_all_action_vector(hive)
 
     @staticmethod
-    def get_next_state(board, player, action_number):
+    def get_next_state(board, player_num, action_number):
         assert action_number >= 0
-        hive = represent.load_state_with_player(board, AIEnvironment._player_to_inner_player(player))
+        hive = represent.load_state_with_player(board, AIEnvironment._player_to_inner_player(player_num))
         try:
             (piece, to_cell) = hive.action_from_vector(action_number)
         except HiveException as error:
@@ -103,7 +103,7 @@ class AIEnvironment(AIGameEnv):
             logging.error("Hive:\n{}".format(hive))
             importexport.export_hive(hive, importexport.saved_game_path("last_error.json"))
             raise
-        return represent.two_dim_representation(represent.get_adjacency_state(hive)), player*(-1)
+        return represent.two_dim_representation(represent.get_adjacency_state(hive)), player_num*(-1)
 
     
     @staticmethod

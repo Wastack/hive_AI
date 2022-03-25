@@ -11,7 +11,7 @@ def ucb_score(parent, child, exploration_param = 1):
     A method for calculating the Upper Confidence Bound (UCB)
     """
     priors = exploration_param * child.prior * math.sqrt(parent.visits_count) / (child.visits_count + 1)
-    if child.visit_count > 0:
+    if child.visits_count > 0:
         # The child node is from the perspective of the opposing player, so signs must be reversed
         value = -child.value()
     else:
@@ -108,7 +108,7 @@ class Node:
         return len(self.children) > 0 
 
     def __repr__(self):
-        return "{} Prior: {0:.3f} Count: {} Value: {}".format(self.state.__str__(), self.prior, self.visit_count, self.value)
+        return "{} Prior: {0:.3f} Count: {} Value: {}".format(self.state.__str__(), self.prior, self.visits_count, self.value)
     
     
 
@@ -125,35 +125,39 @@ class MonteCarloTreeSearch():
 
         # Expanding the root node
         action_probs, value = model.predict(state)
-        valid_moves = ai_environment.getValidMoves(canonical_board, 1)
+        valid_moves = ai_environment.get_valid_moves(canonical_board, to_play)
         action_probs = action_probs * valid_moves  # mask invalid moves
+        # print("action probabilities:" )
+        # print(action_probs)
         action_probs /= np.sum(action_probs)
         root.expand(state, to_play, action_probs)
 
-        for _ in range(self.args['num_simulations']):
+        for _ in range(self.args['numMCTSSims']):
             node = root
             search_path = [node]
 
             # SELECT
             while node.is_expanded():
                 action, node = node.select_best_child()
+                # print(" action: ")
+                # print(action)
                 search_path.append(node)
 
             parent = search_path[-2]
             state = parent.state
             # Now we're at a leaf node and we would like to expand
             # Players always play from their own perspective
-            next_state, _ = ai_environment.getNextState(canonical_board, player=1, action=action)
+            next_state, _ = ai_environment.get_next_state(canonical_board, player_num=1, action_number=action)
             # Get the board from the perspective of the other player
-            next_state = ai_environment.getCanonicalForm(next_state, player=-1)
+            next_state = ai_environment.get_canonical_form(next_state, player_num=-1)
 
             # The value of the new state from the perspective of the other player
-            value = ai_environment.getGameEnded(next_state, player=1)
+            value = ai_environment.get_game_ended(next_state, player_num=1)
             if value == 0:
                 # If the game has not ended:
                 # EXPAND
                 action_probs, value = model.predict(next_state)
-                valid_moves = ai_environment.getValidMoves(next_state)
+                valid_moves = ai_environment.get_valid_moves(next_state, player_num=1)
                 action_probs = action_probs * valid_moves  # mask invalid moves
                 action_probs /= np.sum(action_probs)
                 node.expand(next_state, parent.to_play * -1, action_probs)
@@ -168,5 +172,5 @@ class MonteCarloTreeSearch():
         to the root.
         """
         for node in reversed(search_path):
-            node.value_sum += value if node.to_play == to_play else -value
-            node.visit_count += 1
+            node.total_value += value if node.to_play == to_play else -value
+            node.visits_count += 1

@@ -5,18 +5,11 @@ import numpy as np
 import time
 import os
 
-from keras.models import *
+from keras.models import Model, load_model
 from keras.layers import *
 from keras.optimizers import adam_v2
 
-nnet_args = dotdict({
-    'lr': 0.001,
-    'dropout': 0.3,
-    'epochs': 10,
-    'batch_size': 64,
-    'cuda': False,
-    'num_channels': 16,
-})
+
 
 class CNNModel():
     def __init__(self, nnet_args):
@@ -45,12 +38,16 @@ class CNNModel():
         self.v = Dense(1, activation='tanh', name='v')(s_fc2)                    # batch_size x 1
 
         self.model = Model(inputs=self.input_boards, outputs=[self.pi, self.v])
-        self.model.compile(loss=['categorical_crossentropy','mean_squared_error'], optimizer=adam_v2(self.args.lr))
+        opt = adam_v2.Adam(learning_rate=self.args.lr)
+        self.model.compile(loss=['categorical_crossentropy','mean_squared_error'], optimizer=opt)
 
     def train(self, examples):
         """
         examples: list of examples, each example is of form (board, pi, v)
         """
+        print(np.shape(examples))
+        print(np.shape(list(zip(*examples))))
+        print(np.shape(list(zip(zip(*examples)))))
         input_boards, target_pis, target_vs = list(zip(*examples))
         input_boards = np.asarray(input_boards)
         target_pis = np.asarray(target_pis)
@@ -84,6 +81,21 @@ class CNNModel():
         if not os.path.exists(file_path):
             raise(RuntimeError("No model in path {}".format(file_path)))
         self.model = load_model(file_path)
+
+    def save_checkpoint(self, folder='checkpoint', filename='checkpoint.h5'):
+        filepath = os.path.join(folder, filename)
+        if not os.path.exists(folder):
+            print("Checkpoint Directory does not exist! Making directory {}".format(folder))
+            os.mkdir(folder)
+        else:
+            print("Checkpoint Directory exists! ")
+        self.model.save_weights(filepath)
+
+    def load_checkpoint(self, folder='checkpoint', filename='checkpoint.h5'):
+        filepath = os.path.join(folder, filename)
+        if not os.path.exists(filepath):
+            raise(RuntimeError("No model in path {}".format(filepath)))
+        self.model.load_weights(filepath)
 
 
 

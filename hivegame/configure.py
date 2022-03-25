@@ -16,3 +16,12 @@ train_args = dotdict({
     'numItersForTrainExamplesHistory': 20,
 
 })
+
+nnet_args = dotdict({
+    'lr': 0.001,
+    'dropout': 0.3,
+    'epochs': 10,
+    'batch_size': 64,
+    'cuda': False,
+    'num_channels': 16,
+})
