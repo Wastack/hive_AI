@@ -91,30 +91,30 @@ class MiniMaxAI():
         """
         Given a state, this function returns the value of pinned pieces
         """
-        pass
+        return 0
 
     def count_moveable_pieces_value(self, state):
         """
         Function that gets a score representing the value of moveable pieces
         """
-        pass
+        return 0
 
     def count_playable_space_value(self, state):
         """
         Function to count the amount of space a new piece can be played in to for the opponent and for the current player
         """
-        pass
+        return 0
 
     def count_moves_to_win_value(self, state):
         """
         Function that counts the number of moves needed to win compared to the opponent
         """
-        pass
+        return 0
 
     def is_movement(self, action):
         """
         Function that gets the type of move (placement or movement). 
         Returns: False if the move is a placement and True if the move is a movement
         """
-        pass
+        return 0
 
