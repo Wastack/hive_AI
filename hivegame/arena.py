@@ -4,12 +4,9 @@ import sys
 from engine.environment.environment import Environment
 from AI.random_player import RandomPlayer
 from AI.human_player import HumanPlayer
-from engine.hive_utils import GameStatus, HiveException
+from AI.hardcoded_player import MiniMaxPlayer
+from engine.hive_utils import GameStatus, HiveException, Player
 
-hasPyQt5 = False
-if hasPyQt5:
-    from PyQt5 import QtWidgets
-    from utils.gui.hive_widget import GameWidget
 
 import logging
 
@@ -102,17 +99,11 @@ def main():
     logging.basicConfig(level=logging.DEBUG, format=FORMAT)
     # game = Arena(HumanAI(sys.stdin), RandomAI())
     player1 = HumanPlayer(sys.stdin)
-    player2 = RandomPlayer()
+    player2 = MiniMaxPlayer(Player.BLACK)
     logging.info("Start game with the following AIs: {}, {}".format(player1, player2))
     game = Arena(player1, player2)
-    if headless:
-        game.playGame()
-    elif hasPyQt5:
-        # TODO put it elsewhere
-        app = QtWidgets.QApplication(sys.argv)
-        window = GameWidget()
-        window.show()
-        app.exec_()
+    game.playGame()
+
     logging.info("Thanks for playing Hive. Have a nice day!")
 
 

@@ -2,13 +2,13 @@
 
 from typing import List
 
-from engine.hive import Hive, HiveException
+import engine.hive
 from engine.hive_utils import GameStatus, Player
 from engine.environment.AIGameEnv import AIGameEnv
 
 import logging
 import engine.hive_representation as represent
-from utils import importexport
+import utils.importexport
 
 class AIEnvironment(AIGameEnv):
     """
@@ -37,7 +37,7 @@ class AIEnvironment(AIGameEnv):
         """
         :return: Number of possible actions in the given state
         """
-        hive = Hive()
+        hive = engine.hive.Hive()
         return len(represent.get_all_action_vector(hive))
 
     @staticmethod
@@ -57,11 +57,11 @@ class AIEnvironment(AIGameEnv):
         res = 0
         white_queen_pos = hive.locate("wQ1")
         if white_queen_pos:
-            if len(hive.level.occupied_surroundings(white_queen_pos)) > 1:
+            if len(hive.level.occupied_surroundings(white_queen_pos)) > 5:
                 res = -1 if inner_player == Player.WHITE else 1
         black_queen_pos = hive.locate("bQ1")
         if black_queen_pos:
-            if len(hive.level.occupied_surroundings(black_queen_pos)) > 1:
+            if len(hive.level.occupied_surroundings(black_queen_pos)) > 5:
                 res = -1 if inner_player == Player.BLACK else 1
         return res
 
@@ -89,26 +89,26 @@ class AIEnvironment(AIGameEnv):
         hive = represent.load_state_with_player(board, AIEnvironment._player_to_inner_player(player_num))
         try:
             (piece, to_cell) = hive.action_from_vector(action_number)
-        except HiveException as error:
+        except engine.hive.HiveException as error:
             logging.error("HiveException was caught: {}".format(error))
             logging.error("action number: {}".format(action_number))
-            importexport.export_hive(hive, importexport.saved_game_path("last_error.json"))
+            utils.importexport.export_hive(hive, utils.importexport.saved_game_path("last_error.json"))
             raise
         # TODO handle pass
         try:
             hive.action_piece_to(piece, to_cell)
-        except HiveException as error:
+        except engine.hive.HiveException as error:
             logging.error("HiveException was caught: {}".format(error))
             logging.error("action number: {}, resulting action: ({}, {})".format(action_number, piece, to_cell))
             logging.error("Hive:\n{}".format(hive))
-            importexport.export_hive(hive, importexport.saved_game_path("last_error.json"))
+            utils.importexport.export_hive(hive, utils.importexport.saved_game_path("last_error.json"))
             raise
         return represent.two_dim_representation(represent.get_adjacency_state(hive)), player_num*(-1)
 
     
     @staticmethod
     def get_init_board():
-        hive = Hive()
+        hive = engine.hive.Hive()
         return represent.two_dim_representation(represent.get_adjacency_state(hive))
 
     @staticmethod
@@ -136,7 +136,7 @@ class AIEnvironment(AIGameEnv):
 
     @staticmethod
     def get_board_size():
-        hive = Hive()
+        hive = engine.hive.Hive()
         return represent.two_dim_representation(represent.canonical_adjacency_state(hive)).shape
 
 

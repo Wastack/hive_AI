@@ -1,5 +1,5 @@
 import json, logging, os
-from engine.hive import Hive
+import engine.hive
 from utils.hexutil import Hex
 import ast
 import pieces.piece_factory as piecefact
@@ -10,7 +10,7 @@ SAVED_GAME_DIR = "saved_games"
 def saved_game_path(file_name: str):
     return os.path.join(ROOT_DIR, SAVED_GAME_DIR, file_name)
 
-def import_hive(file: str) -> Hive:
+def import_hive(file: str):
     data = json.load(open(file, 'r'))
 
     current_player= data["player"]
@@ -24,7 +24,7 @@ def import_hive(file: str) -> Hive:
     if not isinstance(data, dict):
         logging.error("Wrong format, expected dict")
         raise RuntimeError()
-    hive = Hive()
+    hive = engine.hive.Hive()
     hive.level.current_player = current_player.lower()
     for hex_str_tuple, v in game.items():
         hex_tuple = ast.literal_eval(hex_str_tuple)
@@ -39,7 +39,7 @@ def import_hive(file: str) -> Hive:
             hive.level.append_to(piecefact.name_to_piece(piece_str), hexagon)
     return hive
 
-def export_hive(hive:Hive, file:str) -> None:
+def export_hive(hive, file:str) -> None:
     data = {}
     data["player"] = hive.current_player
     game = {}

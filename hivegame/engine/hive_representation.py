@@ -11,7 +11,7 @@ from utils.game_state import GameState
 from typing import Dict, List, Set, Tuple
 import numpy as np
 
-from engine.hive import Hive
+import engine.hive
 
 
 # Adjacency matrix of pieces
@@ -33,7 +33,7 @@ from pieces.piece import HivePiece
 from utils import hexutil
 
 
-def get_adjacency_state(hive: 'Hive') -> Dict[str, Dict[str, int]]:
+def get_adjacency_state(hive: 'engine.hive.Hive') -> Dict[str, Dict[str, int]]:
     """
     Returns a two dimensional dictionary, where both keys are the string representation of the pieces.
     One cell represents the adjacency of the two pieces. 0 means they are not adjacent.
@@ -87,7 +87,7 @@ def get_adjacency_state(hive: 'Hive') -> Dict[str, Dict[str, int]]:
     return result
 
 
-def canonical_adjacency_state(hive: 'Hive') -> Dict[str, Dict[str, int]]:
+def canonical_adjacency_state(hive: 'engine.hive.Hive') -> Dict[str, Dict[str, int]]:
     """
     Representation of state with adjacency matrix. From the players point of view. Instead of having a white and
     a black player, there are my pieces and the opponent's pieces.
@@ -167,7 +167,7 @@ def _toggle_color(piece_name):
     return "".join(s)
 
 
-def get_all_action_vector(hive: 'Hive') -> List[int]:
+def get_all_action_vector(hive: 'engine.hive.Hive') -> List[int]:
     """
     The format of the fix-size action space is the following:
     vector = [init_place | place | move ]
@@ -276,7 +276,7 @@ def get_all_action_vector(hive: 'Hive') -> List[int]:
     return result
 
 
-def get_all_possible_actions_nonidentical(hive: 'Hive') -> Tuple[(HivePiece, hexutil.Hex)]:
+def get_all_possible_actions_nonidentical(hive: 'engine.hive.Hive') -> Tuple[(HivePiece, hexutil.Hex)]:
     """
     :param hive: The representation of the game.
     :return: All possible actions except the second turn. In the second player's first turn all the directions are
@@ -288,7 +288,7 @@ def get_all_possible_actions_nonidentical(hive: 'Hive') -> Tuple[(HivePiece, hex
     return get_all_possible_actions(hive)
 
 
-def get_all_possible_actions(hive: 'Hive') -> Set[Tuple[HivePiece, hexutil.Hex]]:
+def get_all_possible_actions(hive: 'engine.hive.Hive') -> Set[Tuple[HivePiece, hexutil.Hex]]:
     """
     Query for all the possible movements in a given state. The list of actions
     is unordered, i.e the order is not specified.
@@ -357,14 +357,14 @@ def get_all_possible_actions(hive: 'Hive') -> Set[Tuple[HivePiece, hexutil.Hex]]
     return result
 
 
-def load_state_with_player(two_dim_repr: List[List[int]], current_player) -> 'Hive':
+def load_state_with_player(two_dim_repr: List[List[int]], current_player) -> 'engine.hive.Hive':
     assert current_player == Player.WHITE or current_player == Player.BLACK
 
     # count number of pieces already on board
     # It is needed in order to guess turn number
     adjacency = dict_representation(two_dim_repr)
-    hive = Hive()
-    to_be_placed = Hive._get_piece_names_on_board(adjacency)
+    hive = engine.hive.Hive()
+    to_be_placed = engine.hive.Hive._get_piece_names_on_board(adjacency)
     if len(to_be_placed) <= 0:
         return hive  # initial state
 

@@ -1,9 +1,9 @@
 from engine.hive_utils import GameStatus
-from engine.hive import Hive
+import engine.hive
 
 
-class Environment(Hive):
-    _occupied_to_win = 2
+class Environment(engine.hive.Hive):
+    _occupied_to_win = 6
 
     def pass_turn(self):
         self.level.current_player = self._toggle_player(self.level.current_player)  # switch active player

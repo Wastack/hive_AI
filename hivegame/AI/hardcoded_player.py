@@ -9,7 +9,7 @@ class MiniMaxPlayer(Player):
         self.player_colour = player_colour
 
     def step(self, hive: 'Hive'):
-        minimax = MiniMaxAI(hive, self.player_colour, 5)
+        minimax = MiniMaxAI(hive, self.player_colour, 3)
         return minimax.get_best_move()
 
 

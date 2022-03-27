@@ -136,7 +136,7 @@ def validate_one_hive(hive: 'Hive', pos: hexutil.Hex, piece: 'HivePiece'):
     # won't be broken
     piece_list = hive.level.get_tile_content(pos)
     if len(piece_list) > 1:
-        logging.info("Calling one-hive on tile with multiple elements")
+        #logging.info("Calling one-hive on tile with multiple elements")
         return True
 
     if not hive.level.tiles:
