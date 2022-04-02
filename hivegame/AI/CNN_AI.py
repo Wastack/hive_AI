@@ -45,9 +45,7 @@ class CNNModel():
         """
         examples: list of examples, each example is of form (board, pi, v)
         """
-        print(np.shape(examples))
-        print(np.shape(list(zip(*examples))))
-        print(np.shape(list(zip(zip(*examples)))))
+
         input_boards, target_pis, target_vs = list(zip(*examples))
         input_boards = np.asarray(input_boards)
         target_pis = np.asarray(target_pis)
@@ -58,16 +56,12 @@ class CNNModel():
         """
         board: np array with board
         """
-        # timing
         start = time.time()
 
-        # preparing input
         board = np.array(board[np.newaxis, :, :], dtype=np.float64)
-
-        # run
         pi, v = self.model.predict(board)
 
-        print('PREDICTION TIME TAKEN : {0:03f}'.format(time.time()-start))
+        #print('PREDICTION TIME TAKEN : {0:03f}'.format(time.time()-start))
         return pi[0], v[0]
 
     def save_model(self, folder='checkpoint', filename='model.h5'):

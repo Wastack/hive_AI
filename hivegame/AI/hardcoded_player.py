@@ -5,12 +5,11 @@ from AI.hardcoded_AI import MiniMaxAI
 from AI.player import Player
 
 class MiniMaxPlayer(Player):
-    def __init__(self, player_colour):
-        self.player_colour = player_colour
+    def __init__(self, depth, args):
+        self.minimax = MiniMaxAI(depth, args)
 
     def step(self, hive: 'Hive'):
-        minimax = MiniMaxAI(hive, self.player_colour, 3)
-        return minimax.get_best_move()
+        return self.minimax.get_best_move(hive)
 
 
     def feedback(self, success) -> None:

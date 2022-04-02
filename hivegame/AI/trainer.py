@@ -6,7 +6,7 @@ from collections import deque
 from AI.CNN_player import CNN_Player 
 from arena import Arena
 
-from AI.utils.Monte_Carlo import MonteCarloTreeSearch
+from AI.utils.MCTS import MCTS
 from engine.environment.aienvironment import ai_environment
 from pickle import Pickler
 
@@ -17,36 +17,46 @@ class Trainer:
         self.comp_model = self.model.__class__(nnet_args)    # competitor network for self play
         self.args = train_args
         self.train_examples_history = []
-        self.mcts = MonteCarloTreeSearch(self.model, self.args)
+        self.mcts = MCTS(self.model, self.args)
 
     def execute_episode(self):
 
         train_examples = []
-        current_player = 1
+        self.current_player = -1          
         state = ai_environment.get_init_board()
+        iteration = 0
+        
 
         while True:
-            canonical_board = ai_environment.get_canonical_form(state, current_player)
+            self.current_player *= -1
+            iteration += 1
+            temperature = int(self.args.tempThreshold > iteration)
+            canonical_board = ai_environment.get_canonical_form(state, self.current_player) 
 
-            self.mcts = MonteCarloTreeSearch(self.model, self.args)
-            root = self.mcts.run(self.model, canonical_board, state, to_play=1)
+            self.mcts = MCTS(self.model, self.args)
+            action_probs = self.mcts.run(canonical_board, temperature=temperature)
 
-            action_probs = [0 for _ in range(ai_environment.get_action_size())]
-            for k, v in root.children.items():
-                action_probs[k] = v.visits_count
+            # action_probs = [0 for _ in range(ai_environment.get_action_size())]
+            # for k, v in root.children.items():
+            #     action_probs[k] = v.visits_count
 
-            action_probs = action_probs / np.sum(action_probs)
-            train_examples.append((canonical_board, current_player, action_probs))
+            #  action_probs = action_probs / np.sum(action_probs)
 
-            action = root.select_best_child()
-            state, current_player = ai_environment.get_next_state(state, current_player, action[0])
-            reward = ai_environment.get_game_ended(state, current_player)
+
+            # getting symmetries allows us to recognise that board rotations are not new states
+            symmetries = ai_environment.get_symmetries(canonical_board, action_probs)
+            for s, probs in symmetries:
+                train_examples.append((s, self.current_player, probs))
+
+            # action = root.get_action(temperature=0)
+            action = np.random.choice(len(action_probs), p = action_probs)
+            state, _ = ai_environment.get_next_state(canonical_board, 1, action)
+            reward = ai_environment.get_game_ended(state, self.current_player)
 
             if reward != 0:
                 replay_buffer = []
                 for hist_state, hist_current_player, hist_action_probs in train_examples:
-                    # [Board, currentPlayer, actionProbabilities, Reward]
-                    replay_buffer.append((hist_state, hist_action_probs, reward * ((-1) ** (hist_current_player != current_player))))
+                    replay_buffer.append((hist_state, hist_action_probs, reward * ((-1) ** (hist_current_player != self.current_player))))
 
                 return replay_buffer
 
@@ -59,8 +69,9 @@ class Trainer:
                 iteration_train_examples = deque([])
 
                 for eps in range(self.args.numEps):
-                    self.mcts = MonteCarloTreeSearch(self.model, self.args)
-                    iteration_train_examples.append(self.execute_episode())
+                    print("----Monte Carlo Episode {} ---".format(eps))
+                    self.mcts = MCTS(self.model, self.args)
+                    iteration_train_examples += self.execute_episode()
 
                 
                 self.train_examples_history.append(iteration_train_examples)
@@ -87,11 +98,11 @@ class Trainer:
         arena = Arena(cnn_player, comp_cnn_player)
         wins, comp_wins, draws = arena.playGames(self.args.arenaCompare)
 
-        print("W:L:D  -  %d:%d:%d".format(wins, comp_wins, draws))
+        print("W:L:D  -  {}:{}:{}".format(wins, comp_wins, draws))
 
         if comp_wins * self.args.updateThreshold > wins or comp_wins + wins == 0:
             print("SELECTING OLD MODEL")
-            self.model.load_checkpoint(folder=self.args.checkpoint, filename='temp.pth.tar')
+            self.model.load_checkpoint(folder=self.args.checkpoint)
         else:
             print("SELECTING NEW MODEL")
             iter_filename = 'checkpoint_' + str(i) + '.pth.tar'

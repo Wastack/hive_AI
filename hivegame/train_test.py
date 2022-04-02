@@ -8,7 +8,7 @@ from AI.trainer import Trainer
 
 def main():
 
-    sys.setrecursionlimit(1500)
+    sys.setrecursionlimit(3000)
     FORMAT = "[%(filename)s:%(lineno)s - %(funcName)20s() ] %(message)s"
     logging.basicConfig(level=logging.DEBUG, format=FORMAT)
 

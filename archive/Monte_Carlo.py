@@ -1,10 +1,12 @@
 import math
 import numpy as np
 import logging
+import random
 
 from engine.environment.aienvironment import ai_environment
 from engine.hive_utils import Player
 from engine import hive_representation
+from engine.hive_utils import get_queen_name
 
 def ucb_score(parent, child, exploration_param = 1):
     """
@@ -36,7 +38,7 @@ class Node:
     """
     def __init__(self, prior, to_play):
         self.prior = prior
-        self.to_play = to_play
+        self.to_play = to_play   
         self.visits_count = 0
         self.children = {}
         self.total_value = 0
@@ -85,7 +87,7 @@ class Node:
         """
         Method to expand the children of a node while noting the priors given by the convolutional neural network
         """
-        self.to_play - to_play
+        self.to_play = to_play
         self.state = state
 
         for action, probability in enumerate(action_probabilities):
@@ -107,8 +109,8 @@ class Node:
         """
         return len(self.children) > 0 
 
-    def __repr__(self):
-        return "{} Prior: {0:.3f} Count: {} Value: {}".format(self.state.__str__(), self.prior, self.visits_count, self.value)
+    # def __repr__(self):
+    #     return "{} Prior: {0:.3f} Count: {} Value: {}".format(self.state.__str__(), self.prior, self.visits_count, self.value)
     
     
 
@@ -116,6 +118,7 @@ class MonteCarloTreeSearch():
 
     def __init__(self, model, args):
         self.model = model
+        self.next_player = 1   # keeps track of the number representing which colour is to play, 1 = white, -1 = black, start with white
         self.args = args
 
 
@@ -125,14 +128,17 @@ class MonteCarloTreeSearch():
 
         # Expanding the root node
         action_probs, value = model.predict(state)
-        valid_moves = ai_environment.get_valid_moves(canonical_board, to_play)
+        valid_moves = ai_environment.get_valid_moves(canonical_board, to_play)                        # TODO HERE
         action_probs = action_probs * valid_moves  # mask invalid moves
         # print("action probabilities:" )
         # print(action_probs)
         action_probs /= np.sum(action_probs)
-        root.expand(state, to_play, action_probs)
+        root.expand(state, to_play, action_probs)                                                     # TODO HERE
 
-        for _ in range(self.args['numMCTSSims']):
+
+        for i in range(0, self.args['numMCTSSims']):
+            print("Monte Carlo Sim " + str(i))
+            # setting search_path
             node = root
             search_path = [node]
 
@@ -145,24 +151,42 @@ class MonteCarloTreeSearch():
 
             parent = search_path[-2]
             state = parent.state
+
+            hive  = hive_representation.load_state_with_player(state, Player.WHITE)
+            print("Hive: \n{}".format(hive))
+            print(hive.locate(get_queen_name(hive.current_player)))
+
             # Now we're at a leaf node and we would like to expand
-            # Players always play from their own perspective
-            next_state, _ = ai_environment.get_next_state(canonical_board, player_num=1, action_number=action)
+            next_state, next_player = ai_environment.get_next_state(state, player_num=1, action_number=action)  # TODO player num refers to colour here
+
             # Get the board from the perspective of the other player
             next_state = ai_environment.get_canonical_form(next_state, player_num=-1)
 
-            # The value of the new state from the perspective of the other player
-            value = ai_environment.get_game_ended(next_state, player_num=1)
-            if value == 0:
-                # If the game has not ended:
-                # EXPAND
-                action_probs, value = model.predict(next_state)
-                valid_moves = ai_environment.get_valid_moves(next_state, player_num=1)
-                action_probs = action_probs * valid_moves  # mask invalid moves
-                action_probs /= np.sum(action_probs)
-                node.expand(next_state, parent.to_play * -1, action_probs)
+            
+            hive  = hive_representation.load_state_with_player(next_state, Player.WHITE)
+            print("Hive: \n{}".format(hive))
+            print(hive.locate(get_queen_name(hive.current_player)))
 
-            self.backpropagate(search_path, value, parent.to_play * -1)
+            # The value of the new state from the perspective of the other player
+            value = ai_environment.get_game_ended(next_state, player_num=1)                 # TODO player num refers to player colour here
+            if value == 0:
+
+                # If the game has not ended then we expand the node
+                action_probs, value = model.predict(next_state)
+                valid_moves = ai_environment.get_valid_moves(next_state, player_num=1)       # TODO player number needs to alternate here             
+                action_probs = action_probs * valid_moves  # mask invalid moves
+
+                # normalizing action_probs
+                if np.sum(action_probs) > 0:
+                    action_probs /= np.sum(action_probs)    
+                else:
+                    print("All moves had probability of 0")
+                    action_probs += valid_moves
+                    action_probs / np.sum(action_probs)
+
+                node.expand(next_state, parent.to_play*-1, action_probs)                          # TODO HERE
+
+            self.backpropagate(search_path, value, parent.to_play*-1)                             # TODO HERE
 
         return root
 

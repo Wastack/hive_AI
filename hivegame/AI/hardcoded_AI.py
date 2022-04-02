@@ -12,10 +12,9 @@ from typing import List
 
 class MiniMaxAI():
 
-    def __init__(self, hive: 'Hive', player_colour, depth):
-        self.hive = hive
+    def __init__(self, depth, args):
         self.depth = depth
-        self.player_colour = player_colour
+        self.args = args
 
         self.piece_val_dict = {
             "Q": 50,
@@ -28,11 +27,12 @@ class MiniMaxAI():
         # value of all pieces added up
         self.total_piece_value = 260
 
-    def get_best_move(self):
-        state = representation.two_dim_representation(representation.get_adjacency_state(self.hive))
+    def get_best_move(self, hive):
+        state = representation.two_dim_representation(representation.get_adjacency_state(hive))
+        self.player_colour = hive.level.current_player
 
         _, best_action_number = self.minimax(state, self.depth)
-        best_action = self.hive.action_from_vector(best_action_number)
+        best_action = hive.action_from_vector(best_action_number)
 
         return best_action
 
@@ -60,6 +60,7 @@ class MiniMaxAI():
 
         # Some of these helper functions take a player_num instead of a colour. 
         # TODO refactor ai_environment functions to have consistent paramaters (take Player.colour instead of a number)
+        
         if self.player_colour == Player.WHITE: 
             player_num = 1
             if maximizing_player:
@@ -133,13 +134,16 @@ class MiniMaxAI():
         game_state = representation.load_state_with_player(board, curr_player)
         score = 0
 
-        score += 4* self.count_pinned_pieces_value_relative(game_state, curr_player)
-        score += 4* self.count_moveable_pieces_value_relative(game_state, curr_player)
-        score += 2* self.count_placeable_pieces_value(game_state, curr_player)
-        score += 10* self.count_queen_surrounded_pieces(game_state, curr_player)
+        score += self.args['pinned_value']* self.count_pinned_pieces_value_relative(game_state, curr_player)
+        score += self.args['moveable_piece_value']* self.count_moveable_pieces_value_relative(game_state, curr_player)
+        score += self.args['placeable_piece_value']* self.count_placeable_pieces_value(game_state, curr_player)
+        score += self.args['queen_surrounded_value']* self.count_queen_surrounded_pieces(game_state, curr_player)
+        score += self.args['number_moves_value']* self.get_number_of_moves_score(board, curr_player)
 
         # this value should dwarf the others and take absolute priority strategically
-        score += 1000 * self.get_winning_score(board, curr_player)
+        score += self.args['winning_value'] * self.get_winning_score(board, curr_player)
+
+        # print("score: {}".format(score))
 
         return score
 
@@ -160,18 +164,15 @@ class MiniMaxAI():
     def get_pinned_piece_value(self, game_state, curr_player):
         pinned_piece_value = 0
 
-        # pieces can only move once the queen has been placed
-        queen_pos = game_state.locate(get_queen_name(curr_player))
         played_pieces = game_state.level.get_played_pieces(curr_player)
 
-        if queen_pos:
-            for piece in played_pieces:
-                piece_pos = game_state.level.find_piece_position(piece)
+        for piece in played_pieces:
+            piece_pos = game_state.level.find_piece_position(piece)
 
-                if not validate.validate_one_hive(game_state, piece_pos, piece):
-                    # adding the value from value dict
-                    val = self.piece_val_dict[piece.kind]
-                    pinned_piece_value += val
+            if not validate.validate_one_hive(game_state, piece_pos, piece):
+                # adding the value from value dict
+                val = self.piece_val_dict[piece.kind]
+                pinned_piece_value += val
         
         return pinned_piece_value / self.total_piece_value
 
@@ -252,6 +253,25 @@ class MiniMaxAI():
             return black_queen_surr - white_queen_surr
         else:
             return white_queen_surr - black_queen_surr
+
+    def get_number_of_moves_score(self, board, curr_player):
+        """
+        Function gets the percentage of moves available out of total action space, more moves means more options, 
+        and therefore a better board position
+        """
+        if curr_player == Player.WHITE:     player_num = 1
+        else:                               player_num = -1
+        
+        moves = ai_environment.get_valid_moves(board, player_num)
+        count = 0
+        for move in moves:
+            if move == 1:
+                count += 1
+        
+        total = ai_environment.get_action_size()
+
+        return count / total
+
 
     def get_winning_score(self, board, curr_player):
         """

@@ -1,10 +1,14 @@
 #! /usr/bin/env python
 
-import sys
+import sys, os
+from project import ROOT_DIR
 from engine.environment.environment import Environment
 from AI.random_player import RandomPlayer
 from AI.human_player import HumanPlayer
 from AI.hardcoded_player import MiniMaxPlayer
+from AI.CNN_player import CNN_Player
+from AI.CNN_AI import CNNModel
+import configure
 from engine.hive_utils import GameStatus, HiveException, Player
 
 
@@ -91,20 +95,26 @@ class Arena(object):
         self._player1, self._player2 = self._player2, self._player1
         return white_won + white_won2, black_won + black_won2, draw + draw2
 
-headless = True
-
 def main():
     # TODO parse options for players
     FORMAT = "[%(filename)s:%(lineno)s - %(funcName)20s() ] %(message)s"
     logging.basicConfig(level=logging.DEBUG, format=FORMAT)
     # game = Arena(HumanAI(sys.stdin), RandomAI())
-    player1 = HumanPlayer(sys.stdin)
-    player2 = MiniMaxPlayer(Player.BLACK)
-    logging.info("Start game with the following AIs: {}, {}".format(player1, player2))
-    game = Arena(player1, player2)
-    game.playGame()
 
-    logging.info("Thanks for playing Hive. Have a nice day!")
+    # loading NNET AI
+    nnet = CNNModel(configure.nnet_args)
+    nnet.load_model(folder=os.path.join(ROOT_DIR, 'model_saved'), filename='model.h5')
+    nnet_player = CNN_Player(nnet, configure.train_args)
+
+    human_player = HumanPlayer(sys.stdin)
+    minimax_player = MiniMaxPlayer(2, configure.minimax_args)
+    random_player = RandomPlayer()
+
+    logging.info("Start game with the following AIs: {}, {}".format(minimax_player, random_player))
+    game = Arena(minimax_player, random_player)
+    p1_wins, p2_wins, draws = game.playGames(4)
+
+    logging.info("Player 1 won: {}, Player 2 won: {}, draws: {}".format(p1_wins, p2_wins, draws))
 
 
 if __name__ == '__main__':
