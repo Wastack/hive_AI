@@ -27,9 +27,9 @@ class Arena(object):
         logging.info("Start a game")
         hive = Environment()
         while hive.check_victory() == GameStatus.UNFINISHED:
-            #print(self.env.hive)
             current_player = self._player1 if hive.current_player == "w" else self._player2
             response = current_player.step(hive)
+            #print(hive)
             if response == "pass":
                 if self._passed:
                     # both player passed. Ouch
@@ -104,15 +104,19 @@ def main():
     # loading NNET AI
     nnet = CNNModel(configure.nnet_args)
     nnet.load_model(folder=os.path.join(ROOT_DIR, 'model_saved'), filename='model.h5')
-    nnet_player = CNN_Player(nnet, configure.train_args)
+    nnet_player = CNN_Player(nnet, configure.train_args)   
+
+    # comp_nnet = CNNModel(configure.nnet_args)
+    # comp_nnet.load_model(folder=os.path.join(ROOT_DIR, 'model_saved'), filename='model.h5')
+    # comp_nnet_player = CNN_Player(nnet, configure.train_args)
 
     human_player = HumanPlayer(sys.stdin)
     minimax_player = MiniMaxPlayer(2, configure.minimax_args)
     random_player = RandomPlayer()
 
-    logging.info("Start game with the following AIs: {}, {}".format(minimax_player, random_player))
-    game = Arena(minimax_player, random_player)
-    p1_wins, p2_wins, draws = game.playGames(4)
+    logging.info("Start game with the following AIs: {}, {}".format(human_player, random_player))
+    game = Arena(human_player, random_player)
+    p1_wins, p2_wins, draws = game.playGames(100)
 
     logging.info("Player 1 won: {}, Player 2 won: {}, draws: {}".format(p1_wins, p2_wins, draws))
 

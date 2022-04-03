@@ -32,7 +32,12 @@ class MiniMaxAI():
         self.player_colour = hive.level.current_player
 
         _, best_action_number = self.minimax(state, self.depth)
-        best_action = hive.action_from_vector(best_action_number)
+
+        try:
+            best_action = hive.action_from_vector(best_action_number)
+        except:
+            # selecting first valid move if we get an invalid move
+            best_action = hive.action_from_vector(ai_environment.get_valid_moves().index(1))
 
         return best_action
 
@@ -82,6 +87,7 @@ class MiniMaxAI():
         if maximizing_player:
             max_eval = float('-inf')
             actions_list = ai_environment.get_valid_moves(position, player_num)
+            best_action = actions_list.index(1)
 
             for i in range(len(actions_list)):
                 if actions_list[i] == 1:
@@ -100,6 +106,7 @@ class MiniMaxAI():
         else:
             min_eval = float('inf')
             actions_list = ai_environment.get_valid_moves(position, -1*player_num)
+            best_action = actions_list.index(1)
 
             for i in range(len(actions_list)):
                 if actions_list[i] == 1:
@@ -132,20 +139,24 @@ class MiniMaxAI():
         # loading state from corrent point of view
 
         game_state = representation.load_state_with_player(board, curr_player)
-        score = 0
 
-        score += self.args['pinned_value']* self.count_pinned_pieces_value_relative(game_state, curr_player)
-        score += self.args['moveable_piece_value']* self.count_moveable_pieces_value_relative(game_state, curr_player)
-        score += self.args['placeable_piece_value']* self.count_placeable_pieces_value(game_state, curr_player)
-        score += self.args['queen_surrounded_value']* self.count_queen_surrounded_pieces(game_state, curr_player)
-        score += self.args['number_moves_value']* self.get_number_of_moves_score(board, curr_player)
+        scores = []
+        scores.append(self.args['pinned_value']* self.count_pinned_pieces_value_relative(game_state, curr_player))
+        scores.append(self.args['moveable_piece_value']* self.count_moveable_pieces_value_relative(game_state, curr_player))
+        scores.append(self.args['placeable_piece_value']* self.count_placeable_pieces_value(game_state, curr_player))
+        scores.append(self.args['number_moves_value']* self.get_number_of_moves_score(board, curr_player))
+        scores.append(self.args['queen_surrounded_value']* self.count_queen_surrounded_pieces(game_state, curr_player))
 
         # this value should dwarf the others and take absolute priority strategically
-        score += self.args['winning_value'] * self.get_winning_score(board, curr_player)
+        scores.append(self.args['winning_value'] * self.get_winning_score(board, curr_player))
 
-        # print("score: {}".format(score))
+        # print("pinned | moveable | placeable | moves number | queen surrounded | winning")
+        # print(scores)
+        # print(np.sum(scores))
+        # hive = representation.load_state_with_player(board, curr_player)
+        # print("board: \n{}".format(hive))
 
-        return score
+        return np.sum(scores)
 
     def count_pinned_pieces_value_relative(self, game_state, curr_player):
         """
@@ -157,7 +168,7 @@ class MiniMaxAI():
         curr_val = self.get_pinned_piece_value(game_state, curr_player)
         opp_val = self.get_pinned_piece_value(game_state, opp_player)
 
-        return curr_val - opp_val
+        return opp_val - curr_val
 
         
 
@@ -194,18 +205,21 @@ class MiniMaxAI():
         moveable_piece_value = 0
 
         # pieces can only move once the queen has been placed
-        queen_pos = game_state.locate(get_queen_name(curr_player))
         played_pieces = game_state.level.get_played_pieces(curr_player)
 
-        if queen_pos:
-            for piece in played_pieces:
-                piece_pos = game_state.level.find_piece_position(piece)
+        
+        for piece in played_pieces:
+            piece_pos = game_state.level.find_piece_position(piece)
 
-                if not validate.validate_one_hive(game_state, piece_pos, piece):
-                    continue
-            
-                val = self.piece_val_dict[piece.kind]
-                moveable_piece_value += val
+            if not validate.validate_one_hive(game_state, piece_pos, piece):
+                continue
+        
+            val = self.piece_val_dict[piece.kind]
+            moveable_piece_value += val
+
+        # we generally want to play lower value pieces in the first 4 moves
+        if len(played_pieces) < 4:
+            moveable_piece_value *= -1
         
         return moveable_piece_value / self.total_piece_value
 

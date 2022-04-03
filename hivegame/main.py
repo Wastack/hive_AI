@@ -46,12 +46,9 @@ def main():
     logging.info(f"Number of games to play: {opt_args.game_number}")
     logging.info(f"Player 1: {opt_args.player_white}")
     logging.info(f"Player 2: {opt_args.player_black}")
-    game = Arena(player1, player2)
+    game = Arena(player1, player2)        
+    game.playGames(opt_args.game_number)
 
-    if not opt_args.gui_enabled:
-        game.playGames(opt_args.game_number)
-    else:  # GUI enabled
-        pass # TODO IMPL
     logging.info("Thanks for playing Hive. Have a nice day!")
 
 

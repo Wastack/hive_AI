@@ -5,6 +5,7 @@ from typing import List
 import engine.hive
 from engine.hive_utils import GameStatus, Player
 from engine.environment.AIGameEnv import AIGameEnv
+from configure import surrounded_to_win
 
 import logging
 import engine.hive_representation as represent
@@ -57,11 +58,11 @@ class AIEnvironment(AIGameEnv):
         res = 0
         white_queen_pos = hive.locate("wQ1")
         if white_queen_pos:
-            if len(hive.level.occupied_surroundings(white_queen_pos)) > 3:
+            if len(hive.level.occupied_surroundings(white_queen_pos)) == surrounded_to_win:
                 res = -1 if inner_player == Player.WHITE else 1
         black_queen_pos = hive.locate("bQ1")
         if black_queen_pos:
-            if len(hive.level.occupied_surroundings(black_queen_pos)) > 3:
+            if len(hive.level.occupied_surroundings(black_queen_pos)) == surrounded_to_win:
                 res = -1 if inner_player == Player.BLACK else 1
         return res
 

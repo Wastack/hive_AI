@@ -1,5 +1,6 @@
 
 import numpy as np
+import logging
 
 from AI.player import Player
 from engine.hive import Hive
@@ -53,4 +54,5 @@ class CNN_Player(Player):
         
 
     def feedback(self, succeeded) -> None:
-        pass
+        if not succeeded:
+            logging.error("Invalid action from CNN Player")

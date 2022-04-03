@@ -53,6 +53,7 @@ class Trainer:
             state, _ = ai_environment.get_next_state(canonical_board, 1, action)
             reward = ai_environment.get_game_ended(state, self.current_player)
 
+            #print(iteration)
             if reward != 0:
                 replay_buffer = []
                 for hist_state, hist_current_player, hist_action_probs in train_examples:
@@ -60,21 +61,29 @@ class Trainer:
 
                 return replay_buffer
 
+            # limiting max number of MCTS executions so the algorithm doesn't get stuck
+            # ai_environment.get_game_ended does not indicate if game is a draw, so we do not want to get stuck in draw
+            elif iteration > self.args['maxMCTSRuns']:
+                replay_buffer = []
+                for hist_state, hist_current_player, hist_action_probs in train_examples:
+                    replay_buffer.append((hist_state, hist_action_probs, 0))    # reward = 0
+
+                return replay_buffer
+
+
     def learn(self):
         
         for i in range(0, self.args.numIters):
             print('---------Iteration ' + str(i+1) + '------------')
+            iteration_train_examples = deque([])
 
-            if i > 0:
-                iteration_train_examples = deque([])
+            for eps in range(self.args.numEps):
+                print("----Monte Carlo Episode {} ---".format(eps))
+                self.mcts = MCTS(self.model, self.args)
+                iteration_train_examples += self.execute_episode()
 
-                for eps in range(self.args.numEps):
-                    print("----Monte Carlo Episode {} ---".format(eps))
-                    self.mcts = MCTS(self.model, self.args)
-                    iteration_train_examples += self.execute_episode()
-
-                
-                self.train_examples_history.append(iteration_train_examples)
+            
+            self.train_examples_history.append(iteration_train_examples)
 
         if len(self.train_examples_history) > self.args.numItersForTrainExamplesHistory:
             self.train_examples_history.pop(0)
